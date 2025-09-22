@@ -1,0 +1,157 @@
+{% extends "core/base.html" %}
+
+{% block title %}Mytro Feed{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Floating post button */
+  #postBtn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background-color: #ff7f50;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 6px 12px rgba(255, 127, 80, 0.4);
+    color: white;
+    font-size: 30px;
+    border: none;
+    z-index: 1000;
+    cursor: pointer;
+  }
+  #postModal .modal-content {
+    border-radius: 12px;
+  }
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    transition: box-shadow 0.3s ease-in-out;
+  }
+  .card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  .like-btn, .comment-btn, .edit-btn {
+    color: #ff7f50;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .like-btn:hover, .comment-btn:hover, .edit-btn:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <h2 class="my-4 text-center">Your Feed</h2>
+
+  {% if posts %}
+    {% for post in posts %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{ post.author.username }}</h5>
+          <p class="card-text">{{ post.content }}</p>
+          {% if post.image %}
+            <img src="{{ post.image.url }}" alt="Post Image" class="img-fluid rounded mt-3" />
+          {% endif %}
+          <div class="mt-3">
+            <a href="{% url 'like_post' post.id %}" class="like-btn me-3">Like ({{ post.likes.count }})</a>
+            <a href="{% url 'add_comment' post.id %}" class="comment-btn me-3">Comment ({{ post.comments.count }})</a>
+            {% if post.author == user %}
+              <a href="{% url 'edit_post' post.id %}" class="edit-btn">Edit</a>
+            {% endif %}
+          </div>
+          {% for comment in post.comments.all %}
+            <div class="border-top pt-2 mt-2">
+              <strong>{{ comment.user.username }}</strong>: {{ comment.content }}
+              <br />
+              <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+          {% endfor %}
+          <small class="text-muted">{{ post.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-center">No posts to show.</p>
+  {% endif %}
+
+  <!-- Floating Post Button -->
+  <button id="postBtn" data-bs-toggle="modal" data-bs-target="#postModal" title="Create New Post">+</button>
+
+  <!-- Post Modal -->
+  <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content p-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title" id="postModalLabel">Create New Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{% url 'post_create' %}">
+          {% csrf_token %}
+          <div class="modal-body pt-0">
+            {{ form.as_p }}
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="submit" class="btn btn-kesri">Post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Optional: Focus first input on modal show
+  var postModal = document.getElementById('postModal')
+  postModal.addEventListener('shown.bs.modal', function () {
+    postModal.querySelector('textarea, input[type="text"]').focus()
+  })
+</script>
+<style>
+  /* Custom Kesri button style */
+  .btn-kesri {
+    background-color: #ff7f50;
+    color: white;
+    border: none;
+  }
+  .btn-kesri:hover {
+    background-color: #e6733d;
+    color: white;
+  }
+</style>
+{% endblock %}
+
+<script>
+  document.getElementById('postForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Stop normal form submit
+
+    const formData = new FormData(this);
+
+    fetch("{% url 'post_create' %}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest', // AJAX request identifier
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.success){
+        // Close modal and reset form
+        bootstrap.Modal.getInstance(document.getElementById('postModal')).hide();
+        this.reset();
+
+        // Optionally add the new post dynamically at top of feed
+        // For simplicity reload page here
+        location.reload();
+      }else{
+        alert("Error posting, please try again.");
+      }
+    })
+    .catch(error => alert("Unexpected error occurred."));
+  });
+</script>

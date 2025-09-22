@@ -1,0 +1,7 @@
+<div class="modal-body pt-0">
+  <form id="postForm" method="post" enctype="multipart/form-data" action="{% url 'post_create' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-kesri w-100" type="submit">Post</button>
+  </form>
+</div>
