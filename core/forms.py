@@ -2,6 +2,8 @@ from django import forms
 from .models import Interest, Profile, Post, Comment  # Agar Post model bhi use karna hai
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django_select2.forms import Select2TagWidget
+from django.utils.safestring import mark_safe
 
 class CustomSignupForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -52,26 +54,31 @@ class ProfileForm(forms.ModelForm):
             'dob': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'website': forms.URLInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'interests': forms.SelectMultiple(attrs={'class': 'js-select2'}),  # or forms.SelectMultiple()
+            'interests': forms.SelectMultiple(attrs={'class': 'js-select2', 'style': 'width:100%;'}),
+            # 'interests': Select2TagWidget(attrs={'class': 'form-control'}),
+
 
         }
         def save(self, commit=True):
             profile = super().save(commit=False)
             if commit:
                 profile.save()
-            # Handle interests - create new if needed
+
             interests_data = self.cleaned_data['interests']
             interests_list = []
+
             for interest in interests_data:
                 if isinstance(interest, str):
                     obj, created = Interest.objects.get_or_create(name=interest)
                     interests_list.append(obj)
                 else:
                     interests_list.append(interest)
+
             profile.interests.set(interests_list)
             if commit:
                 profile.save()
             return profile
+
 
 
 class PostForm(forms.ModelForm):
