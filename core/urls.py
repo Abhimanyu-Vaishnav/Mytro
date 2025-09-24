@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.contrib.auth import views as auth_views
 
 from mytro import settings
@@ -19,6 +19,8 @@ urlpatterns = [
     path('post/<int:post_id>/like/', views.like_post, name='like_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
+    path("select2/", include("django_select2.urls")),
+
 ]
 
 urlpatterns += [

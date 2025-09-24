@@ -1,6 +1,7 @@
 {% extends "core/base.html" %}
 {% load static %}
 {% load widget_tweaks %}
+
 {% block title %}Edit Profile - Mytro{% endblock %}
 
 {% block content %}
@@ -17,6 +18,7 @@
     <form method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
 
+      <!-- Profile Picture Upload -->
       <div class="text-center mb-4">
         <input type="file" name="profile_pic" id="profilePicInput" accept="image/*" class="d-none">
         <label for="profilePicInput" id="uploadArea" class="position-relative d-inline-block"
@@ -28,13 +30,13 @@
             <img id="previewImage" src="{% static 'default_profile_pic.png' %}" alt="Default Pic"
                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
           {% endif %}
-          <div class="overlay" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                                    background:rgba(0,0,0,0.3); color:#fff; opacity:0; transition:opacity 0.3s;">
+          <div class="overlay">
             Click or drag & drop to upload
           </div>
         </label>
       </div>
 
+      <!-- User fields -->
       <div class="mb-3">
         <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Name</label>
         {{ user_form.first_name|add_class:"form-control" }}
@@ -51,69 +53,46 @@
         {% endfor %}
       </div>
 
+      <!-- Profile fields -->
       <div class="mb-3">
         <label for="{{ profile_form.gender.id_for_label }}" class="form-label">Gender</label>
         {{ profile_form.gender|add_class:"form-control" }}
-        {% for error in profile_form.gender.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.dob.id_for_label }}" class="form-label">Date of Birth</label>
         {{ profile_form.dob|add_class:"form-control" }}
-        {% for error in profile_form.dob.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.interests.id_for_label }}" class="form-label">Interests</label>
-        {{ profile_form.interests|add_class:"js-select2" }}
-        <small class="form-text text-muted">Choose or type your interests and press Enter to add new.</small>
-        {% for error in profile_form.interests.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
+        {{ profile_form.interests }}
+        <small class="form-text text-muted">Type and press Enter to add new interests.</small>
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.website.id_for_label }}" class="form-label">Website</label>
         {{ profile_form.website|add_class:"form-control" }}
-        {% for error in profile_form.website.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
         {{ profile_form.phone_number|add_class:"form-control" }}
-        {% for error in profile_form.phone_number.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
         {{ profile_form.bio|add_class:"form-control" }}
-        {% for error in profile_form.bio.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.location.id_for_label }}" class="form-label">Location</label>
         {{ profile_form.location|add_class:"form-control" }}
-        {% for error in profile_form.location.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <div class="mb-3">
         <label for="{{ profile_form.language_preference.id_for_label }}" class="form-label">Language</label>
         {{ profile_form.language_preference|add_class:"form-control" }}
-        {% for error in profile_form.language_preference.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
       </div>
 
       <button type="submit" class="btn btn-kesri w-100 py-2 fw-bold">Save Changes</button>
@@ -124,85 +103,20 @@
 </div>
 
 <style>
-.text-kesri {
-  color: #ff7f50 !important;
-}
-.btn-kesri {
-  background-color: #ff7f50;
-  border: none;
-  color: white;
-  transition: 0.3s;
-  font-weight: 700;
-  border-radius: 8px;
-}
-.btn-kesri:hover {
-  background-color: #e6733d;
-}
-.border-kesri {
-  border-color: #ff7f50 !important;
-}
-.form-label {
-  font-weight: 600;
-}
-.form-control {
-  border-radius: 8px !important;
-  border: 1.5px solid #ccc !important;
-  padding: 8px !important;
-  width: 100% !important;
-  box-sizing: border-box;
-  transition: border-color 0.3s, box-shadow 0.3s !important;
-}
-.form-control:focus {
-  border-color: #ff7f50 !important;
-  box-shadow: 0 0 6px #ff7f50 !important;
-  outline: none;
-}
-#uploadArea {
-  cursor: pointer;
-  position: relative;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid #ff7f50;
-  display: inline-block;
-  width: 160px;
-  height: 160px;
-}
-#uploadArea img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-#uploadArea:hover .overlay {
-  opacity: 1;
-}
+.text-kesri { color: #ff7f50 !important; }
+.btn-kesri { background-color: #ff7f50; border: none; color: white; border-radius: 8px; font-weight: 700; }
+.btn-kesri:hover { background-color: #e6733d; }
 .overlay {
-  position: absolute;
-  inset: 0;
-  color: white;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: opacity 0.3s;
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.3); color:#fff; opacity:0; transition:opacity 0.3s;
 }
-
-.select2-container--bootstrap-5 .select2-selection {
-  border-radius: 20px !important;
-  min-height: 48px;
+#uploadArea:hover .overlay { opacity:1; }
+.form-control { border-radius:8px; border:1.5px solid #ccc; }
+.select2-container .select2-selection--multiple {
+  min-height: 48px; border-radius: 8px; border: 1.5px solid #ccc;
 }
 .select2-selection__choice {
-  background: #ff7f50 !important;
-  color: #fff !important;
-  border-radius: 15px !important;
-  margin: 4px 6px !important;
-  font-weight: 600;
-}
-.select2-selection__choice__remove {
-  color: #fff !important;
-  font-size: 18px;
-  margin-left: 5px;
-  cursor: pointer;
+  background:#ff7f50 !important; color:#fff !important; border-radius:15px !important;
 }
 </style>
 
@@ -212,46 +126,31 @@ const previewImage = document.getElementById("previewImage");
 const uploadArea = document.getElementById("uploadArea");
 const overlay = document.querySelector(".overlay");
 
-uploadArea.addEventListener("click", () => {
-  profilePicInput.click();
-});
-
+uploadArea.addEventListener("click", () => profilePicInput.click());
 profilePicInput.addEventListener("change", (e) => {
   const [file] = e.target.files;
-  if (file) {
-    previewImage.src = URL.createObjectURL(file);
-  }
+  if (file) previewImage.src = URL.createObjectURL(file);
 });
-
-uploadArea.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  overlay.style.opacity = 1;
-});
-
-uploadArea.addEventListener("dragleave", (e) => {
-  e.preventDefault();
-  overlay.style.opacity = 0;
-});
-
+uploadArea.addEventListener("dragover", (e) => { e.preventDefault(); overlay.style.opacity=1; });
+uploadArea.addEventListener("dragleave", (e) => { e.preventDefault(); overlay.style.opacity=0; });
 uploadArea.addEventListener("drop", (e) => {
-  e.preventDefault();
-  overlay.style.opacity = 0;
+  e.preventDefault(); overlay.style.opacity=0;
   if (e.dataTransfer.files.length) {
     profilePicInput.files = e.dataTransfer.files;
     previewImage.src = URL.createObjectURL(e.dataTransfer.files[0]);
   }
 });
-</script>
-<script>
-  $(document).ready(function() {
-    $('.js-select2').select2({
-      tags: true,
-      tokenSeparators: [',', ' '],
-      placeholder: 'Select or add interests',
-      allowClear: true,
-      width: '100%'
-    });
+
+// Init Select2
+$(document).ready(function() {
+  $('#id_interests').select2({
+    tags: true,
+    tokenSeparators: [',', ' '],
+    placeholder: 'Select or type your interests',
+    allowClear: true,
+    width: '100%'
   });
+});
 </script>
 
 {% endblock %}
