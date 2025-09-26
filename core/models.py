@@ -1,9 +1,8 @@
 from django.db import models
+from django.conf import settings
+from django.utils import timezone
 
-# Create your models here.
-from django.db import models
-from django.contrib.auth.models import User
-
+User = settings.AUTH_USER_MODEL
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -12,7 +11,7 @@ class Profile(models.Model):
     location = models.CharField(max_length=100, blank=True)
     language_preference = models.CharField(max_length=50, blank=True)
     gender = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')], blank=True)
-    dob = models.DateField(blank=True, null=True) # <-- Ensure this exists
+    dob = models.DateField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     interests = models.ManyToManyField('Interest', blank=True)
@@ -25,29 +24,31 @@ class Interest(models.Model):
     def __str__(self):
         return self.name
 
-
-
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.CharField(max_length=280)
-    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    content = models.TextField()
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    likes = models.ManyToManyField(User, through='Like', related_name='liked_posts', blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"{self.author.username}: {self.content[:30]}"
-    
-
 
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.post.content[:30]}"
 
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
 
 class Follow(models.Model):
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
@@ -60,7 +61,6 @@ class Follow(models.Model):
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
 
-    
 class Notification(models.Model):
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
@@ -126,7 +126,6 @@ class SavedPost(models.Model):
 
     def __str__(self):
         return f"{self.user.username} saved post {self.post.id}"
-    
 
 class Report(models.Model):
     reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_made')
@@ -136,7 +135,7 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} against {self.reported_user.username}"
-    
+
 class Block(models.Model):
     blocker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blocks_made')
     blocked = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blocks_received')
@@ -155,4 +154,3 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"Activity by {self.user.username} - {self.action} at {self.timestamp}"
-
