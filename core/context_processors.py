@@ -1,17 +1,32 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from .models import Follow
 
 def suggestions_context(request):
-    if request.user.is_authenticated:
-        User = get_user_model()
-        try:
-            # Get users that current user is not following
+    """
+    Context processor for user suggestions in the sidebar
+    """
+    context = {}
+    
+    try:
+        if request.user.is_authenticated:
+            # Get users that current user is following
+            following_users = User.objects.filter(
+                followers__follower=request.user
+            )
+            
+            # Get random suggestions: users not followed by current user and not current user
             suggestions = User.objects.exclude(
-                id=request.user.id
-            ).exclude(
-                profile__followers=request.user
-            )[:5]
-            return {'suggestions': suggestions}
-        except Exception as e:
-            print(f"Error in suggestions_context: {e}")
-            return {'suggestions': []}
-    return {'suggestions': []}
+                id__in=following_users.values_list('id', flat=True)
+            ).exclude(id=request.user.id).order_by('?')[:5]
+            
+            context['suggestions'] = suggestions
+        else:
+            # For non-authenticated users, show random users
+            context['suggestions'] = User.objects.all().order_by('?')[:5]
+            
+    except Exception as e:
+        # If any error occurs, return empty suggestions
+        print(f"Error in suggestions_context: {e}")
+        context['suggestions'] = User.objects.none()
+    
+    return context

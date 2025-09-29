@@ -3,18 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+import json
 
 from .forms import ProfileForm, PostForm, CommentForm, UserForm, CustomSignupForm
 from .models import Post, Like, Comment, Profile, Follow
-from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse
-import json
-from django.views.decorators.http import require_POST
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
-
 
 def signup_view(request):
     if request.method == 'POST':
@@ -26,21 +21,58 @@ def signup_view(request):
         form = CustomSignupForm()
     return render(request, 'core/signup.html', {'form': form})
 
+# views.py में profile_view function को replace करें
 
 @login_required
-def profile_view(request, username):
-    user_profile = get_object_or_404(User, username=username)
+def profile_view(request, username=None):
+    # If no username provided, show current user's profile
+    if not username:
+        username = request.user.username
+    
+    profile_user = get_object_or_404(User, username=username)
+    is_own_profile = (request.user == profile_user)
+    
+    # Get user's posts
+    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+    
+    # Get follow stats
+    followers_count = Follow.objects.filter(following=profile_user).count()
+    following_count = Follow.objects.filter(follower=profile_user).count()
+    
+    # Check if current user follows this profile user
     is_following = False
-    if request.user.is_authenticated and request.user != user_profile:
-        is_following = Follow.objects.filter(follower=request.user, following=user_profile).exists()
-    return render(request, 'core/profile.html', {'user_profile': user_profile, 'is_following': is_following})
-
-
+    if not is_own_profile and request.user.is_authenticated:
+        is_following = Follow.objects.filter(
+            follower=request.user, 
+            following=profile_user
+        ).exists()
+    
+    # Get followers and following lists (limited to 10 each)
+    followers = User.objects.filter(
+        following__following=profile_user
+    )[:10]
+    
+    following_users = User.objects.filter(
+        followers__follower=profile_user
+    )[:10]
+    
+    context = {
+        'profile_user': profile_user,  # यहाँ profile_user use करें
+        'is_own_profile': is_own_profile,
+        'user_posts': user_posts,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'is_following': is_following,
+        'followers': followers,
+        'following_users': following_users,
+        'posts_count': user_posts.count(),
+    }
+    
+    return render(request, 'core/profile.html', context)
 
 @login_required
 def my_profile_view(request):
     return profile_view(request, username=request.user.username)
-
 
 @login_required
 def edit_profile_view(request):
@@ -62,9 +94,9 @@ def edit_profile_view(request):
         'user': user,
     })
 
-
 @login_required
 def feed_view(request):
+    # Get users that current user follows
     following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
 
     # Posts from followed users + self
@@ -73,7 +105,9 @@ def feed_view(request):
     ).order_by('-created_at')
 
     # Suggest users to follow (excluding self and already followed)
-    suggestions = User.objects.exclude(id=request.user.id).exclude(id__in=following_users)[:5]
+    suggestions = User.objects.exclude(
+        Q(id=request.user.id) | Q(id__in=following_users)
+    ).order_by('?')[:5]
 
     form = PostForm()
     if request.method == 'POST':
@@ -89,8 +123,6 @@ def feed_view(request):
         'form': form,
         'suggestions': suggestions,
     })
-
-
 
 @login_required
 def post_create_view(request):
@@ -110,45 +142,6 @@ def post_create_view(request):
         form = PostForm()
     return render(request, 'core/post_create.html', {'form': form})
 
-
-# @login_required
-# def like_post(request, post_id):
-#     post = get_object_or_404(Post, id=post_id)
-#     like, created = Like.objects.get_or_create(user=request.user, post=post)
-#     if not created:
-#         like.delete()
-#     return redirect('feed')
-
-
-# @login_required
-# def add_comment(request, post_id):
-#     post = get_object_or_404(Post, id=post_id)
-#     if request.method == 'POST':
-#         form = CommentForm(request.POST)
-#         if form.is_valid():
-#             comment = form.save(commit=False)
-#             comment.user = request.user
-#             comment.post = post
-#             comment.save()
-#             return redirect('feed')
-#     else:
-#         form = CommentForm()
-#     return render(request, 'core/add_comment.html', {'form': form, 'post': post})
-
-
-# @login_required
-# def edit_post(request, post_id):
-#     post = get_object_or_404(Post, id=post_id, author=request.user)
-#     if request.method == 'POST':
-#         form = PostForm(request.POST, request.FILES, instance=post)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('feed')
-#     else:
-#         form = PostForm(instance=post)
-#     return render(request, 'core/edit_post.html', {'form': form, 'post': post})
-
-
 @login_required
 def follow_user(request, username):
     to_follow = get_object_or_404(User, username=username)
@@ -156,90 +149,113 @@ def follow_user(request, username):
         Follow.objects.get_or_create(follower=request.user, following=to_follow)
     return redirect('profile', username=username)
 
-
 @login_required
 def unfollow_user(request, username):
     to_unfollow = get_object_or_404(User, username=username)
     Follow.objects.filter(follower=request.user, following=to_unfollow).delete()
     return redirect('profile', username=username)
 
-
-# @login_required
-# def edit_comment(request, pk):
-#     comment = get_object_or_404(Comment, pk=pk)
-
-#     # Sirf comment ka malik hi edit kar sakta hai
-#     if comment.user != request.user:
-#         return redirect('feed')  # Ya kisi error page pe redirect karo
-
-#     if request.method == 'POST':
-#         form = CommentForm(request.POST, instance=comment)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('feed')  # Ya post detail page jahan se aaya tha
-#     else:
-#         form = CommentForm(instance=comment)
-
-#     return render(request, 'core/edit_comment.html', {'form': form, 'comment': comment})
-
-
-
+# API VIEWS
 @csrf_exempt
+@login_required
 def edit_post(request, pk):
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            content = data.get('content', '').strip()
+            # Check content type
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                content = data.get('content', '').strip()
+            else:
+                content = request.POST.get('content', '').strip()
+            
             if not content:
-                return HttpResponseBadRequest('Post content cannot be empty')
+                return JsonResponse({'error': 'Post content cannot be empty'}, status=400)
+            
+            # Get post and verify ownership
             post = Post.objects.get(pk=pk, author=request.user)
             post.content = content
+            
+            # Handle image upload if present
+            if 'image' in request.FILES:
+                post.image = request.FILES['image']
+            
             post.save()
-            return JsonResponse({'content': post.content})
+            
+            return JsonResponse({
+                'success': True,
+                'content': post.content,
+                'image_url': post.image.url if post.image else None
+            })
+            
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found or you are not the author'}, status=404)
         except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
+            print(f"Error in edit_post: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
+@login_required
 def edit_comment(request, pk):
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
             content = data.get('content', '').strip()
             if not content:
-                return HttpResponseBadRequest('Comment cannot be empty')
+                return JsonResponse({'error': 'Comment cannot be empty'}, status=400)
+            
             comment = Comment.objects.get(pk=pk, user=request.user)
             comment.content = content
             comment.save()
-            return JsonResponse({'content': comment.content})
+            
+            return JsonResponse({
+                'success': True,
+                'content': comment.content
+            })
+            
+        except Comment.DoesNotExist:
+            return JsonResponse({'error': 'Comment not found'}, status=404)
         except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
+@login_required
 def add_comment(request):
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
             post_id = data.get('post_id')
             comment_text = data.get('comment', '').strip()
+            
             if not post_id or not comment_text:
-                return HttpResponseBadRequest('Missing fields')
+                return JsonResponse({'error': 'Missing fields'}, status=400)
+            
             post = Post.objects.get(pk=post_id)
-            new_comment = Comment.objects.create(user=request.user, post=post, content=comment_text)
+            new_comment = Comment.objects.create(
+                user=request.user, 
+                post=post, 
+                content=comment_text
+            )
+            
             result = {
                 'id': new_comment.id,
                 'content': new_comment.content,
                 'name': new_comment.user.get_full_name() or new_comment.user.username,
-                'photoUrl': new_comment.user.profile.profile_pic.url if new_comment.user.profile.profile_pic else '',
+                'photoUrl': new_comment.user.profile.profile_pic.url if hasattr(new_comment.user, 'profile') and new_comment.user.profile.profile_pic else '',
                 'profile_url': reverse('profile', args=[new_comment.user.username]),
                 'date': new_comment.created_at.strftime('%b %d, %Y %H:%M'),
             }
             return JsonResponse(result)
+            
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found'}, status=404)
         except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
-
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
 @login_required
@@ -248,74 +264,68 @@ def like_post(request, pk):
         try:
             post = Post.objects.get(pk=pk)
             like_instance = Like.objects.filter(user=request.user, post=post).first()
+            
             if like_instance:
                 like_instance.delete()
                 liked = False
             else:
                 Like.objects.create(user=request.user, post=post)
                 liked = True
+                
             like_count = Like.objects.filter(post=post).count()
-            return JsonResponse({'like_count': like_count, 'liked': liked})
+            return JsonResponse({
+                'like_count': like_count, 
+                'liked': liked
+            })
+            
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+    
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
-
 @csrf_exempt
+@login_required
 def upload_post_photo(request):
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST':
         photo = request.FILES.get('photo')
         post_id = request.POST.get('post_id')
+        
         if not photo or not post_id:
-            return HttpResponseBadRequest('Photo and post_id required')
+            return JsonResponse({'error': 'Photo and post_id required'}, status=400)
+        
         try:
             post = Post.objects.get(pk=post_id, author=request.user)
             post.image = photo
             post.save()
             return JsonResponse({'photo_url': post.image.url})
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found'}, status=404)
         except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
-def upload_comment_photo(request):
-    if request.method == 'POST' and request.user.is_authenticated:
-        photo = request.FILES.get('photo')
-        post_id = request.POST.get('post_id')
-        comment_id = request.POST.get('comment_id')
-        if not photo or not post_id:
-            return HttpResponseBadRequest('Photo and post_id required')
-        try:
-            # Save photo logic here, e.g., create CommentPhoto object or append to comment content
-            photo_url = '/media/path_to_photo'  # your real path after saving
-            return JsonResponse({'photo_url': photo_url})
-        except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
-
-@csrf_exempt
+@login_required
 def like_comment(request, pk):
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST':
         try:
             comment = Comment.objects.get(pk=pk)
-            if request.user in comment.likes.all():
-                comment.likes.remove(request.user)
-            else:
-                comment.likes.add(request.user)
-            comment.save()
-            return JsonResponse({'like_count': comment.likes.count()})
+            # Since Comment model doesn't have likes field, we'll implement this later
+            return JsonResponse({'like_count': 0})
+        except Comment.DoesNotExist:
+            return JsonResponse({'error': 'Comment not found'}, status=404)
         except Exception as e:
-            return HttpResponseBadRequest(str(e))
-    return HttpResponseBadRequest('Invalid request')
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-
-# ADD THESE NEW FUNCTIONS TO YOUR EXISTING views.py
-
+# MODERN FEED API VIEWS
 @login_required
 @require_POST
 def create_post(request):
-    """Handle post creation from the modern feed modal"""
     content = request.POST.get('content', '')
     image = request.FILES.get('image')
     
@@ -334,20 +344,16 @@ def create_post(request):
 @login_required
 @require_POST
 def repost_post(request, post_id):
-    """Handle post reposting"""
     post = get_object_or_404(Post, id=post_id)
-    
-    # For now, we'll just return success since we don't have repost field
-    # You can implement repost logic based on your needs
+    # Basic implementation - you can extend this
     return JsonResponse({
         'reposted': True,
-        'repost_count': 0  # Update this based on your implementation
+        'repost_count': 0
     })
 
 @login_required
 @require_POST
 def delete_post(request, post_id):
-    """Delete a post"""
     post = get_object_or_404(Post, id=post_id, author=request.user)
     post.delete()
     return JsonResponse({'success': True})
@@ -355,7 +361,6 @@ def delete_post(request, post_id):
 @login_required
 @require_POST
 def remove_post_image(request, post_id):
-    """Remove image from a post"""
     post = get_object_or_404(Post, id=post_id, author=request.user)
     if post.image:
         post.image.delete(save=False)
@@ -366,7 +371,6 @@ def remove_post_image(request, post_id):
 @login_required
 @require_POST
 def delete_comment(request, comment_id):
-    """Delete a comment"""
     comment = get_object_or_404(Comment, id=comment_id, user=request.user)
     comment.delete()
     return JsonResponse({'success': True})
@@ -374,7 +378,6 @@ def delete_comment(request, comment_id):
 @login_required
 @require_POST
 def follow_user_api(request, user_id):
-    """API endpoint for following users"""
     user_to_follow = get_object_or_404(User, id=user_id)
     
     if user_to_follow != request.user:
@@ -391,11 +394,11 @@ def follow_user_api(request, user_id):
 
 @login_required
 def suggested_users(request):
-    """Get suggested users to follow"""
     following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
     
-    # Get users not followed by current user
-    suggestions = User.objects.exclude(id=request.user.id).exclude(id__in=following_users)[:10]
+    suggestions = User.objects.exclude(
+        Q(id=request.user.id) | Q(id__in=following_users)
+    ).order_by('?')[:10]
     
     users_data = []
     for user in suggestions:
@@ -411,14 +414,12 @@ def suggested_users(request):
 @login_required
 @require_POST
 def pin_post(request, post_id):
-    """Pin a post to profile"""
     post = get_object_or_404(Post, id=post_id, author=request.user)
-    # Implement pinning logic here if you have a pinned field
+    # Basic implementation
     return JsonResponse({'success': True})
 
 @login_required
 def get_comments(request, post_id):
-    """Get all comments for a post"""
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all().order_by('created_at')
     
@@ -437,7 +438,6 @@ def get_comments(request, post_id):
 
 @login_required
 def load_more_posts(request):
-    """Load more posts for infinite scroll"""
     offset = int(request.GET.get('offset', 0))
     limit = 10
     
@@ -464,22 +464,36 @@ def load_more_posts(request):
     
     return JsonResponse({'posts': posts_data})
 
-def profile(request, username=None):
-    if username:
-        # Other user's profile
-        profile_user = get_object_or_404(User, username=username)
-    else:
-        # Current user's profile
-        if request.user.is_authenticated:
-            profile_user = request.user
-        else:
-            return redirect('login')
+
+# views.py में add करें
+@login_required
+def get_followers(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    followers = User.objects.filter(following__following=profile_user)
     
-    posts = Post.objects.filter(user=profile_user).order_by('-created_at')
+    followers_data = []
+    for user in followers:
+        followers_data.append({
+            'id': user.id,
+            'username': user.username,
+            'name': user.get_full_name() or user.username,
+            'avatar': user.profile.profile_pic.url if user.profile.profile_pic else None
+        })
     
-    context = {
-        'profile_user': profile_user,
-        'posts': posts,
-    }
-    return render(request, 'core/profile.html', context)
-# Add this import at the top if not already present
+    return JsonResponse({'followers': followers_data})
+
+@login_required
+def get_following(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    following = User.objects.filter(followers__follower=profile_user)
+    
+    following_data = []
+    for user in following:
+        following_data.append({
+            'id': user.id,
+            'username': user.username,
+            'name': user.get_full_name() or user.username,
+            'avatar': user.profile.profile_pic.url if user.profile.profile_pic else None
+        })
+    
+    return JsonResponse({'following': following_data})
