@@ -10,17 +10,18 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    # Apne profile ka URL (logged-in user ke liye)
+    
+    # Profile URLs
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/', views.my_profile_view, name='my_profile'),
-    # Kisi dusre user ka profile URL (username parameter ke sath)
     path('profile/<str:username>/', views.profile_view, name='profile'),
+    
+    # Post URLs
     path('post/new/', views.post_create_view, name='post_create'),
-    # path('post/<int:post_id>/like/', views.like_post, name='like_post'),
-    # path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
-    # path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
+    path('create_post/', views.create_post, name='create_post'),  # ADD THIS LINE
+    
+    # API endpoints
     path("select2/", include("django_select2.urls")),
-    # path('comment/<int:pk>/edit/', views.edit_comment, name='edit_comment'),
     path('api/edit_post/<int:pk>/', views.edit_post, name='edit_post'),
     path('api/edit_comment/<int:pk>/', views.edit_comment, name='edit_comment'),
     path('api/add_comment/', views.add_comment, name='add_comment'),
@@ -28,12 +29,23 @@ urlpatterns = [
     path('api/upload_post_photo/', views.upload_post_photo, name='upload_post_photo'),
     path('api/upload_comment_photo/', views.upload_comment_photo, name='upload_comment_photo'),
     path('api/like_comment/<int:pk>/', views.like_comment, name='like_comment'),
-
-]
-
-urlpatterns += [
+    
+    # Follow/Unfollow
     path('follow/<str:username>/', views.follow_user, name='follow_user'),
     path('unfollow/<str:username>/', views.unfollow_user, name='unfollow_user'),
+    
+    # NEW API ENDPOINTS FOR THE MODERN FEED
+    path('api/repost/<int:post_id>/', views.repost_post, name='repost'),
+    path('api/delete_post/<int:post_id>/', views.delete_post, name='delete_post'),
+    path('api/remove_post_image/<int:post_id>/', views.remove_post_image, name='remove_post_image'),
+    path('api/delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
+    path('api/follow/<int:user_id>/', views.follow_user_api, name='follow_user_api'),
+    path('api/suggested_users/', views.suggested_users, name='suggested_users'),
+    path('api/pin_post/<int:post_id>/', views.pin_post, name='pin_post'),
+    path('api/comments/<int:post_id>/', views.get_comments, name='get_comments'),
+    path('api/load_more_posts/', views.load_more_posts, name='load_more_posts'),
+    path('profile/', views.profile, name='profile'),
+    path('profile/<str:username>/', views.profile, name='user_profile'),
 ]
 
 if settings.DEBUG:

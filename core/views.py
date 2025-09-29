@@ -9,6 +9,7 @@ from .models import Post, Like, Comment, Profile, Follow
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 import json
+from django.views.decorators.http import require_POST
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -307,3 +308,178 @@ def like_comment(request, pk):
         except Exception as e:
             return HttpResponseBadRequest(str(e))
     return HttpResponseBadRequest('Invalid request')
+
+
+# ADD THESE NEW FUNCTIONS TO YOUR EXISTING views.py
+
+@login_required
+@require_POST
+def create_post(request):
+    """Handle post creation from the modern feed modal"""
+    content = request.POST.get('content', '')
+    image = request.FILES.get('image')
+    
+    if content or image:
+        post = Post.objects.create(
+            author=request.user,
+            content=content,
+            image=image
+        )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'post_id': post.id})
+        return redirect('feed')
+    
+    return JsonResponse({'success': False, 'error': 'Content or image required'})
+
+@login_required
+@require_POST
+def repost_post(request, post_id):
+    """Handle post reposting"""
+    post = get_object_or_404(Post, id=post_id)
+    
+    # For now, we'll just return success since we don't have repost field
+    # You can implement repost logic based on your needs
+    return JsonResponse({
+        'reposted': True,
+        'repost_count': 0  # Update this based on your implementation
+    })
+
+@login_required
+@require_POST
+def delete_post(request, post_id):
+    """Delete a post"""
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+    post.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def remove_post_image(request, post_id):
+    """Remove image from a post"""
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+    if post.image:
+        post.image.delete(save=False)
+        post.image = None
+        post.save()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def delete_comment(request, comment_id):
+    """Delete a comment"""
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    comment.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def follow_user_api(request, user_id):
+    """API endpoint for following users"""
+    user_to_follow = get_object_or_404(User, id=user_id)
+    
+    if user_to_follow != request.user:
+        follow, created = Follow.objects.get_or_create(
+            follower=request.user,
+            following=user_to_follow
+        )
+        return JsonResponse({
+            'username': user_to_follow.username,
+            'following': created
+        })
+    
+    return JsonResponse({'error': 'Cannot follow yourself'}, status=400)
+
+@login_required
+def suggested_users(request):
+    """Get suggested users to follow"""
+    following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
+    
+    # Get users not followed by current user
+    suggestions = User.objects.exclude(id=request.user.id).exclude(id__in=following_users)[:10]
+    
+    users_data = []
+    for user in suggestions:
+        users_data.append({
+            'id': user.id,
+            'name': user.get_full_name() or user.username,
+            'username': user.username,
+            'photo': user.profile.profile_pic.url if hasattr(user, 'profile') and user.profile.profile_pic else None
+        })
+    
+    return JsonResponse({'users': users_data})
+
+@login_required
+@require_POST
+def pin_post(request, post_id):
+    """Pin a post to profile"""
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+    # Implement pinning logic here if you have a pinned field
+    return JsonResponse({'success': True})
+
+@login_required
+def get_comments(request, post_id):
+    """Get all comments for a post"""
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.all().order_by('created_at')
+    
+    comments_data = []
+    for comment in comments:
+        comments_data.append({
+            'id': comment.id,
+            'content': comment.content,
+            'name': comment.user.get_full_name() or comment.user.username,
+            'profile_url': reverse('profile', args=[comment.user.username]),
+            'is_owner': comment.user == request.user,
+            'photoUrl': comment.user.profile.profile_pic.url if hasattr(comment.user, 'profile') and comment.user.profile.profile_pic else ''
+        })
+    
+    return JsonResponse({'comments': comments_data})
+
+@login_required
+def load_more_posts(request):
+    """Load more posts for infinite scroll"""
+    offset = int(request.GET.get('offset', 0))
+    limit = 10
+    
+    following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
+    posts = Post.objects.filter(
+        Q(author__in=following_users) | Q(author=request.user)
+    ).order_by('-created_at')[offset:offset + limit]
+    
+    posts_data = []
+    for post in posts:
+        posts_data.append({
+            'id': post.id,
+            'content': post.content,
+            'author': {
+                'username': post.author.username,
+                'name': post.author.get_full_name() or post.author.username,
+                'photo': post.author.profile.profile_pic.url if hasattr(post.author, 'profile') and post.author.profile.profile_pic else None
+            },
+            'image': post.image.url if post.image else None,
+            'likes_count': post.likes.count(),
+            'comments_count': post.comments.count(),
+            'created_at': post.created_at.strftime('%b %d, %Y')
+        })
+    
+    return JsonResponse({'posts': posts_data})
+
+def profile(request, username=None):
+    if username:
+        # Other user's profile
+        profile_user = get_object_or_404(User, username=username)
+    else:
+        # Current user's profile
+        if request.user.is_authenticated:
+            profile_user = request.user
+        else:
+            return redirect('login')
+    
+    posts = Post.objects.filter(user=profile_user).order_by('-created_at')
+    
+    context = {
+        'profile_user': profile_user,
+        'posts': posts,
+    }
+    return render(request, 'core/profile.html', context)
+# Add this import at the top if not already present

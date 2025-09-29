@@ -1,506 +1,2012 @@
 {% extends "core/base.html" %}
-{% load follow_tags %}
 {% load static %}
 
 {% block title %}Mytro Feed{% endblock %}
 {% block extra_head %}
 <style>
-  /* Your full existing CSS unchanged (not shortened) */
-  /* General */
-  body {
-    background: #fff7f0;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  /* =============================================
+     MODERN CSS WITH INSTAGRAM-LIKE UI
+     ============================================= */
+  :root {
+    --primary-color: #ff7f50;
+    --primary-dark: #e6733d;
+    --primary-light: #ffa07a;
+    --secondary-color: #7e4b21;
+    --background: #fafafa;
+    --card-bg: #ffffff;
+    --text-primary: #262626;
+    --text-secondary: #8e8e8e;
+    --border-color: #dbdbdb;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    --like-red: #ed4956;
+    --comment-blue: #0095f6;
+    --success-color: #17bf63;
+    --error-color: #e0245e;
   }
-  /* Floating post button */
+
+  [data-theme="dark"] {
+    --background: #15202b;
+    --card-bg: #192734;
+    --text-primary: #ffffff;
+    --text-secondary: #8899a6;
+    --border-color: #38444d;
+  }
+
+  body {
+    background: var(--background);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    transition: background 0.3s ease;
+  }
+
+  .container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+  }
+
+  /* =============================================
+     THEME TOGGLE
+     ============================================= */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+  }
+
+  .theme-toggle:hover {
+    transform: scale(1.05);
+  }
+
+  /* =============================================
+     FLOATING POST BUTTON
+     ============================================= */
   #postBtn {
     position: fixed;
-    bottom: 40px;
-    right: 40px;
-    background-color: #ff7f50; /* Kesari */
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
     border-radius: 50%;
     width: 60px;
     height: 60px;
-    box-shadow: 0 6px 12px rgba(255, 127, 80, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 127, 80, 0.4);
     color: white;
-    font-size: 32px;
+    font-size: 28px;
+    font-weight: 300;
     border: none;
     z-index: 1000;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
   }
+
   #postBtn:hover {
-    background-color: #e6733d;
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(255, 127, 80, 0.6);
   }
-  /* Card styles */
-  .card {
-    border-radius: 15px;
-    box-shadow: 0 5px 18px rgba(255, 127, 80, 0.16);
-    margin-bottom: 25px;
-    transition: box-shadow 0.3s ease-in-out, transform 0.15s ease-in-out;
-  }
-  .card:hover {
-    box-shadow: 0 14px 40px rgba(255, 127, 80, 0.25);
-    transform: translateY(-3px);
-  }
-  .card-body {
+
+  /* =============================================
+     STORIES SECTION
+     ============================================= */
+  .stories-container {
     display: flex;
-    gap: 15px;
+    gap: 12px;
+    padding: 16px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    scrollbar-width: none;
   }
-  /* Profile photos and avatar fallback */
-  .profile-photo,
-  .avatar-fallback {
-    width: 50px;
-    height: 50px;
+
+  .stories-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .story {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    min-width: 70px;
+  }
+
+  .story-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .story-avatar img {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid var(--card-bg);
+    object-fit: cover;
+  }
+
+  .story-username {
+    font-size: 12px;
+    color: var(--text-primary);
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* =============================================
+     MAIN FEED CONTENT
+     ============================================= */
+  .feed-content {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* =============================================
+     SIDEBAR - PEOPLE TO FOLLOW
+     ============================================= */
+  .sidebar {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+  }
+
+  .suggestions-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .suggestions-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .refresh-suggestions {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .suggestion-avatar {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
   }
+
   .avatar-fallback {
-    background-color: #ff7f50;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
     color: white;
-    font-weight: 700;
-    font-size: 22px;
+    font-weight: 600;
+    font-size: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
     text-transform: uppercase;
-  }
-  /* User and post text */
-  h5 a,
-  strong a {
-    color: #ff7f50 !important;
-    font-weight: 700;
-    text-decoration: none;
-  }
-  h5 a:hover,
-  strong a:hover {
-    text-decoration: underline;
-  }
-  p,
-  textarea,
-  input {
-    font-size: 16px;
-    margin-top: 8px;
-    color: #4a4a4a;
-    line-height: 1.4;
-  }
-  .post-content-view {
-    white-space: pre-line;
-  }
-  .img-fluid {
-    border-radius: 15px;
-    margin-top: 12px;
-    max-height: 400px;
-    object-fit: cover;
-  }
-  /* Post interaction buttons */
-  .like-btn,
-  .comment-btn,
-  .edit-btn {
-    color: #ff7f50;
-    text-decoration: none;
-    font-weight: 700;
-    margin-right: 20px;
-    cursor: pointer;
-    font-size: 15px;
-    transition: color 0.3s;
-  }
-  .like-btn:hover,
-  .comment-btn:hover,
-  .edit-btn:hover {
-    color: #e6733d;
-    text-decoration: underline;
-  }
-  /* Comments */
-  .comment-block {
-    border-top: 1px solid #f7c9a4;
-    padding-top: 12px;
-    margin-top: 12px;
-    color: #666;
-    font-size: 14px;
-  }
-  .comment-block strong {
-    color: #ff7f50;
-  }
-  /* Date */
-  small.text-muted {
-    color: #a9725b !important;
-    font-size: 13px;
-  }
-  /* Suggestions panel */
-  .suggestion-list {
-    max-height: 420px;
-    overflow-y: auto;
-    box-shadow: 0 5px 12px rgba(255, 127, 80, 0.15);
-  }
-  .list-group-item {
-    border-radius: 15px;
-    margin-bottom: 10px;
-    padding: 12px 15px;
-  }
-  .list-group-item.d-flex {
-    gap: 12px;
-    align-items: center;
-  }
-  /* Buttons */
-  .btn-primary,
-  .btn-primary:focus,
-  .btn-primary:hover,
-  .btn-primary:active,
-  .btn-primary:visited {
-    background-color: #ff7f50 !important;
-    border-color: #ff7f50 !important;
-    font-weight: 700;
-    transition: background-color 0.3s;
-  }
-  .btn-primary:hover {
-    background-color: #e6733d !important;
-    border-color: #e6733d !important;
-  }
-  .btn-danger,
-  .btn-danger:focus,
-  .btn-danger:hover,
-  .btn-danger:active {
-    background-color: #d64535 !important;
-    border-color: #d64535 !important;
-  }
-  .btn-danger:hover {
-    background-color: #b03529 !important;
-    border-color: #b03529 !important;
-  }
-  .comment-editable,
-  .post-editable {
-    width: 100%;
-    padding: 8px 10px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 1.5px solid #ff7f50;
-    resize: vertical;
-    margin-top: 6px;
-  }
-  .edit-actions {
-    margin-top: 8px;
-  }
-  .edit-actions button {
-    margin-right: 12px;
-    font-size: 14px;
+    flex-shrink: 0;
   }
 
-  /* New added small style for emoji and attach buttons */
-  .emoji-btn,
-  .attach-btn {
-    background: transparent;
+  .suggestion-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .suggestion-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .suggestion-username {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .follow-btn {
+    background: var(--primary-color);
+    color: white;
     border: none;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .follow-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+
+  .follow-btn.following {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+
+  /* =============================================
+     CARD STYLES - MODERN INSTAGRAM-LIKE
+     ============================================= */
+  .feed-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .feed-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    position: relative;
+  }
+
+  /* Profile photos and avatar */
+  .profile-photo {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark)) border-box;
+  }
+
+  .user-info {
+    margin-left: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .username {
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 15px;
+    display: block;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .username:hover {
+    text-decoration: underline;
+  }
+
+  .full-name {
+    font-size: 15px;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .location {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Post content */
+  .post-content {
+    padding: 8px 16px 12px;
+    white-space: pre-line;
+    word-break: break-word;
+    line-height: 1.5;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .post-hashtag {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .post-hashtag:hover {
+    text-decoration: underline;
+  }
+
+  .post-mention {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .post-mention:hover {
+    text-decoration: underline;
+  }
+
+  /* Media container */
+  .post-media-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+  }
+
+  .post-image {
+    width: 100%;
+    display: block;
+    max-height: 600px;
+    object-fit: contain;
+  }
+
+  .post-video {
+    width: 100%;
+    max-height: 600px;
+    background: #000;
+  }
+
+  /* POST ACTIONS - Modern Line Icons */
+  .post-actions {
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .action-buttons-left {
+    display: flex;
+    gap: 16px;
+  }
+
+  .action-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+  }
+
+  .action-btn:hover {
+    color: var(--primary-color);
+  }
+
+  .action-btn .action-count {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 10px;
+    margin-left: 4px;
+  }
+
+  /* Like button */
+  .like-btn:hover {
+    color: var(--like-red);
+  }
+
+  .like-btn.liked {
+    color: var(--like-red);
+  }
+
+  .like-btn.liked .action-count {
+    color: var(--like-red);
+  }
+
+  /* Comment button */
+  .comment-btn:hover {
+    color: var(--comment-blue);
+  }
+
+  .comment-btn.active {
+    color: var(--comment-blue);
+  }
+
+  .comment-btn.active .action-count {
+    color: var(--comment-blue);
+  }
+
+  .post-stats {
+    padding: 0 16px 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+    display: flex;
+    gap: 16px;
+  }
+
+  .post-time {
+    padding: 0 16px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+  }
+
+  /* Dropdown menu for post options */
+  .post-menu {
+    position: relative;
+  }
+
+  .post-menu-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: var(--text-secondary);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .post-menu-btn:hover {
+    background: rgba(29, 161, 242, 0.1);
+    color: var(--primary-color);
+  }
+
+  .post-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    min-width: 180px;
+    z-index: 1000;
+    display: none;
+    border: 1px solid var(--border-color);
+  }
+
+  .post-dropdown.show {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+
+  .dropdown-item:hover {
+    background: rgba(29, 161, 242, 0.1);
+  }
+
+  .dropdown-item.delete {
+    color: var(--error-color);
+  }
+
+  /* =============================================
+     EDIT POST UI - INLINE EDITING
+     ============================================= */
+  .edit-container {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(29, 161, 242, 0.05);
+  }
+
+  .edit-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 12px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  .edit-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .edit-image-preview {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .edit-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .edit-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s;
+  }
+
+  .btn-primary {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-dark);
+  }
+
+  .btn-secondary {
+    background: #efefef;
+    color: var(--text-primary);
+  }
+
+  .btn-secondary:hover {
+    background: #dbdbdb;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .btn-outline:hover {
+    background: #fafafa;
+  }
+
+  .btn-danger {
+    background: #ed4956;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #e02d3a;
+  }
+
+  .icon-btn {
+    background: #efefef;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     font-size: 18px;
-    color: #ff7f50;
-    margin-left: 8px;
-    vertical-align: middle;
+    color: var(--text-primary);
+    transition: all 0.3s;
   }
 
-  .card-body h5 {
-  margin-bottom: 0.1rem; /* Reduce gap below name */
-}
-.post-content-wrapper {
-  margin-top: 0; /* Or decrease if needed */
-}
+  .icon-btn:hover {
+    background: #dbdbdb;
+  }
 
+  /* =============================================
+     COMMENTS SECTION WITH RICH EDITING
+     ============================================= */
+  .comments-section {
+    border-top: 1px solid var(--border-color);
+    padding: 12px 16px;
+  }
+
+  .comments-container {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+
+  .comment {
+    display: flex;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .comment:last-child {
+    margin-bottom: 0;
+  }
+
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .comment-content {
+    flex: 1;
+    background: rgba(29, 161, 242, 0.05);
+    padding: 12px;
+    border-radius: 12px;
+    position: relative;
+  }
+
+  .comment-user {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-right: 4px;
+  }
+
+  .comment-user:hover {
+    text-decoration: underline;
+  }
+
+  .comment-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-top: 4px;
+    white-space: pre-line;
+  }
+
+  .comment-edit-input {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 60px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  .comment-edit-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .comment-action {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+  }
+
+  .comment-action:hover {
+    color: var(--primary-color);
+  }
+
+  .add-comment {
+    display: flex;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .comment-input-container {
+    flex: 1;
+    background: rgba(29, 161, 242, 0.05);
+    border-radius: 20px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  .comment-input {
+    border: none;
+    background: none;
+    resize: none;
+    font-size: 14px;
+    padding: 0;
+    max-height: 60px;
+    font-family: inherit;
+    width: 100%;
+    color: var(--text-primary);
+  }
+
+  .comment-input:focus {
+    outline: none;
+  }
+
+  .comment-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .toolbar-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .toolbar-btn:hover {
+    background: rgba(29, 161, 242, 0.1);
+    color: var(--primary-color);
+  }
+
+  .post-comment-btn {
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    min-width: 60px;
+  }
+
+  .post-comment-btn.active {
+    opacity: 1;
+  }
+
+  .post-comment-btn:hover {
+    background: var(--primary-dark);
+  }
+
+  .view-comments-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-top: 8px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .view-comments-btn:hover {
+    color: var(--primary-color);
+  }
+
+  /* =============================================
+     MODERN IMAGE EDITOR
+     ============================================= */
+  .image-editor-modal .modal-dialog {
+    max-width: 800px;
+  }
+
+  .image-editor-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .editor-preview-container {
+    display: flex;
+    justify-content: center;
+    background: #000;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 400px;
+    overflow: hidden;
+  }
+
+  .editor-preview {
+    max-width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+  }
+
+  .editor-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .control-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .control-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e1e8ed;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+  }
+
+  .filter-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .filter-preset {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .filter-preset.active {
+    border-color: var(--primary-color);
+  }
+
+  .filter-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .filter-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 10px;
+    padding: 4px;
+    text-align: center;
+  }
+
+  /* =============================================
+     NOTIFICATION TOAST
+     ============================================= */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 90%;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .toast.show {
+    opacity: 1;
+  }
+
+  .toast.success {
+    border-left: 4px solid var(--success-color);
+  }
+
+  .toast.error {
+    border-left: 4px solid var(--error-color);
+  }
+
+  /* =============================================
+     UTILITY CLASSES
+     ============================================= */
+  .d-none {
+    display: none !important;
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .mt-3 {
+    margin-top: 16px;
+  }
+
+  .py-5 {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  /* =============================================
+     RESPONSIVE DESIGN
+     ============================================= */
+  @media (max-width: 992px) {
+    .container-fluid {
+      grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 0;
+    }
+    
+    .feed-card {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      margin-bottom: 1px;
+    }
+    
+    #postBtn {
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      font-size: 24px;
+    }
+    
+    .theme-toggle {
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+    }
+    
+    .modal-dialog {
+      margin: 0;
+      height: 100vh;
+      max-width: 100%;
+    }
+    
+    .modal-content {
+      height: 100%;
+      border-radius: 0;
+    }
+  }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.min.js"></script>
 {% endblock %}
+
 {% block content %}
-<h2 class="my-4 text-center" style="color: #7e4b21">Your Feed</h2>
+<!-- =============================================
+     THEME TOGGLE
+     ============================================= -->
+<div class="theme-toggle" id="themeToggle">
+  <span id="themeIcon">🌙</span>
+</div>
 
-<div class="row">
-  <div class="col-md-8">
-    {% if posts %}
-      {% for post in posts %}
-        <div class="card" data-post-id="{{ post.id }}">
-          <div class="card-body">
-            {% if post.author.profile.photo %}
-              <a href="{% url 'profile' post.author.username %}">
-                <img src="{{ post.author.profile.photo.url }}" alt="Profile Photo" class="profile-photo" />
-              </a>
-            {% else %}
-              <a href="{% url 'profile' post.author.username %}">
-                <div class="avatar-fallback">{{ post.author.profile.name|default:post.author.username|first }}</div>
-              </a>
-            {% endif %}
-            <div style="flex: 1">
-              <h5>
-                <a href="{% url 'profile' post.author.username %}">{{ post.author.profile.name|default:post.author.username }}</a>
-              </h5>
-              <div class="post-content-wrapper">
-                <div class="post-content-view" id="post-content-{{ post.id }}">
-                  {{ post.content|linebreaksbr }}
-                </div>
-                <textarea class="post-editable d-none" id="post-edit-{{ post.id }}" rows="3">{{ post.content }}</textarea>
-                <div class="edit-actions d-none" id="post-edit-actions-{{ post.id }}">
-                  <button class="btn btn-sm btn-primary" onclick="savePostEdit({{ post.id }})">Save</button>
-                  <button class="btn btn-sm btn-secondary" onclick="cancelPostEdit({{ post.id }})">Cancel</button>
-                </div>
-              </div>
-              {% if post.image %}
-                <img src="{{ post.image.url }}" alt="Post Image" class="img-fluid" />
+<div class="container-fluid">
+  <!-- =============================================
+       MAIN FEED CONTENT
+       ============================================= -->
+  <div class="feed-content">
+    <!-- =============================================
+         STORIES SECTION
+         ============================================= -->
+    <div class="stories-container">
+      {% for user in active_users %}
+      <div class="story" onclick="viewStory('{{ user.username }}')">
+        <div class="story-avatar">
+          {% if user.profile.profile_pic %}
+            <img src="{{ user.profile.profile_pic.url }}" alt="{{ user.username }}" />
+          {% else %}
+            <div class="avatar-fallback">{{ user.get_full_name|default:user.username|first }}</div>
+          {% endif %}
+        </div>
+        <div class="story-username">{{ user.username }}</div>
+      </div>
+      {% empty %}
+      <div class="text-center text-muted w-100 py-3">
+        No active stories
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- =============================================
+         MAIN FEED POSTS
+         ============================================= -->
+    <div>
+      {% if posts %}
+        {% for post in posts %}
+          <!-- POST CARD START -->
+          <div class="feed-card" data-post-id="{{ post.id }}">
+            
+            <!-- POST HEADER -->
+            <div class="card-header">
+              <!-- User Avatar and Info -->
+              {% if post.author.profile.profile_pic %}
+                <img src="{{ post.author.profile.profile_pic.url }}" alt="Profile" class="profile-photo" />
+              {% else %}
+                <div class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|first }}</div>
               {% endif %}
-              <div>
-                <small class="text-muted">
-                  {{ post.created_at|date:"M d, Y H:i" }} {% if post.updated_at and post.updated_at > post.created_at %} (Edited) {% endif %}
-                </small>
-              </div>
-
-              <div class="mt-3">
-                <a href="#" class="like-btn" onclick="likePost({{ post.id }}); return false;">Like ({{ post.likes.count }})</a>
-                <a href="#" class="comment-btn" onclick="toggleCommentInput({{ post.id }}); return false;">Comment ({{ post.comments.count }})</a>
-                {% if post.author == user %}
-                  <a href="#" class="edit-btn" onclick="enablePostEdit({{ post.id }}); return false;">Edit</a>
-                  <button class="btn btn-sm btn-outline-primary" onclick="sharePost({{ post.id }})">Share</button>
+              
+              <div class="user-info">
+                <div class="full-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+                <a href="{% url 'profile' post.author.username %}" class="username">
+                  @{{ post.author.username }}
+                </a>
+                {% if post.location %}
+                  <div class="location">📍 {{ post.location }}</div>
                 {% endif %}
               </div>
-              <div id="comments-container-{{ post.id }}" class="mt-3">
-                {% for comment in post.comments.all %}
-                  <div class="comment-block" id="comment-{{ comment.id }}">
-                    {% if comment.user.profile.photo %}
-                      <a href="{% url 'profile' comment.user.username %}">
-                        <img src="{{ comment.user.profile.photo.url }}" alt="Commenter Photo" class="profile-photo" />
-                      </a>
+              
+              <!-- Post Menu Dropdown -->
+              {% if post.author == user %}
+                <div class="post-menu">
+                  <button class="post-menu-btn" onclick="togglePostMenu({{ post.id }})">⋯</button>
+                  <div class="post-dropdown" id="post-menu-{{ post.id }}">
+                    <button class="dropdown-item" onclick="enablePostEdit({{ post.id }})">
+                      <span>✏️</span> Edit Post
+                    </button>
+                    {% if post.image %}
+                      <button class="dropdown-item" onclick="openImageEditor({{ post.id }})">
+                        <span>🖼️</span> Edit Image
+                      </button>
+                    {% endif %}
+                    <button class="dropdown-item" onclick="pinPost({{ post.id }})">
+                      <span>📌</span> Pin Post
+                    </button>
+                    <button class="dropdown-item delete" onclick="deletePost({{ post.id }})">
+                      <span>🗑️</span> Delete Post
+                    </button>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- POST CONTENT -->
+            <div class="post-content" id="post-content-{{ post.id }}">
+              {{ post.content|safe }}
+            </div>
+            
+            <!-- POST MEDIA (IMAGE/VIDEO) -->
+            {% if post.image %}
+              <div class="post-media-container">
+                <img src="{{ post.image.url }}" alt="Post Image" class="post-image" id="post-image-{{ post.id }}" />
+              </div>
+            {% endif %}
+            
+            <!-- POST ACTIONS - Modern Line Icons -->
+            <div class="post-actions">
+              <div class="action-buttons-left">
+                <!-- Like Button -->
+                <button class="action-btn like-btn {% if user in post.likes.all %}liked{% endif %}" 
+                        onclick="likePost({{ post.id }})"
+                        id="like-btn-{{ post.id }}">
+                  <span class="like-icon">🤍</span>
+                  <span class="action-count" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                </button>
+                
+                <!-- Comment Button -->
+                <button class="action-btn comment-btn" onclick="focusCommentInput({{ post.id }})">
+                  <span>💬</span>
+                  <span class="action-count" id="comment-count-{{ post.id }}">{{ post.comments.count }}</span>
+                </button>
+                
+                <!-- Repost Button -->
+                <button class="action-btn repost-btn" 
+                        onclick="repostPost({{ post.id }})"
+                        id="repost-btn-{{ post.id }}">
+                  <span>🔄</span>
+                  <span class="action-count" id="repost-count-{{ post.id }}">0</span>
+                </button>
+              </div>
+              
+              <!-- Share Button -->
+              <button class="action-btn share-btn" onclick="openShareModal({{ post.id }})">
+                <span>📤</span>
+              </button>
+            </div>
+            
+            <!-- POST STATS -->
+            <div class="post-stats">
+              <span id="like-count-text-{{ post.id }}">
+                {% if post.likes.count > 0 %}
+                  {% if user in post.likes.all %}
+                    You{% if post.likes.count > 1 %} and {{ post.likes.count|add:"-1" }} other{% if post.likes.count > 2 %}s{% endif %}{% endif %}
+                  {% else %}
+                    {{ post.likes.count }} like{% if post.likes.count > 1 %}s{% endif %}
+                  {% endif %}
+                {% else %}
+                  0 likes
+                {% endif %}
+              </span>
+              {% if post.comments.count > 0 %}
+                <span>{{ post.comments.count }} comment{% if post.comments.count > 1 %}s{% endif %}</span>
+              {% endif %}
+            </div>
+            
+            <!-- POST TIME -->
+            <div class="post-time">
+              {{ post.created_at|timesince }} ago
+              {% if post.updated_at and post.updated_at > post.created_at %}
+                • <span class="text-muted">Edited</span>
+              {% endif %}
+            </div>
+            
+            <!-- COMMENTS SECTION -->
+            <div class="comments-section">
+              <div class="comments-container" id="comments-container-{{ post.id }}">
+                {% for comment in post.comments.all|slice:":2" %}
+                  <div class="comment" id="comment-{{ comment.id }}">
+                    {% if comment.user.profile.profile_pic %}
+                      <img src="{{ comment.user.profile.profile_pic.url }}" alt="Commenter" class="comment-avatar" />
                     {% else %}
-                      <a href="{% url 'profile' comment.user.username %}">
-                        <div class="avatar-fallback">{{ comment.user.profile.name|default:comment.user.username|first }}</div>
+                      <div class="avatar-fallback" style="width: 32px; height: 32px; font-size: 14px;">
+                        {{ comment.user.get_full_name|default:comment.user.username|first }}
+                      </div>
+                    {% endif %}
+                    
+                    <div class="comment-content">
+                      <a href="{% url 'profile' comment.user.username %}" class="comment-user">
+                        {{ comment.user.get_full_name|default:comment.user.username }}
                       </a>
-                    {% endif %}
-                    <strong><a href="{% url 'profile' comment.user.username %}">{{ comment.user.profile.name|default:comment.user.username }}</a></strong>:
-                    <span id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
-                    {% if comment.user == user %}
-                      <a href="#" class="edit-btn" onclick="enableCommentEdit({{ comment.id }}); return false;">Edit</a>
-                    {% endif %}
-                    <br />
-                    <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
-                    <textarea class="comment-editable d-none" id="comment-edit-{{ comment.id }}" rows="2">{{ comment.content }}</textarea>
-                    <div class="edit-actions d-none" id="comment-edit-actions-{{ comment.id }}">
-                      <button class="btn btn-sm btn-primary" onclick="saveCommentEdit({{ comment.id }}); return false;">Save</button>
-                      <button class="btn btn-sm btn-secondary" onclick="cancelCommentEdit({{ comment.id }}); return false;">Cancel</button>
+                      <div class="comment-text" id="comment-text-{{ comment.id }}">{{ comment.content }}</div>
+                      
+                      {% if comment.user == user %}
+                        <div class="comment-actions">
+                          <button class="comment-action" onclick="enableCommentEdit({{ comment.id }})">Edit</button>
+                          <button class="comment-action" onclick="deleteComment({{ comment.id }})">Delete</button>
+                        </div>
+                      {% endif %}
                     </div>
                   </div>
                 {% endfor %}
               </div>
-
-              <div class="mt-3 d-none" id="comment-input-wrapper-{{ post.id }}">
-                <form onsubmit="return addComment(event, {{ post.id }});">
-                  {% csrf_token %}
-                  <textarea name="comment" id="comment-input-{{ post.id }}" class="form-control" placeholder="Add a comment..." rows="2" required></textarea>
-                  <button type="button" class="emoji-btn" onclick="toggleEmojiPicker('comment-input-{{ post.id }}')" title="Add Emoji">😊</button>
-                  <button type="button" class="attach-btn" onclick="document.getElementById('comment-photo-{{ post.id }}').click()" title="Attach Photo">📎</button>
-                  <input type="file" id="comment-photo-{{ post.id }}" style="display: none" accept="image/*" onchange="uploadCommentPhoto(event, {{ post.id }})" />
-                  <button type="submit" class="btn btn-sm btn-primary mt-2">Post Comment</button>
-                </form>
+              
+              {% if post.comments.count > 2 %}
+                <button class="view-comments-btn" onclick="loadAllComments({{ post.id }})">
+                  View all {{ post.comments.count }} comments
+                </button>
+              {% endif %}
+              
+              <!-- ADD COMMENT FORM -->
+              <div class="add-comment">
+                <div class="comment-input-container">
+                  <textarea class="comment-input" placeholder="Add a comment..." 
+                            id="comment-input-{{ post.id }}" 
+                            oninput="togglePostCommentBtn({{ post.id }})"></textarea>
+                </div>
+                <button class="post-comment-btn" id="post-comment-btn-{{ post.id }}" 
+                        onclick="addComment({{ post.id }})" disabled>Post</button>
+              </div>
+              <div class="comment-toolbar">
+                <button class="toolbar-btn" onclick="toggleEmojiPicker('comment-input-{{ post.id }}')" title="Add Emoji">😊</button>
+                <button class="toolbar-btn" onclick="addSticker('comment-input-{{ post.id }}')" title="Add Sticker">⭐</button>
+                <button class="toolbar-btn" onclick="addImageToComment('comment-input-{{ post.id }}')" title="Add Image">🖼️</button>
+              </div>
+            </div>
+            
+            <!-- EDIT POST UI (Hidden by default) -->
+            <div class="edit-container d-none" id="edit-container-{{ post.id }}">
+              <textarea class="edit-textarea" id="post-edit-{{ post.id }}">{{ post.content }}</textarea>
+              
+              {% if post.image %}
+                <img src="{{ post.image.url }}" alt="Post Image" class="edit-image-preview" id="post-edit-image-preview-{{ post.id }}" />
+              {% endif %}
+              
+              <div class="edit-controls">
+                {% if post.image %}
+                  <button class="icon-btn" onclick="openImageEditor({{ post.id }})" title="Edit Image">🖼️</button>
+                  <button class="icon-btn" onclick="document.getElementById('post-photo-input-{{ post.id }}').click()" title="Change Image">📎</button>
+                  <button class="icon-btn btn-danger" onclick="removePostImage({{ post.id }})" title="Remove Image">🗑️</button>
+                {% else %}
+                  <button class="icon-btn" onclick="document.getElementById('post-photo-input-{{ post.id }}').click()" title="Add Image">📷</button>
+                {% endif %}
+                <input type="file" id="post-photo-input-{{ post.id }}" class="d-none" accept="image/*" onchange="previewPostEditImage(event, {{ post.id }})" />
+              </div>
+              
+              <div class="edit-buttons">
+                <button class="btn btn-primary" onclick="savePostEdit({{ post.id }})">Save Changes</button>
+                <button class="btn btn-secondary" onclick="cancelPostEdit({{ post.id }})">Cancel</button>
               </div>
             </div>
           </div>
+          <!-- POST CARD END -->
+        {% endfor %}
+      {% else %}
+        <!-- EMPTY STATE WHEN NO POSTS -->
+        <div class="text-center py-5">
+          <h4 style="color: var(--text-secondary)">No posts to show</h4>
+          <p class="text-muted">Follow more users to see their posts here or create your first post!</p>
+          <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#postModal" style="background: var(--primary-color); border: none;">Create your first post</button>
         </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-center" style="color: #7e4b21">No posts to show.</p>
-    {% endif %}
+      {% endif %}
+    </div>
   </div>
 
-  <div class="col-md-4">
-    <h5 class="mb-3" style="color: #7e4b21">People You May Know</h5>
-    <ul class="list-group suggestion-list">
-      {% for user in suggestions %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center">
-            {% if user.profile.photo %}
-              <a href="{% url 'profile' user.username %}">
-                <img src="{{ user.profile.photo.url }}" alt="Profile Photo" class="profile-photo" />
-              </a>
-            {% else %}
-              <a href="{% url 'profile' user.username %}">
-                <div class="avatar-fallback">{{ user.profile.name|default:user.username|first }}</div>
-              </a>
-            {% endif %}
-            <a href="{% url 'profile' user.username %}" class="fw-bold ms-2" style="color: #ff7f50">
-              {{ user.profile.name|default:user.username }}
-            </a>
-          </div>
-          {% if user|user_is_followed:request.user %}
-            <form method="post" action="{% url 'unfollow_user' user.username %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-danger">Unfollow</button>
-            </form>
+
+    <!-- =============================================
+     SIDEBAR - PEOPLE TO FOLLOW SUGGESTIONS
+     ============================================= -->
+<div class="sidebar">
+  <div class="suggestions-card">
+    <div class="suggestions-header">
+      <h3 class="suggestions-title">People to Follow</h3>
+      <button class="refresh-suggestions" onclick="refreshSuggestions()">Refresh</button>
+    </div>
+    <div class="suggestions-list" id="suggestionsList">
+      {% for suggested_user in suggestions %}
+      <div class="suggestion-item" id="suggestion-{{ suggested_user.id }}">
+        <!-- Profile link on avatar -->
+        <a href="{% url 'user_profile' suggested_user.username %}" class="suggestion-profile-link">
+          {% if suggested_user.profile.profile_pic %}
+            <img src="{{ suggested_user.profile.profile_pic.url }}" alt="{{ suggested_user.username }}" class="suggestion-avatar" />
           {% else %}
-            <form method="post" action="{% url 'follow_user' user.username %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-primary">Follow</button>
-            </form>
+            <div class="avatar-fallback">{{ suggested_user.get_full_name|default:suggested_user.username|first }}</div>
           {% endif %}
-        </li>
+        </a>
+        
+        <div class="suggestion-info">
+          <!-- Profile link on name -->
+          <a href="{% url 'user_profile' suggested_user.username %}" class="suggestion-profile-link">
+            <p class="suggestion-name">{{ suggested_user.get_full_name|default:suggested_user.username }}</p>
+            <p class="suggestion-username">@{{ suggested_user.username }}</p>
+          </a>
+        </div>
+        
+        <button class="follow-btn {% if suggested_user in user.following.all %}following{% endif %}" 
+                onclick="followUser({{ suggested_user.id }}, this)">
+          {% if suggested_user in user.following.all %}Following{% else %}Follow{% endif %}
+        </button>
+      </div>
       {% empty %}
-        <li class="list-group-item">No suggestions available</li>
+      <div class="text-center text-muted py-3">
+        No suggestions available
+      </div>
       {% endfor %}
-    </ul>
+    </div>
+  </div>
+
+    <!-- TRENDING HASHTAGS -->
+    <div class="suggestions-card">
+      <div class="suggestions-header">
+        <h3 class="suggestions-title">Trending Hashtags</h3>
+      </div>
+      <div class="suggestions-list">
+        <div class="suggestion-item">
+          <span style="font-size: 20px;">#</span>
+          <div class="suggestion-info">
+            <p class="suggestion-name">MytroApp</p>
+            <p class="suggestion-username">189 posts</p>
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span style="font-size: 20px;">#</span>
+          <div class="suggestion-info">
+            <p class="suggestion-name">Community</p>
+            <p class="suggestion-username">156 posts</p>
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span style="font-size: 20px;">#</span>
+          <div class="suggestion-info">
+            <p class="suggestion-name">NewFriends</p>
+            <p class="suggestion-username">142 posts</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<button id="postBtn" data-bs-toggle="modal" data-bs-target="#postModal" title="Create New Post">
-  +
-</button>
-
-<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content p-4">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title" id="postModalLabel">Create New Post</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- =============================================
+     CREATE POST MODAL
+     ============================================= -->
+<div class="modal fade" id="postModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Post</h5>
+        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
       </div>
-      <form method="post" enctype="multipart/form-data" id="post-form">
+      <form method="post" enctype="multipart/form-data" id="post-form" action="{% url 'create_post' %}">
         {% csrf_token %}
-        <div class="modal-body pt-0" style="position: relative">
-          {{ form.content }}
-          <button type="button" class="emoji-btn" onclick="toggleEmojiPicker('id_content')" title="Add Emoji" style="position: absolute; right: 15px; bottom: 110px">😊</button>
-          {{ form.image }}
-          <label for="{{ form.image.id_for_label }}" class="attach-btn" title="Attach Photo" style="cursor: pointer">📎</label>
+        <div class="modal-body">
+          <div class="create-post-header">
+            {% if user.profile.profile_pic %}
+              <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="profile-photo" />
+            {% else %}
+              <div class="avatar-fallback">{{ user.get_full_name|default:user.username|first }}</div>
+            {% endif %}
+            <div class="user-info">
+              <div class="full-name">{{ user.get_full_name|default:user.username }}</div>
+              <div class="username">@{{ user.username }}</div>
+            </div>
+          </div>
+          
+          <textarea class="create-post-textarea" placeholder="What's happening?" name="content" id="id_content"></textarea>
+          
+          <!-- Media Previews -->
+          <div id="media-previews" class="media-previews">
+            <img id="image-preview" class="media-preview image-preview" src="" alt="Image preview" />
+          </div>
         </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="submit" class="btn btn-primary">Post</button>
+        <div class="modal-footer">
+          <div class="media-options">
+            <input type="file" id="id_image" name="image" accept="image/*" class="d-none" />
+            <input type="file" id="id_video" name="video" accept="video/*" class="d-none" />
+            
+            <button type="button" class="icon-btn" onclick="document.getElementById('id_image').click()" title="Add Photo">
+              📷
+            </button>
+            <button type="button" class="icon-btn" onclick="document.getElementById('id_video').click()" title="Add Video">
+              🎥
+            </button>
+            <button type="button" class="icon-btn" onclick="toggleEmojiPicker('id_content')" title="Add Emoji">
+              😊
+            </button>
+            <button type="button" class="icon-btn" onclick="addLocation()" title="Add Location">
+              📍
+            </button>
+          </div>
+          <div class="post-actions">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submit-post-btn" style="background: var(--primary-color); border: none;">Post</button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<!-- =============================================
+     MODERN IMAGE EDITOR MODAL
+     ============================================= -->
+<div class="modal fade image-editor-modal" id="imageEditorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Image</h5>
+        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="image-editor-container">
+          <div class="editor-preview-container">
+            <img id="editor-preview" class="editor-preview" src="" alt="Image to edit" />
+          </div>
+          
+          <div class="editor-controls">
+            <div class="control-group">
+              <label class="control-label">Brightness</label>
+              <input type="range" class="control-slider" id="brightnessSlider" min="0" max="200" value="100" oninput="applyImageFilter()">
+            </div>
+            <div class="control-group">
+              <label class="control-label">Contrast</label>
+              <input type="range" class="control-slider" id="contrastSlider" min="0" max="200" value="100" oninput="applyImageFilter()">
+            </div>
+            <div class="control-group">
+              <label class="control-label">Saturation</label>
+              <input type="range" class="control-slider" id="saturationSlider" min="0" max="200" value="100" oninput="applyImageFilter()">
+            </div>
+            <div class="control-group">
+              <label class="control-label">Rotation</label>
+              <input type="range" class="control-slider" id="rotationSlider" min="0" max="360" value="0" oninput="applyImageFilter()">
+            </div>
+          </div>
+          
+          <div class="filter-presets">
+            <div class="filter-preset active" onclick="applyFilter('normal')">
+              <img id="filter-normal" class="filter-preview" src="" alt="Normal" />
+              <div class="filter-name">Normal</div>
+            </div>
+            <div class="filter-preset" onclick="applyFilter('clarendon')">
+              <img id="filter-clarendon" class="filter-preview" src="" alt="Clarendon" />
+              <div class="filter-name">Clarendon</div>
+            </div>
+            <div class="filter-preset" onclick="applyFilter('gingham')">
+              <img id="filter-gingham" class="filter-preview" src="" alt="Gingham" />
+              <div class="filter-name">Gingham</div>
+            </div>
+            <div class="filter-preset" onclick="applyFilter('moon')">
+              <img id="filter-moon" class="filter-preview" src="" alt="Moon" />
+              <div class="filter-name">Moon</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveImageEdit()" style="background: var(--primary-color); border: none;">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     NOTIFICATION TOAST
+     ============================================= -->
+<div class="toast" id="notificationToast">
+  <span id="toastMessage">Notification message</span>
+</div>
+
+<!-- =============================================
+     FLOATING POST BUTTON
+     ============================================= -->
+<button id="postBtn" data-bs-toggle="modal" data-bs-target="#postModal" title="Create New Post">
+  +
+</button>
 {% endblock %}
+
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.min.js"></script>
+<!-- Emoji Picker Library -->
+<script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+
 <script>
+  // =============================================
+  // MYTRO FEED - COMPLETE JAVASCRIPT
+  // =============================================
+
+  // Global variables
   const emojiPickers = {};
+  let currentEditingPostId = null;
+  let currentEditingImage = null;
+  let currentEditingCommentId = null;
+  let currentImageFilters = {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    rotation: 0,
+    filter: 'normal'
+  };
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", function() {
+    initializeFeed();
+    setupMediaUploads();
+    initializeTheme();
+    processHashtagsAndMentions();
+    loadLikeStates();
+  });
+
+  // =============================================
+  // THEME MANAGEMENT
+  // =============================================
+
+  function initializeTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    
+    themeToggle.addEventListener('click', function() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('theme', newTheme);
+    });
+  }
+
+  // =============================================
+  // INITIALIZATION FUNCTIONS
+  // =============================================
+
+  function initializeFeed() {
+    // Focus handling for post modal
+    const postModal = document.getElementById("postModal");
+    if (postModal) {
+      postModal.addEventListener("shown.bs.modal", function() {
+        document.getElementById("id_content").focus();
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      // Close post menus
+      document.querySelectorAll('.post-dropdown').forEach(menu => {
+        if (!e.target.closest('.post-menu')) {
+          menu.classList.remove('show');
+        }
+      });
+    });
+
+    // Infinite scroll
+    window.addEventListener('scroll', function() {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+        loadMorePosts();
+      }
+    });
+  }
+
+  function setupMediaUploads() {
+    // Image upload for new posts
+    const imageInput = document.getElementById('id_image');
+    if (imageInput) {
+      imageInput.addEventListener('change', function(e) {
+        handleMediaUpload(e, 'image');
+      });
+    }
+  }
+
+  function handleMediaUpload(event, mediaType) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      if (mediaType === 'image') {
+        const preview = document.getElementById('image-preview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // =============================================
+  // LOAD LIKE STATES FROM LOCAL STORAGE
+  // =============================================
+
+  function loadLikeStates() {
+    // Load liked posts from localStorage
+    const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+    
+    Object.keys(likedPosts).forEach(postId => {
+      const likeBtn = document.getElementById(`like-btn-${postId}`);
+      if (likeBtn) {
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('.like-icon').textContent = '❤️';
+      }
+    });
+  }
+
+  // =============================================
+  // NOTIFICATION SYSTEM
+  // =============================================
+
+  function showNotification(message, type = 'success') {
+    const toast = document.getElementById('notificationToast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toastMessage.textContent = message;
+    toast.className = `toast ${type}`;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+
+  // =============================================
+  // PEOPLE TO FOLLOW FUNCTIONS
+  // =============================================
+
+  function followUser(userId, button) {
+    // Optimistic UI update
+    const isFollowing = button.classList.contains('following');
+    
+    if (isFollowing) {
+      button.classList.remove('following');
+      button.textContent = 'Follow';
+    } else {
+      button.classList.add('following');
+      button.textContent = 'Following';
+    }
+    
+    // API call
+    fetch(`/api/follow/${userId}/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to follow user");
+      return res.json();
+    })
+    .then(data => {
+      showNotification(isFollowing ? `Unfollowed ${data.username}` : `Following ${data.username}`);
+    })
+    .catch(err => {
+      // Revert UI on error
+      if (isFollowing) {
+        button.classList.add('following');
+        button.textContent = 'Following';
+      } else {
+        button.classList.remove('following');
+        button.textContent = 'Follow';
+      }
+      showNotification('Error: ' + err.message, 'error');
+    });
+  }
+
+  function refreshSuggestions() {
+    const suggestionsList = document.getElementById('suggestionsList');
+    const refreshBtn = document.querySelector('.refresh-suggestions');
+    
+    // Show loading state
+    refreshBtn.textContent = 'Loading...';
+    refreshBtn.disabled = true;
+    
+    fetch('/api/suggested_users/')
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load suggestions");
+        return res.json();
+      })
+      .then(data => {
+        // Update suggestions list
+        suggestionsList.innerHTML = '';
+        
+        if (data.users && data.users.length > 0) {
+          data.users.forEach(user => {
+            const suggestionHTML = `
+              <div class="suggestion-item" id="suggestion-${user.id}">
+                ${user.photo ? 
+                  `<img src="${user.photo}" alt="${user.username}" class="suggestion-avatar" />` : 
+                  `<div class="avatar-fallback">${user.name ? user.name.charAt(0) : user.username.charAt(0)}</div>`
+                }
+                <div class="suggestion-info">
+                  <p class="suggestion-name">${user.name || user.username}</p>
+                  <p class="suggestion-username">@${user.username}</p>
+                </div>
+                <button class="follow-btn" onclick="followUser(${user.id}, this)">Follow</button>
+              </div>`;
+            suggestionsList.innerHTML += suggestionHTML;
+          });
+        } else {
+          suggestionsList.innerHTML = '<div class="text-center text-muted py-3">No suggestions available</div>';
+        }
+        
+        showNotification('Suggestions updated');
+      })
+      .catch(err => {
+        showNotification('Error loading suggestions', 'error');
+      })
+      .finally(() => {
+        refreshBtn.textContent = 'Refresh';
+        refreshBtn.disabled = false;
+      });
+  }
+
+  // =============================================
+  // CONTENT PROCESSING
+  // =============================================
+
+  function processHashtagsAndMentions() {
+    document.querySelectorAll('.post-content').forEach(content => {
+      let text = content.innerHTML;
+      // Process hashtags
+      text = text.replace(/#(\w+)/g, '<a href="/hashtag/$1" class="post-hashtag">#$1</a>');
+      // Process mentions
+      text = text.replace(/@(\w+)/g, '<a href="/profile/$1" class="post-mention">@$1</a>');
+      content.innerHTML = text;
+    });
+  }
+
+  // =============================================
+  // EMOJI PICKER FUNCTIONS
+  // =============================================
 
   function toggleEmojiPicker(inputId) {
     if (emojiPickers[inputId]) {
-      emojiPickers[inputId].toggle();
+      emojiPickers[inputId].togglePicker(document.getElementById(inputId));
       return;
     }
+    
     const input = document.getElementById(inputId);
-    const picker = new EmojiButton({ position: "top-end" });
-    picker.on("emoji", (emoji) => {
-      insertAtCursor(input, emoji);
+    if (!input) return;
+    
+    const picker = new EmojiButton({
+      position: 'top-end',
+      zIndex: 9999
     });
+    
+    picker.on('emoji', emoji => {
+      insertAtCursor(input, emoji);
+      input.focus();
+    });
+    
     emojiPickers[inputId] = picker;
-    picker.toggle();
+    picker.togglePicker(input);
   }
 
   function insertAtCursor(input, textToInsert) {
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const text = input.value;
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    const text = input.value || '';
     input.value = text.slice(0, start) + textToInsert + text.slice(end);
     input.selectionStart = input.selectionEnd = start + textToInsert.length;
     input.focus();
   }
 
-  var postModal = document.getElementById("postModal");
-  postModal.addEventListener("shown.bs.modal", function () {
-    postModal.querySelector("textarea, input[type='text']").focus();
-  });
+  // =============================================
+  // POST INTERACTION FUNCTIONS
+  // =============================================
 
-  function toggleCommentInput(postId) {
-    const wrapper = document.getElementById("comment-input-wrapper-" + postId);
-    wrapper.classList.toggle("d-none");
-    if (!wrapper.classList.contains("d-none")) {
-      document.getElementById("comment-input-" + postId).focus();
+  function likePost(postId) {
+    const likeBtn = document.getElementById(`like-btn-${postId}`);
+    const likeCount = document.getElementById(`like-count-${postId}`);
+    const likeCountText = document.getElementById(`like-count-text-${postId}`);
+    
+    // Optimistic UI update
+    const currentLikes = parseInt(likeCount.textContent) || 0;
+    const isLiked = likeBtn.classList.contains('liked');
+    
+    if (isLiked) {
+      // Unlike
+      likeBtn.classList.remove('liked');
+      likeBtn.querySelector('.like-icon').textContent = '🤍';
+      likeCount.textContent = currentLikes - 1;
+      
+      // Update like text
+      if (currentLikes - 1 === 0) {
+        likeCountText.textContent = '0 likes';
+      } else if (currentLikes - 1 === 1) {
+        likeCountText.textContent = '1 like';
+      } else {
+        likeCountText.textContent = `${currentLikes - 1} likes`;
+      }
+      
+      // Remove from localStorage
+      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+      delete likedPosts[postId];
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+    } else {
+      // Like
+      likeBtn.classList.add('liked');
+      likeBtn.querySelector('.like-icon').textContent = '❤️';
+      likeCount.textContent = currentLikes + 1;
+      
+      // Update like text
+      if (currentLikes + 1 === 1) {
+        likeCountText.textContent = 'You liked this';
+      } else {
+        likeCountText.textContent = `You and ${currentLikes} other${currentLikes > 1 ? 's' : ''}`;
+      }
+      
+      // Save to localStorage
+      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+      likedPosts[postId] = true;
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
     }
-  }
-
-  function enablePostEdit(postId) {
-    document.getElementById("post-content-" + postId).classList.add("d-none");
-    document.getElementById("post-edit-" + postId).classList.remove("d-none");
-    document.getElementById("post-edit-actions-" + postId).classList.remove("d-none");
-  }
-
-  function cancelPostEdit(postId) {
-    let editArea = document.getElementById("post-edit-" + postId);
-    let viewContent = document.getElementById("post-content-" + postId);
-    editArea.classList.add("d-none");
-    document.getElementById("post-edit-actions-" + postId).classList.add("d-none");
-    viewContent.classList.remove("d-none");
-    editArea.value = viewContent.innerText.trim();
-  }
-
-  function savePostEdit(postId) {
-    const content = document.getElementById("post-edit-" + postId).value.trim();
-    if (!content) {
-      alert("Post content cannot be empty.");
-      return;
-    }
-    fetch(`/api/edit_post/${postId}/`, {
+    
+    // API call
+    fetch(`/api/like_post/${postId}/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": "{{ csrf_token }}",
       },
-      body: JSON.stringify({ content }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to save post");
-        return res.json();
-      })
-      .then((data) => {
-        document.getElementById("post-content-" + postId).innerHTML = data.content.replace(/\n/g, "<br>");
-        cancelPostEdit(postId);
-      })
-      .catch((err) => alert(err.message));
+    .then(async (res) => {
+      if (!res.ok) {
+        // Revert UI if API call fails
+        if (isLiked) {
+          likeBtn.classList.add('liked');
+          likeBtn.querySelector('.like-icon').textContent = '❤️';
+          likeCount.textContent = currentLikes;
+        } else {
+          likeBtn.classList.remove('liked');
+          likeBtn.querySelector('.like-icon').textContent = '🤍';
+          likeCount.textContent = currentLikes;
+        }
+        throw new Error("Failed to like post");
+      }
+      return res.json();
+    })
+    .then(data => {
+      showNotification(isLiked ? 'Post unliked' : 'Post liked');
+    })
+    .catch((err) => {
+      showNotification('Error: ' + err.message, 'error');
+    });
   }
 
-  function enableCommentEdit(commentId) {
-    document.getElementById("comment-content-" + commentId).classList.add("d-none");
-    document.getElementById("comment-edit-" + commentId).classList.remove("d-none");
-    document.getElementById("comment-edit-actions-" + commentId).classList.remove("d-none");
-  }
-
-  function cancelCommentEdit(commentId) {
-    let editArea = document.getElementById("comment-edit-" + commentId);
-    let viewContent = document.getElementById("comment-content-" + commentId);
-    editArea.classList.add("d-none");
-    document.getElementById("comment-edit-actions-" + commentId).classList.add("d-none");
-    viewContent.classList.remove("d-none");
-    editArea.value = viewContent.innerText.trim();
-  }
-
-  function saveCommentEdit(commentId) {
-    const content = document.getElementById("comment-edit-" + commentId).value.trim();
-    if (!content) {
-      alert("Comment content cannot be empty.");
-      return;
+  function repostPost(postId) {
+    const repostBtn = document.getElementById(`repost-btn-${postId}`);
+    const repostCount = document.getElementById(`repost-count-${postId}`);
+    
+    // Optimistic UI update
+    const currentReposts = parseInt(repostCount.textContent) || 0;
+    const isReposted = repostBtn.classList.contains('reposted');
+    
+    if (isReposted) {
+      repostBtn.classList.remove('reposted');
+      repostCount.textContent = currentReposts - 1;
+    } else {
+      repostBtn.classList.add('reposted');
+      repostCount.textContent = currentReposts + 1;
     }
-    fetch(`/api/edit_comment/${commentId}/`, {
+    
+    // API call
+    fetch(`/api/repost/${postId}/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
+        "X-CSRFToken": "{{ csrf_token }}"
       },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ repost: true })
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to save comment");
-        return res.json();
-      })
-      .then((data) => {
-        document.getElementById("comment-content-" + commentId).innerText = data.content;
-        cancelCommentEdit(commentId);
-      })
-      .catch((err) => alert(err.message));
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to repost");
+      return res.json();
+    })
+    .then(data => {
+      showNotification(isReposted ? 'Removed repost' : 'Post reposted');
+    })
+    .catch(err => {
+      // Revert UI on error
+      if (isReposted) {
+        repostBtn.classList.add('reposted');
+        repostCount.textContent = currentReposts;
+      } else {
+        repostBtn.classList.remove('reposted');
+        repostCount.textContent = currentReposts;
+      }
+      showNotification('Error: ' + err.message, 'error');
+    });
   }
 
-  function addComment(event, postId) {
-    event.preventDefault();
-    const input = document.getElementById("comment-input-" + postId);
+  // =============================================
+  // COMMENT SYSTEM FUNCTIONS
+  // =============================================
+
+  function togglePostCommentBtn(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const btn = document.getElementById(`post-comment-btn-${postId}`);
+    if (input && btn) {
+      btn.disabled = !input.value.trim();
+      btn.classList.toggle('active', !!input.value.trim());
+    }
+  }
+
+  function focusCommentInput(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    if (input) input.focus();
+  }
+
+  function addComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const btn = document.getElementById(`post-comment-btn-${postId}`);
+    
+    if (!input || !btn) return;
+    
     const content = input.value.trim();
-    if (!content) {
-      alert("Comment cannot be empty.");
-      return false;
-    }
+    if (!content) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+    
     fetch("/api/add_comment/", {
       method: "POST",
       headers: {
@@ -509,116 +2015,605 @@
       },
       body: JSON.stringify({ post_id: postId, comment: content }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to add comment");
-        return res.json();
-      })
-      .then((data) => {
-        let commentsContainer = document.getElementById("comments-container-" + postId);
-        const newCommentHTML = `
-          <div class="comment-block" id="comment-${data.id}">
-            <a href="${data.profile_url}">
-              <img src="${data.photoUrl || "/static/img/avatar-placeholder.png"}" alt="Commenter Photo" class="profile-photo"/>
-            </a>
-            <strong><a href="${data.profile_url}" style="color:#ff7f50;">${data.name}</a></strong>: <span id="comment-content-${data.id}">${data.content}</span>
-            <a href="#" class="edit-btn" onclick="enableCommentEdit(${data.id}); return false;">Edit</a><br>
-            <small class="text-muted">${data.date}</small>
-            <textarea class="comment-editable d-none" id="comment-edit-${data.id}" rows="2">${data.content}</textarea>
-            <div class="edit-actions d-none" id="comment-edit-actions-${data.id}">
-              <button class="btn btn-sm btn-primary" onclick="saveCommentEdit(${data.id}); return false;">Save</button>
-              <button class="btn btn-sm btn-secondary" onclick="cancelCommentEdit(${data.id}); return false;">Cancel</button>
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to add comment");
+      return res.json();
+    })
+    .then((data) => {
+      // Add new comment to UI
+      const commentsContainer = document.getElementById(`comments-container-${postId}`);
+      if (!commentsContainer) return;
+      
+      const newCommentHTML = `
+        <div class="comment" id="comment-${data.id}">
+          <div class="avatar-fallback" style="width: 32px; height: 32px; font-size: 14px;">
+            ${data.name ? data.name.charAt(0) : 'U'}
+          </div>
+          <div class="comment-content">
+            <a href="${data.profile_url || '#'}" class="comment-user">${data.name || 'User'}</a>
+            <div class="comment-text" id="comment-text-${data.id}">${data.content}</div>
+            <div class="comment-actions">
+              <button class="comment-action" onclick="enableCommentEdit(${data.id})">Edit</button>
+              <button class="comment-action" onclick="deleteComment(${data.id})">Delete</button>
             </div>
-          </div>`;
-        commentsContainer.insertAdjacentHTML("beforeend", newCommentHTML);
-        input.value = "";
-        toggleCommentInput(postId);
-      })
-      .catch((err) => alert(err.message));
-    return false;
+          </div>
+        </div>`;
+      
+      commentsContainer.insertAdjacentHTML('beforeend', newCommentHTML);
+      
+      // Clear input and reset button
+      input.value = '';
+      btn.disabled = false;
+      btn.innerHTML = 'Post';
+      togglePostCommentBtn(postId);
+      
+      // Update comment count
+      const commentCount = document.getElementById(`comment-count-${postId}`);
+      if (commentCount) {
+        const currentCount = parseInt(commentCount.textContent) || 0;
+        commentCount.textContent = currentCount + 1;
+      }
+      
+      // Update view comments button
+      const viewCommentsBtn = commentsContainer.nextElementSibling;
+      if (viewCommentsBtn && viewCommentsBtn.classList.contains('view-comments-btn')) {
+        const currentCount = parseInt(viewCommentsBtn.textContent.match(/\d+/)[0]) || 0;
+        viewCommentsBtn.textContent = `View all ${currentCount + 1} comments`;
+      }
+      
+      showNotification('Comment added');
+    })
+    .catch((err) => {
+      showNotification('Error adding comment: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Post';
+    });
   }
 
-  function likePost(postId) {
-    fetch(`/api/like_post/${postId}/`, {
+  // =============================================
+  // COMMENT EDITING (INLINE)
+  // =============================================
+
+  function enableCommentEdit(commentId) {
+    const commentElement = document.getElementById(`comment-${commentId}`);
+    const commentText = document.getElementById(`comment-text-${commentId}`);
+    const currentText = commentText.textContent;
+    
+    // Replace text with input field
+    const editInput = document.createElement('textarea');
+    editInput.className = 'comment-edit-input';
+    editInput.value = currentText;
+    
+    const editButtons = document.createElement('div');
+    editButtons.className = 'comment-actions';
+    editButtons.innerHTML = `
+      <button class="comment-action" onclick="saveCommentEdit(${commentId})">Save</button>
+      <button class="comment-action" onclick="cancelCommentEdit(${commentId})">Cancel</button>
+    `;
+    
+    commentText.replaceWith(editInput);
+    commentElement.querySelector('.comment-actions').replaceWith(editButtons);
+    
+    currentEditingCommentId = commentId;
+    editInput.focus();
+  }
+
+  function saveCommentEdit(commentId) {
+    const editInput = document.querySelector(`#comment-${commentId} .comment-edit-input`);
+    const newText = editInput.value.trim();
+    
+    if (!newText) {
+      showNotification("Comment cannot be empty", "error");
+      return;
+    }
+    
+    fetch(`/api/edit_comment/${commentId}/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
+        "X-CSRFToken": "{{ csrf_token }}"
       },
+      body: JSON.stringify({ content: newText })
     })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || "Failed");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        const likeBtn = document.querySelector(`.card[data-post-id="${postId}"] .like-btn`);
-        if (typeof data.like_count !== "undefined") {
-          likeBtn.textContent = `Like (${data.like_count})`;
-        }
-        if (data.error) {
-          alert(data.error);
-        }
-      })
-      .catch((err) => alert(err.message));
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to edit comment");
+      return res.json();
+    })
+    .then(data => {
+      // Restore comment display
+      const commentElement = document.getElementById(`comment-${commentId}`);
+      const commentText = document.createElement('div');
+      commentText.className = 'comment-text';
+      commentText.id = `comment-text-${commentId}`;
+      commentText.textContent = data.content;
+      
+      const actions = document.createElement('div');
+      actions.className = 'comment-actions';
+      actions.innerHTML = `
+        <button class="comment-action" onclick="enableCommentEdit(${commentId})">Edit</button>
+        <button class="comment-action" onclick="deleteComment(${commentId})">Delete</button>
+      `;
+      
+      editInput.replaceWith(commentText);
+      commentElement.querySelector('.comment-actions').replaceWith(actions);
+      
+      currentEditingCommentId = null;
+      showNotification('Comment updated');
+    })
+    .catch(err => {
+      showNotification('Error editing comment: ' + err.message, 'error');
+    });
   }
 
-  function uploadCommentPhoto(event, postId) {
-    const file = event.target.files[0];
-    if (!file) return;
+  function cancelCommentEdit(commentId) {
+    const editInput = document.querySelector(`#comment-${commentId} .comment-edit-input`);
+    const originalText = document.getElementById(`comment-text-${commentId}`).textContent;
+    
+    // Restore original comment
+    const commentElement = document.getElementById(`comment-${commentId}`);
+    const commentText = document.createElement('div');
+    commentText.className = 'comment-text';
+    commentText.id = `comment-text-${commentId}`;
+    commentText.textContent = originalText;
+    
+    const actions = document.createElement('div');
+    actions.className = 'comment-actions';
+    actions.innerHTML = `
+      <button class="comment-action" onclick="enableCommentEdit(${commentId})">Edit</button>
+      <button class="comment-action" onclick="deleteComment(${commentId})">Delete</button>
+    `;
+    
+    editInput.replaceWith(commentText);
+    commentElement.querySelector('.comment-actions').replaceWith(actions);
+    
+    currentEditingCommentId = null;
+  }
+
+  function addSticker(inputId) {
+    // Simple sticker implementation
+    const stickers = ['⭐', '❤️', '🔥', '🎉', '😊', '😂', '😍', '👍'];
+    const sticker = stickers[Math.floor(Math.random() * stickers.length)];
+    insertAtCursor(document.getElementById(inputId), sticker);
+  }
+
+  function addImageToComment(inputId) {
+    // This would open a file picker for images in a real implementation
+    showNotification('Image attachment feature would be implemented here');
+  }
+
+  // =============================================
+  // POST EDITING FUNCTIONS
+  // =============================================
+
+  function togglePostMenu(postId) {
+    const menu = document.getElementById(`post-menu-${postId}`);
+    menu.classList.toggle('show');
+  }
+
+  function enablePostEdit(postId) {
+    currentEditingPostId = postId;
+    
+    // Hide normal post view
+    const card = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
+    card.querySelector('.comments-section').classList.add('d-none');
+    card.querySelector('.post-content').classList.add('d-none');
+    card.querySelector('.post-time').classList.add('d-none');
+    card.querySelector('.post-actions').classList.add('d-none');
+    card.querySelector('.post-stats').classList.add('d-none');
+    
+    // Show edit UI
+    document.getElementById(`edit-container-${postId}`).classList.remove('d-none');
+    
+    // Close menu
+    togglePostMenu(postId);
+  }
+
+  function cancelPostEdit(postId) {
+    // Show normal post view
+    const card = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
+    card.querySelector('.comments-section').classList.remove('d-none');
+    card.querySelector('.post-content').classList.remove('d-none');
+    card.querySelector('.post-time').classList.remove('d-none');
+    card.querySelector('.post-actions').classList.remove('d-none');
+    card.querySelector('.post-stats').classList.remove('d-none');
+    
+    // Hide edit UI
+    document.getElementById(`edit-container-${postId}`).classList.add('d-none');
+    
+    currentEditingPostId = null;
+  }
+
+  function savePostEdit(postId) {
+    const content = document.getElementById(`post-edit-${postId}`).value.trim();
+    if (!content) {
+      showNotification("Post content cannot be empty", "error");
+      return;
+    }
+
+    // Show loading state
+    const card = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
+    card.classList.add('loading');
+
+    // Prepare form data for potential image upload
     const formData = new FormData();
-    formData.append("post_id", postId);
-    formData.append("photo", file);
-    formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
-    fetch("/api/upload_comment_photo/", {
+    formData.append('content', content);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Check if there's a new image
+    const imageInput = document.getElementById(`post-photo-input-${postId}`);
+    if (imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
+
+    fetch(`/api/edit_post/${postId}/`, {
       method: "POST",
-      body: formData,
+      body: formData
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to upload photo");
-        return res.json();
-      })
-      .then((data) => {
-        const textarea = document.getElementById("comment-input-" + postId);
-        textarea.value += ` ![image](${data.photo_url}) `;
-        textarea.focus();
-      })
-      .catch((err) => alert(err.message));
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to save post");
+      return res.json();
+    })
+    .then(data => {
+      // Update post content
+      document.getElementById(`post-content-${postId}`).innerHTML = data.content;
+      
+      // Update time to show "Edited" only if it wasn't already there
+      const timeElement = card.querySelector('.post-time');
+      if (!timeElement.innerHTML.includes('Edited')) {
+        timeElement.innerHTML += ' • <span class="text-muted">Edited</span>';
+      }
+      
+      // Update image if changed
+      if (data.image_url) {
+        const postImage = document.getElementById(`post-image-${postId}`);
+        if (postImage) {
+          postImage.src = data.image_url;
+        }
+      }
+      
+      cancelPostEdit(postId);
+      showNotification('Post updated successfully');
+    })
+    .catch(err => {
+      showNotification('Error saving post: ' + err.message, 'error');
+    })
+    .finally(() => {
+      card.classList.remove('loading');
+    });
   }
 
-  function uploadPostPhoto(event, postId) {
+  function previewPostEditImage(event, postId) {
     const file = event.target.files[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append("post_id", postId);
-    formData.append("photo", file);
-    formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
-
-    fetch("/api/upload_post_photo/", { method: "POST", body: formData })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to upload photo");
-        return res.json();
-      })
-      .then((data) => {
-        const textarea = document.getElementById("post-edit-" + postId);
-        textarea.value += ` ![image](${data.photo_url}) `;
-        textarea.focus();
-      })
-      .catch((e) => alert(e.message));
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById(`post-edit-image-preview-${postId}`);
+      if (preview) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      } else {
+        // Create preview if it doesn't exist
+        const editContainer = document.getElementById(`edit-container-${postId}`);
+        const newPreview = document.createElement('img');
+        newPreview.className = 'edit-image-preview';
+        newPreview.id = `post-edit-image-preview-${postId}`;
+        newPreview.src = e.target.result;
+        newPreview.alt = 'Post Image';
+        editContainer.insertBefore(newPreview, editContainer.querySelector('.edit-controls'));
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
-  function sharePost(postId) {
-    let url = window.location.origin + "/post/" + postId + "/";
-    // Copy link to clipboard or open share dialog
-    navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        alert("Post link copied to clipboard!");
+  function removePostImage(postId) {
+    if (confirm("Are you sure you want to remove this image?")) {
+      fetch(`/api/remove_post_image/${postId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}"
+        }
       })
-      .catch(() => {
-        alert("Failed to copy post link.");
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to remove image");
+        return res.json();
+      })
+      .then(data => {
+        // Hide image preview in edit mode
+        const preview = document.getElementById(`post-edit-image-preview-${postId}`);
+        if (preview) {
+          preview.style.display = 'none';
+        }
+        
+        // Also hide image in main view
+        const postImage = document.querySelector(`.feed-card[data-post-id="${postId}"] .post-media-container`);
+        if (postImage) {
+          postImage.style.display = 'none';
+        }
+        
+        showNotification("Image removed successfully!");
+      })
+      .catch(err => {
+        showNotification("Error removing image: " + err.message, 'error');
       });
+    }
+  }
+
+  // =============================================
+  // MODERN IMAGE EDITOR
+  // =============================================
+
+  function openImageEditor(postId) {
+    currentEditingPostId = postId;
+    const imageSrc = document.getElementById(`post-edit-image-preview-${postId}`).src;
+    
+    // Set up editor
+    document.getElementById('editor-preview').src = imageSrc;
+    
+    // Create filter previews
+    const filters = ['normal', 'clarendon', 'gingham', 'moon'];
+    filters.forEach(filter => {
+      const preview = document.getElementById(`filter-${filter}`);
+      if (preview) {
+        preview.src = imageSrc;
+      }
+    });
+    
+    // Reset filters
+    currentImageFilters = {
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      rotation: 0,
+      filter: 'normal'
+    };
+    
+    document.getElementById('brightnessSlider').value = 100;
+    document.getElementById('contrastSlider').value = 100;
+    document.getElementById('saturationSlider').value = 100;
+    document.getElementById('rotationSlider').value = 0;
+    
+    // Show modal
+    const imageEditorModal = new bootstrap.Modal(document.getElementById('imageEditorModal'));
+    imageEditorModal.show();
+  }
+
+  function applyImageFilter() {
+    const image = document.getElementById('editor-preview');
+    if (!image) return;
+    
+    const brightness = document.getElementById('brightnessSlider').value;
+    const contrast = document.getElementById('contrastSlider').value;
+    const saturation = document.getElementById('saturationSlider').value;
+    const rotation = document.getElementById('rotationSlider').value;
+    
+    // Apply filters
+    image.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+    image.style.transform = `rotate(${rotation}deg)`;
+    
+    // Update current filters
+    currentImageFilters.brightness = brightness;
+    currentImageFilters.contrast = contrast;
+    currentImageFilters.saturation = saturation;
+    currentImageFilters.rotation = rotation;
+  }
+
+  function applyFilter(filterName) {
+    const image = document.getElementById('editor-preview');
+    if (!image) return;
+    
+    // Remove active class from all filters
+    document.querySelectorAll('.filter-preset').forEach(preset => {
+      preset.classList.remove('active');
+    });
+    
+    // Add active class to selected filter
+    event.target.closest('.filter-preset').classList.add('active');
+    
+    // Apply filter preset
+    currentImageFilters.filter = filterName;
+    
+    // In a real implementation, this would apply different CSS filters
+    // For demo, we'll just adjust saturation for different filters
+    let saturation = 100;
+    switch(filterName) {
+      case 'clarendon':
+        saturation = 130;
+        break;
+      case 'gingham':
+        saturation = 80;
+        break;
+      case 'moon':
+        saturation = 0;
+        break;
+      default:
+        saturation = 100;
+    }
+    
+    document.getElementById('saturationSlider').value = saturation;
+    applyImageFilter();
+  }
+
+  function saveImageEdit() {
+    if (currentEditingPostId) {
+      // In a real implementation, this would:
+      // 1. Apply filters to the actual image using canvas
+      // 2. Upload the edited image to the server
+      // 3. Update the post with the new image
+      
+      // For demo, we'll just update the preview
+      const editedImage = document.getElementById('editor-preview');
+      const postPreview = document.getElementById(`post-edit-image-preview-${currentEditingPostId}`);
+      
+      if (postPreview) {
+        postPreview.src = editedImage.src;
+        postPreview.style.filter = editedImage.style.filter;
+        postPreview.style.transform = editedImage.style.transform;
+      }
+      
+      // Close modal
+      const imageEditorModal = bootstrap.Modal.getInstance(document.getElementById('imageEditorModal'));
+      imageEditorModal.hide();
+      
+      showNotification('Image edited successfully!');
+    }
+  }
+
+  // =============================================
+  // ADDITIONAL FUNCTIONS
+  // =============================================
+
+  function deletePost(postId) {
+    if (confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+      fetch(`/api/delete_post/${postId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}"
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to delete post");
+        return res.json();
+      })
+      .then(data => {
+        document.querySelector(`.feed-card[data-post-id="${postId}"]`).remove();
+        showNotification("✅ Post deleted successfully!");
+      })
+      .catch(err => {
+        showNotification("Error deleting post: " + err.message, 'error');
+      });
+    }
+  }
+
+  function deleteComment(commentId) {
+    if (confirm("Are you sure you want to delete this comment?")) {
+      fetch(`/api/delete_comment/${commentId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}"
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to delete comment");
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById(`comment-${commentId}`).remove();
+        showNotification('Comment deleted');
+      })
+      .catch(err => {
+        showNotification('Error deleting comment: ' + err.message, 'error');
+      });
+    }
+  }
+
+  function pinPost(postId) {
+    fetch(`/api/pin_post/${postId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to pin post");
+      return res.json();
+    })
+    .then(data => {
+      showNotification("Post pinned to your profile!");
+      togglePostMenu(postId);
+    })
+    .catch(err => {
+      showNotification("Error pinning post: " + err.message, 'error');
+    });
+  }
+
+  function viewStory(username) {
+    showNotification(`Viewing ${username}'s story`);
+  }
+
+  function loadMorePosts() {
+    // Implementation for infinite scroll
+    const currentPosts = document.querySelectorAll('.feed-card').length;
+    
+    fetch(`/api/load_more_posts/?offset=${currentPosts}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.posts.length > 0) {
+          // Append new posts to feed
+          showNotification(`Loaded ${data.posts.length} more posts`);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading more posts:', err);
+      });
+  }
+
+  function addLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        showNotification("📍 Location added to your post");
+      }, function(error) {
+        showNotification("Unable to get your location. Please enable location services.", "error");
+      });
+    } else {
+      showNotification("Geolocation is not supported by this browser.", "error");
+    }
+  }
+
+  function openShareModal(postId) {
+    // Simple share implementation
+    const url = `${window.location.origin}/post/${postId}/`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check out this post on Mytro',
+        url: url
+      });
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(() => showNotification('Post link copied to clipboard'))
+        .catch(() => showNotification('Failed to copy link', 'error'));
+    }
+  }
+
+  function loadAllComments(postId) {
+    fetch(`/api/comments/${postId}/`)
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to load comments");
+      return res.json();
+    })
+    .then(data => {
+      const commentsContainer = document.getElementById(`comments-container-${postId}`);
+      commentsContainer.innerHTML = '';
+      
+      data.comments.forEach(comment => {
+        const commentHTML = `
+          <div class="comment" id="comment-${comment.id}">
+            <div class="avatar-fallback" style="width: 32px; height: 32px; font-size: 14px;">
+              ${comment.name.charAt(0)}
+            </div>
+            <div class="comment-content">
+              <a href="${comment.profile_url}" class="comment-user">${comment.name}</a>
+              <div class="comment-text" id="comment-text-${comment.id}">${comment.content}</div>
+              ${comment.is_owner ? `
+                <div class="comment-actions">
+                  <button class="comment-action" onclick="enableCommentEdit(${comment.id})">Edit</button>
+                  <button class="comment-action" onclick="deleteComment(${comment.id})">Delete</button>
+                </div>
+              ` : ''}
+            </div>
+          </div>`;
+        commentsContainer.innerHTML += commentHTML;
+      });
+      
+      // Hide the view comments button
+      const viewCommentsBtn = commentsContainer.nextElementSibling;
+      if (viewCommentsBtn && viewCommentsBtn.classList.contains('view-comments-btn')) {
+        viewCommentsBtn.style.display = 'none';
+      }
+    })
+    .catch(err => {
+      showNotification('Error loading comments: ' + err.message, 'error');
+    });
   }
 </script>
 {% endblock %}
