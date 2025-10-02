@@ -1,0 +1,82 @@
+:root {
+    /* Kesari (Orange) Color Palette */
+    --primary-color: #FF6B35;
+    --primary-dark: #E55A2B;
+    --primary-light: #FFE8E0;
+    --secondary-color: #FFA726;
+    --accent-color: #FF4081;
+    
+    /* Neutral Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --bg-card: #ffffff;
+    --bg-overlay: rgba(0, 0, 0, 0.4);
+    
+    /* Text Colors */
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --text-white: #ffffff;
+    
+    /* Border Colors */
+    --border-light: #e0e0e0;
+    --border-medium: #d0d0d0;
+    --border-dark: #c0c0c0;
+    
+    /* Status Colors */
+    --success-color: #4CAF50;
+    --warning-color: #FF9800;
+    --error-color: #f44336;
+    --info-color: #2196F3;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #FFA726 100%);
+    --gradient-secondary: linear-gradient(135deg, #FFA726 0%, #FFCA28 100%);
+    --gradient-accent: linear-gradient(135deg, #FF4081 0%, #FF6B35 100%);
+    --gradient-light: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(255, 107, 53, 0.12), 0 1px 2px rgba(255, 107, 53, 0.24);
+    --shadow-md: 0 4px 6px rgba(255, 107, 53, 0.1), 0 1px 3px rgba(255, 107, 53, 0.08);
+    --shadow-lg: 0 10px 20px rgba(255, 107, 53, 0.15), 0 3px 6px rgba(255, 107, 53, 0.10);
+    --shadow-xl: 0 20px 25px rgba(255, 107, 53, 0.15), 0 10px 10px rgba(255, 107, 53, 0.04);
+    
+    /* Transitions */
+    --transition-fast: all 0.15s ease;
+    --transition-normal: all 0.3s ease;
+    --transition-slow: all 0.5s ease;
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-full: 50%;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+}
+
+/* Dark Theme Variables with Kesari */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #404040;
+    --bg-card: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-tertiary: #808080;
+    --border-light: #404040;
+    --border-medium: #555555;
+    
+    /* Kesari colors for dark theme */
+    --primary-light: #33221a;
+    --gradient-light: linear-gradient(135deg, #33221a 0%, #332a1a 100%);
+}

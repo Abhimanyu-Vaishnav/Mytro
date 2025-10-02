@@ -1,0 +1,390 @@
+/* Profile Page Fixes */
+
+/* Display name with white color and shadow */
+.display-name {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+    font-weight: 700 !important;
+}
+
+/* Username with light orange color and shadow */
+.username {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8) !important;
+    margin: 0;
+    font-weight: 400;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Profile name styling */
+.profile-name {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+}
+
+/* Fix profile image sizes in feed */
+.user-avatar,
+.profile-pic,
+.author-avatar,
+.comment-avatar img,
+.notification-avatar img {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-author-avatar {
+    width: 48px !important;
+    height: 48px !important;
+}
+
+.profile-avatar {
+    width: 160px !important;
+    height: 160px !important;
+}
+
+/* Fix profile card in feed sidebar */
+.profile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.profile-card .user-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    margin-bottom: 12px;
+}
+
+.profile-card .user-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ff6b35;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.profile-card .user-username {
+    font-size: 14px;
+    color: #ff6b35;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.profile-card .user-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #666;
+}
+
+.profile-card .stat-item {
+    text-align: center;
+}
+
+.profile-card .stat-number {
+    font-weight: 600;
+    color: #333;
+    display: block;
+}
+
+.profile-card .stat-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Ensure full names display everywhere */
+.user-name,
+.author-name,
+.mobile-user-name,
+.comment-author {
+    font-weight: 600 !important;
+}
+
+/* Profile section specific colors */
+.profile-info-section .display-name {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+}
+
+.profile-info-section .username {
+    color: rgba(255, 255, 255, 0.75) !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
+}
+
+/* Comment edit/delete options */
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.comment-menu {
+    position: relative;
+    margin-left: auto;
+}
+
+.comment-menu-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.comment:hover .comment-menu-btn {
+    opacity: 1;
+}
+
+.comment-menu-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.comment-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 100;
+    min-width: 120px;
+}
+
+.comment-dropdown.show {
+    display: block;
+}
+
+.comment-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background 0.3s ease;
+}
+
+.comment-dropdown button:hover {
+    background: #f8f9fa;
+}
+
+.comment-dropdown button:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.comment-dropdown button:last-child {
+    border-radius: 0 0 8px 8px;
+    color: #e74c3c;
+}
+
+.comment-dropdown button:last-child:hover {
+    background: #fef2f2;
+}
+
+/* Image cropper modal */
+.crop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.crop-container {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.crop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.crop-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.crop-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.crop-area {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.crop-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.crop-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.crop-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.crop-btn:hover {
+    background: #f8f9fa;
+}
+
+.crop-btn.active {
+    background: #ff6b35;
+    color: white;
+    border-color: #ff6b35;
+}
+
+.crop-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-crop-cancel {
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-crop-save {
+    padding: 10px 20px;
+    background: #ff6b35;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-crop-save:hover {
+    background: #e55a2b;
+}
+
+/* Followers/Following lists styling */
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    cursor: pointer;
+}
+
+.user-item:hover {
+    background: #f8f9fa;
+}
+
+.user-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+    font-size: 15px;
+}
+
+.user-username {
+    color: #666;
+    font-size: 13px;
+}
+
+/* Fix layout issues */
+.profile-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.post-card .user-avatar,
+.comment .user-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.feed-container .profile-pic,
+.feed-container .user-avatar {
+    width: 40px !important;
+    height: 40px !important;
+}

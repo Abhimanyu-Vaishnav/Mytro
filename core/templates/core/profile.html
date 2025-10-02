@@ -3,731 +3,91 @@
 
 {% block title %}{{ profile_user.get_full_name|default:profile_user.username }} - Mytro{% endblock %}
 
-{% block extra_head %}
-<style>
-  /* =============================================
-     MODERN PROFILE STYLES - FEED THEME MATCHING
-     ============================================= */
-  :root {
-    --primary-color: #ff7f50;
-    --primary-dark: #e6733d;
-    --primary-light: #ffa07a;
-    --secondary-color: #7e4b21;
-    --background: #fafafa;
-    --card-bg: #ffffff;
-    --text-primary: #262626;
-    --text-secondary: #8e8e8e;
-    --border-color: #dbdbdb;
-    --shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    --success-color: #17bf63;
-  }
-
-  [data-theme="dark"] {
-    --background: #15202b;
-    --card-bg: #192734;
-    --text-primary: #ffffff;
-    --text-secondary: #8899a6;
-    --border-color: #38444d;
-  }
-
-  .profile-container {
-    max-width: 935px;
-    margin: 0 auto;
-    padding: 20px;
-    background: var(--background);
-    min-height: 100vh;
-  }
-
-  /* Profile Header */
-  .profile-header {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 30px;
-    margin-bottom: 20px;
-    position: relative;
-  }
-
-  .profile-cover {
-    height: 200px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 12px 12px 0 0;
-    margin: -30px -30px 30px -30px;
-    position: relative;
-  }
-
-  .profile-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 16px;
-  }
-
-  .profile-avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 4px solid var(--card-bg);
-    background: var(--card-bg);
-    margin-top: -75px;
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .profile-avatar img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .avatar-fallback {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 48px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .profile-details {
-    width: 100%;
-  }
-
-  .profile-name {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 8px 0;
-  }
-
-  .profile-username {
-    font-size: 16px;
-    color: var(--text-secondary);
-    margin: 0 0 16px 0;
-  }
-
-  .profile-bio {
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--text-primary);
-    margin-bottom: 16px;
-    white-space: pre-line;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .profile-meta {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-secondary);
-    font-size: 14px;
-  }
-
-  .meta-item i {
-    font-size: 16px;
-  }
-
-  .profile-stats {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-  }
-
-  .stat {
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 8px 12px;
-    border-radius: 8px;
-  }
-
-  .stat:hover {
-    background: rgba(29, 161, 242, 0.1);
-  }
-
-  .stat-number {
-    display: block;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .profile-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    margin-top: 16px;
-  }
-
-  /* Action Buttons */
-  .btn {
-    padding: 10px 24px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .btn-primary {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(255, 127, 80, 0.4);
-  }
-
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-  }
-
-  .btn-outline:hover {
-    background: rgba(29, 161, 242, 0.1);
-    border-color: var(--primary-color);
-  }
-
-  .btn-edit {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-    border: 1px solid transparent;
-  }
-
-  .btn-edit:hover {
-    background: rgba(29, 161, 242, 0.2);
-  }
-
-  .icon-btn {
-    background: rgba(29, 161, 242, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    color: var(--primary-color);
-    transition: all 0.3s ease;
-  }
-
-  .icon-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: scale(1.1);
-  }
-
-  /* Profile Navigation */
-  .profile-nav {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 0;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-
-  .nav-tabs {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .nav-item {
-    flex: 1;
-    text-align: center;
-  }
-
-  .nav-link {
-    display: block;
-    padding: 16px 20px;
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 14px;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-
-  .nav-link.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-  }
-
-  .nav-link:hover {
-    color: var(--primary-color);
-    background: rgba(29, 161, 242, 0.05);
-  }
-
-  /* Content Sections */
-  .profile-content {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 20px;
-  }
-
-  .posts-section {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .section-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .section-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .sidebar-section {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .sidebar-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 16px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .user-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .user-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .user-item:hover {
-    background: rgba(29, 161, 242, 0.05);
-    transform: translateX(5px);
-  }
-
-  .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .user-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .user-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .user-username {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .follow-btn-small {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-  }
-
-  .follow-btn-small:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-  }
-
-  .follow-btn-small.following {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-  }
-
-  /* Empty States */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-secondary);
-  }
-
-  .empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  .empty-text {
-    font-size: 16px;
-    margin-bottom: 8px;
-  }
-
-  .empty-subtext {
-    font-size: 14px;
-    opacity: 0.7;
-  }
-
-  /* Post Feed Style */
-  .posts-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .post-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-  }
-
-  .post-card:hover {
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
-  }
-
-  .post-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 16px 0 16px;
-  }
-
-  .post-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .post-user-info {
-    flex: 1;
-  }
-
-  .post-username {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .post-time {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-
-  .post-content {
-    padding: 12px 16px;
-  }
-
-  .post-text {
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--text-primary);
-    margin: 0 0 12px 0;
-  }
-
-  .post-image {
-    width: 100%;
-    max-height: 500px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 12px;
-  }
-
-  .post-actions {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 16px 16px 16px;
-    border-top: 1px solid var(--border-color);
-    margin-top: 12px;
-    padding-top: 12px;
-  }
-
-  .post-action {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 6px 12px;
-    border-radius: 8px;
-  }
-
-  .post-action:hover {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-  }
-
-  .post-action.liked {
-    color: #e0245e;
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .profile-container {
-      padding: 10px;
-    }
-
-    .profile-info {
-      grid-template-columns: 1fr;
-      text-align: center;
-    }
-
-    .profile-avatar {
-      width: 120px;
-      height: 120px;
-      margin: -60px auto 0 auto;
-    }
-
-    .profile-actions {
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .profile-content {
-      grid-template-columns: 1fr;
-    }
-
-    .profile-stats {
-      justify-content: center;
-    }
-
-    .posts-grid {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
-  }
-
-  @media (max-width: 480px) {
-    .profile-header {
-      padding: 20px;
-    }
-
-    .profile-cover {
-      height: 150px;
-      margin: -20px -20px 20px -20px;
-    }
-
-    .profile-name {
-      font-size: 24px;
-    }
-
-    .nav-tabs {
-      flex-direction: column;
-    }
-
-    .posts-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  /* Loading States */
-  .loading {
-    opacity: 0.6;
-    pointer-events: none;
-  }
-
-  .loading-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="profile-container">
-  <!-- Profile Header -->
-  <div class="profile-header">
-    <div class="profile-cover"></div>
-    
-    <div class="profile-info">
+  <!-- Cover Photo Section -->
+  <div class="cover-section">
+    {% if profile_user.profile.cover_pic %}
+      <img src="{{ profile_user.profile.cover_pic.url }}" alt="Cover Photo" class="cover-photo">
+    {% else %}
+      <div class="cover-photo default-cover"></div>
+    {% endif %}
+    {% if is_own_profile %}
+      <div class="photo-edit-overlay">
+        <button class="edit-photo-btn" onclick="editCoverPhoto()">
+          <i class="fas fa-camera"></i> Edit Cover
+        </button>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Profile Info Section -->
+  <div class="profile-info-wrapper">
+    <div class="profile-main-info">
       <!-- Profile Avatar -->
-      <div class="profile-avatar">
-        {% if profile_user.profile.profile_pic %}
-          <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}">
-        {% else %}
-          <div class="avatar-fallback">
-            {{ profile_user.get_full_name|default:profile_user.username|first|upper }}
-          </div>
-        {% endif %}
+      <div class="avatar-section">
+        <div class="profile-avatar">
+          {% if profile_user.profile.profile_pic %}
+            <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}">
+          {% else %}
+            <div class="avatar-fallback">
+              {{ profile_user.profile.full_name|first|upper }}
+            </div>
+          {% endif %}
+          {% if is_own_profile %}
+            <button class="edit-avatar-btn" onclick="editProfilePhoto()">
+              <i class="fas fa-camera"></i>
+            </button>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Profile Details -->
-      <div class="profile-details">
-        <h1 class="profile-name">
-          {{ profile_user.get_full_name|default:profile_user.username }}
-        </h1>
-        <p class="profile-username">@{{ profile_user.username }}</p>
+      <!-- User Details -->
+      <div class="user-details">
+        <div class="name-section">
+          <h1 class="display-name">{{ profile_user.profile.full_name }}</h1>
+          <p class="username">@{{ profile_user.username }}</p>
+        </div>
         
         {% if profile_user.profile.bio %}
-          <div class="profile-bio">{{ profile_user.profile.bio }}</div>
+          <p class="bio">{{ profile_user.profile.bio }}</p>
         {% endif %}
 
-        <div class="profile-meta">
-          {% if profile_user.profile.location %}
-            <div class="meta-item">
-              <i>📍</i>
-              <span>{{ profile_user.profile.location }}</span>
-            </div>
-          {% endif %}
-          
-          {% if profile_user.profile.website %}
-            <div class="meta-item">
-              <i>🔗</i>
-              <a href="{{ profile_user.profile.website }}" target="_blank" style="color: var(--text-secondary); text-decoration: none;">
-                Website
-              </a>
-            </div>
-          {% endif %}
-          
-          <div class="meta-item">
-            <i>📅</i>
-            <span>Joined {{ profile_user.date_joined|date:"F Y" }}</span>
-          </div>
-        </div>
-
+        <!-- Profile Stats -->
         <div class="profile-stats">
-          <div class="stat" onclick="showSection('posts')">
+          <div class="stat-item">
             <span class="stat-number">{{ posts_count }}</span>
             <span class="stat-label">Posts</span>
           </div>
-          <div class="stat" onclick="showFollowers()">
+          <div class="stat-item clickable" onclick="showFollowers()">
             <span class="stat-number" id="followers-count">{{ followers_count }}</span>
             <span class="stat-label">Followers</span>
           </div>
-          <div class="stat" onclick="showFollowing()">
+          <div class="stat-item clickable" onclick="showFollowing()">
             <span class="stat-number" id="following-count">{{ following_count }}</span>
             <span class="stat-label">Following</span>
           </div>
         </div>
-      </div>
 
-      <!-- Profile Actions -->
-      <div class="profile-actions">
-        {% if is_own_profile %}
-          <a href="{% url 'edit_profile' %}" class="btn btn-edit">
-            <i>✏️</i>
-            Edit Profile
-          </a>
-          <button class="icon-btn" title="Share Profile" onclick="shareProfile()">
-            📤
-          </button>
-        {% else %}
-          <button class="btn {% if is_following %}btn-outline{% else %}btn-primary{% endif %}" 
-                  id="follow-btn"
-                  onclick="toggleFollow({{ profile_user.id }})">
-            {% if is_following %}
-              <span class="btn-text">Following</span>
-            {% else %}
-              <span class="btn-text">Follow</span>
-            {% endif %}
-            <span class="loading-spinner" style="display: none;"></span>
-          </button>
-          <button class="btn btn-outline" onclick="sendMessage({{ profile_user.id }})">
-            💬 Message
-          </button>
-          <button class="icon-btn" title="More options">
-            ⋯
-          </button>
-        {% endif %}
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          {% if is_own_profile %}
+            <a href="{% url 'edit_profile' %}" class="btn-primary">
+              <i class="fas fa-edit"></i> Edit Profile
+            </a>
+          {% else %}
+            <button class="btn-follow" id="followBtn" onclick="toggleFollow({{ profile_user.id }})">
+              {% if is_following %}
+                <i class="fas fa-user-check"></i> Following
+              {% else %}
+                <i class="fas fa-user-plus"></i> Follow
+              {% endif %}
+            </button>
+            <button class="btn-message" onclick="sendMessage({{ profile_user.id }})">
+              <i class="fas fa-envelope"></i> Message
+            </button>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -737,17 +97,17 @@
     <ul class="nav-tabs">
       <li class="nav-item">
         <a href="#" class="nav-link active" onclick="showSection('posts'); return false;">
-          📝 Posts
+          <i class="fas fa-stream"></i> Posts
         </a>
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link" onclick="showSection('about'); return false;">
-          ℹ️ About
+          <i class="fas fa-user"></i> About
         </a>
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link" onclick="showSection('photos'); return false;">
-          🖼️ Photos
+          <i class="fas fa-images"></i> Photos
         </a>
       </li>
     </ul>
@@ -759,733 +119,864 @@
     <div class="main-content">
       <!-- Posts Section -->
       <div id="posts-section" class="content-section">
-        <div class="posts-section">
-          <div class="section-header">
-            <h3 class="section-title">Posts</h3>
+        {% if user_posts %}
+          <div class="posts-feed">
+            {% for post in user_posts %}
+              {% include 'core/components/post_card.html' with post=post %}
+            {% endfor %}
           </div>
-
-          {% if user_posts %}
-            <div class="posts-feed">
-              {% for post in user_posts %}
-                <div class="post-card">
-                  <div class="post-header">
-                    {% if profile_user.profile.profile_pic %}
-                      <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}" class="post-avatar">
-                    {% else %}
-                      <div class="avatar-fallback" style="width: 40px; height: 40px; font-size: 16px;">
-                        {{ profile_user.get_full_name|default:profile_user.username|first|upper }}
-                      </div>
-                    {% endif %}
-                    <div class="post-user-info">
-                      <div class="post-username">{{ profile_user.get_full_name|default:profile_user.username }}</div>
-                      <div class="post-time">{{ post.created_at|timesince }} ago</div>
-                    </div>
-                  </div>
-                  
-                  <div class="post-content">
-                    {% if post.content %}
-                      <p class="post-text">{{ post.content }}</p>
-                    {% endif %}
-                    
-                    {% if post.image %}
-                      <img src="{{ post.image.url }}" alt="Post image" class="post-image">
-                    {% endif %}
-                  </div>
-                  
-                  <div class="post-actions">
-                    <button class="post-action like-btn" data-post-id="{{ post.id }}">
-                      <span>❤️</span>
-                      <span class="like-count">{{ post.likes.count }}</span>
-                    </button>
-                    <button class="post-action comment-btn" onclick="openPost({{ post.id }})">
-                      <span>💬</span>
-                      <span>{{ post.comments.count }}</span>
-                    </button>
-                    <button class="post-action share-btn" onclick="sharePost({{ post.id }})">
-                      <span>📤</span>
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="empty-state">
-              <div class="empty-icon">📝</div>
-              <div class="empty-text">No posts yet</div>
-              <div class="empty-subtext">
-                {% if is_own_profile %}
-                  Share your first post with the world!
-                {% else %}
-                  {{ profile_user.username }} hasn't posted anything yet.
-                {% endif %}
-              </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-stream"></i></div>
+            <div class="empty-text">No posts yet</div>
+            <div class="empty-subtext">
               {% if is_own_profile %}
-                <a href="{% url 'create_post' %}" class="btn btn-primary" style="margin-top: 16px;">
-                  Create First Post
-                </a>
+                Share your first post with the world!
+              {% else %}
+                {{ profile_user.profile.full_name }} hasn't posted anything yet.
               {% endif %}
             </div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       </div>
 
       <!-- About Section -->
       <div id="about-section" class="content-section" style="display: none;">
-        <div class="posts-section">
-          <div class="section-header">
-            <h3 class="section-title">About</h3>
+        <div class="about-grid">
+          <div class="about-item">
+            <div class="about-label">Full Name</div>
+            <div class="about-value">{{ profile_user.profile.full_name }}</div>
           </div>
-          <div style="padding: 20px;">
-            <div class="profile-details-grid">
-              <div class="detail-item">
-                <strong>Full Name</strong>
-                <span>{{ profile_user.get_full_name|default:"Not specified" }}</span>
-              </div>
-              
-              <div class="detail-item">
-                <strong>Email</strong>
-                <span>{{ profile_user.email }}</span>
-              </div>
-              
-              <div class="detail-item">
-                <strong>Gender</strong>
-                <span>{{ profile_user.profile.gender|default:"Not specified" }}</span>
-              </div>
-              
-              <div class="detail-item">
-                <strong>Date of Birth</strong>
-                <span>{{ profile_user.profile.dob|date:"F j, Y"|default:"Not specified" }}</span>
-              </div>
-              
-              <div class="detail-item">
-                <strong>Phone</strong>
-                <span>{{ profile_user.profile.phone_number|default:"Not specified" }}</span>
-              </div>
-              
-              <div class="detail-item">
-                <strong>Language</strong>
-                <span>{{ profile_user.profile.language_preference|default:"Not set" }}</span>
-              </div>
-              
-              <div class="detail-item full-width">
-                <strong>Interests</strong>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-                  {% for interest in profile_user.profile.interests.all %}
-                    <span style="background: var(--primary-color); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                      {{ interest.name }}
-                    </span>
-                  {% empty %}
-                    <span style="color: var(--text-secondary);">No interests specified</span>
-                  {% endfor %}
-                </div>
-              </div>
+          <div class="about-item">
+            <div class="about-label">Email</div>
+            <div class="about-value">{{ profile_user.email }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Gender</div>
+            <div class="about-value">{{ profile_user.profile.get_gender_display|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Date of Birth</div>
+            <div class="about-value">{{ profile_user.profile.dob|date:"F d, Y"|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Work</div>
+            <div class="about-value">{{ profile_user.profile.work|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Education</div>
+            <div class="about-value">{{ profile_user.profile.education|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Relationship Status</div>
+            <div class="about-value">{{ profile_user.profile.relationship_status|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Hometown</div>
+            <div class="about-value">{{ profile_user.profile.hometown|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Current City</div>
+            <div class="about-value">{{ profile_user.profile.current_city|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Website</div>
+            <div class="about-value">
+              {% if profile_user.profile.website %}
+                <a href="{{ profile_user.profile.website }}" target="_blank">{{ profile_user.profile.website }}</a>
+              {% else %}
+                Not specified
+              {% endif %}
             </div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Phone</div>
+            <div class="about-value">{{ profile_user.profile.phone_number|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">Languages</div>
+            <div class="about-value">{{ profile_user.profile.languages_known|default:"Not specified" }}</div>
+          </div>
+          <div class="about-item full-width">
+            <div class="about-label">Bio</div>
+            <div class="about-value">{{ profile_user.profile.bio|default:"Not specified" }}</div>
           </div>
         </div>
       </div>
 
       <!-- Photos Section -->
       <div id="photos-section" class="content-section" style="display: none;">
-        <div class="posts-section">
-          <div class="section-header">
-            <h3 class="section-title">Photos</h3>
-          </div>
-          
-          {% with photo_posts=user_posts|dictsortreversed:"created_at" %}
-            {% if photo_posts %}
-              <div class="posts-grid">
-                {% for post in photo_posts %}
-                  {% if post.image %}
-                    <div class="post-grid-item" onclick="openPost({{ post.id }})">
-                      <img src="{{ post.image.url }}" alt="Post" class="post-grid-image">
-                      <div class="post-overlay">
-                        <div class="post-stats-overlay">
-                          <div class="post-stat">
-                            <span>❤️</span>
-                            <span>{{ post.likes.count }}</span>
-                          </div>
-                        </div>
-                      </div>
+        {% if user_posts %}
+          <div class="photos-grid">
+            {% for post in user_posts %}
+              {% if post.image %}
+                <div class="photo-item" onclick="openPost({{ post.id }})">
+                  <img src="{{ post.image.url }}" alt="Post" class="photo-image">
+                  <div class="photo-overlay">
+                    <div class="post-stat">
+                      <i class="fas fa-heart"></i>
+                      <span>{{ post.likes.count }}</span>
                     </div>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="empty-state">
-                <div class="empty-icon">🖼️</div>
-                <div class="empty-text">No photos yet</div>
-                <div class="empty-subtext">
-                  {% if is_own_profile %}
-                    Share your first photo!
-                  {% else %}
-                    {{ profile_user.username }} hasn't shared any photos yet.
-                  {% endif %}
+                    <div class="post-stat">
+                      <i class="fas fa-comment"></i>
+                      <span>{{ post.comments.count }}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            {% endif %}
-          {% endwith %}
-        </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-images"></i></div>
+            <div class="empty-text">No photos yet</div>
+          </div>
+        {% endif %}
       </div>
     </div>
 
     <!-- Sidebar -->
-    <div class="profile-sidebar">
+    <div class="sidebar">
       <!-- Followers Section -->
       <div class="sidebar-section">
-        <h3 class="sidebar-title">
-          Followers
-          <span style="color: var(--text-secondary); font-size: 14px;">{{ followers_count }}</span>
-        </h3>
+        <div class="section-header">
+          <h3 class="section-title">Followers</h3>
+          <span class="count-badge">{{ followers_count }}</span>
+        </div>
         
-        {% if followers %}
-          <div class="user-list">
-            {% for follower in followers %}
-              <a href="{% url 'profile' follower.username %}" class="user-item">
-                {% if follower.profile.profile_pic %}
-                  <img src="{{ follower.profile.profile_pic.url }}" alt="{{ follower.username }}" class="user-avatar">
-                {% else %}
-                  <div class="avatar-fallback" style="width: 40px; height: 40px; font-size: 16px;">
-                    {{ follower.get_full_name|default:follower.username|first|upper }}
-                  </div>
-                {% endif %}
-                <div class="user-info">
-                  <div class="user-name">{{ follower.get_full_name|default:follower.username }}</div>
-                  <div class="user-username">@{{ follower.username }}</div>
-                </div>
-                {% if not is_own_profile and follower != request.user %}
-                  <button class="follow-btn-small" 
-                          onclick="event.preventDefault(); toggleFollow({{ follower.id }}, this)">
-                    Follow
-                  </button>
-                {% endif %}
-              </a>
-            {% endfor %}
-          </div>
-          
-          {% if followers_count > 10 %}
-            <button class="btn btn-outline" style="width: 100%; margin-top: 12px;" onclick="showAllFollowers()">
-              View all followers
-            </button>
+        <div class="followers-list" id="followers-list">
+          {% if followers_count > 0 %}
+            <div class="loading-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading followers...</span>
+            </div>
+          {% else %}
+            <div class="empty-sidebar">
+              <i class="fas fa-users"></i>
+              <p>No followers yet</p>
+            </div>
           {% endif %}
-        {% else %}
-          <div style="text-align: center; color: var(--text-secondary); padding: 20px 0;">
-            No followers yet
-          </div>
-        {% endif %}
+        </div>
       </div>
 
       <!-- Following Section -->
       <div class="sidebar-section">
-        <h3 class="sidebar-title">
-          Following
-          <span style="color: var(--text-secondary); font-size: 14px;">{{ following_count }}</span>
-        </h3>
+        <div class="section-header">
+          <h3 class="section-title">Following</h3>
+          <span class="count-badge">{{ following_count }}</span>
+        </div>
         
-        {% if following_users %}
-          <div class="user-list">
-            {% for following_user in following_users %}
-              <a href="{% url 'profile' following_user.username %}" class="user-item">
-                {% if following_user.profile.profile_pic %}
-                  <img src="{{ following_user.profile.profile_pic.url }}" alt="{{ following_user.username }}" class="user-avatar">
-                {% else %}
-                  <div class="avatar-fallback" style="width: 40px; height: 40px; font-size: 16px;">
-                    {{ following_user.get_full_name|default:following_user.username|first|upper }}
-                  </div>
-                {% endif %}
-                <div class="user-info">
-                  <div class="user-name">{{ following_user.get_full_name|default:following_user.username }}</div>
-                  <div class="user-username">@{{ following_user.username }}</div>
-                </div>
-                {% if not is_own_profile and following_user != request.user %}
-                  <button class="follow-btn-small" 
-                          onclick="event.preventDefault(); toggleFollow({{ following_user.id }}, this)">
-                    Follow
-                  </button>
-                {% endif %}
-              </a>
-            {% endfor %}
+        <div class="following-list" id="following-list">
+          {% if following_count > 0 %}
+            <div class="loading-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading following...</span>
+            </div>
+          {% else %}
+            <div class="empty-sidebar">
+              <i class="fas fa-user-plus"></i>
+              <p>Not following anyone</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Followers Modal -->
+<div id="followersModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Followers</h3>
+      <button class="close-btn" onclick="closeFollowersModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="followers-modal-list" class="user-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Following Modal -->
+<div id="followingModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Following</h3>
+      <button class="close-btn" onclick="closeFollowingModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="following-modal-list" class="user-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Editor Modal -->
+<div class="photo-editor-modal" id="photoEditorModal">
+  <div class="editor-container">
+    <div class="editor-header">
+      <h3 id="editorTitle">Edit Photo</h3>
+      <button class="close-btn" onclick="closePhotoEditor()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="editor-body">
+      <div class="editor-main">
+        <div class="image-container">
+          <canvas id="imageCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="editor-controls">
+          <div class="control-tabs">
+            <button class="tab-btn active" onclick="showTab('crop')">Crop</button>
+            <button class="tab-btn" onclick="showTab('adjust')">Adjust</button>
+            <button class="tab-btn" onclick="showTab('filters')">Filters</button>
           </div>
           
-          {% if following_count > 10 %}
-            <button class="btn btn-outline" style="width: 100%; margin-top: 12px;" onclick="showAllFollowing()">
-              View all following
-            </button>
-          {% endif %}
-        {% else %}
-          <div style="text-align: center; color: var(--text-secondary); padding: 20px 0;">
-            Not following anyone
+          <div class="control-panel" id="cropPanel">
+            <div class="crop-controls">
+              <button class="control-btn" onclick="rotateCrop(-90)"><i class="fas fa-undo"></i></button>
+              <button class="control-btn" onclick="rotateCrop(90)"><i class="fas fa-redo"></i></button>
+              <button class="control-btn" onclick="flipCrop('horizontal')"><i class="fas fa-arrows-alt-h"></i></button>
+              <button class="control-btn" onclick="flipCrop('vertical')"><i class="fas fa-arrows-alt-v"></i></button>
+            </div>
+            <div class="crop-presets">
+              <button class="preset-btn" onclick="setCropRatio(1)">Square</button>
+              <button class="preset-btn" onclick="setCropRatio(16/9)">16:9</button>
+              <button class="preset-btn" onclick="setCropRatio(4/3)">4:3</button>
+              <button class="preset-btn" onclick="setCropRatio(0)">Free</button>
+            </div>
+            <div class="crop-info">
+              <p><strong>Drag</strong> to create crop area<br>
+              <strong>Drag inside</strong> to move crop area</p>
+            </div>
           </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modals for Followers/Following -->
-<div class="modal fade" id="followersModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Followers</h5>
-        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
-      </div>
-      <div class="modal-body">
-        <!-- Followers list will be loaded here -->
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="followingModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Following</h5>
-        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
-      </div>
-      <div class="modal-body">
-        <!-- Following list will be loaded here -->
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  // =============================================
-  // PROFILE PAGE JAVASCRIPT
-  // =============================================
-
-  let currentSection = 'posts';
-  let isProcessing = false;
-
-  // Initialize when DOM is ready
-  document.addEventListener('DOMContentLoaded', function() {
-    initializeProfile();
-  });
-
-  function initializeProfile() {
-    // Add click outside listener for dropdowns
-    document.addEventListener('click', function(e) {
-      // Close any open dropdowns
-      const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-      dropdowns.forEach(dropdown => {
-        if (!e.target.closest('.dropdown')) {
-          dropdown.classList.remove('show');
-        }
-      });
-    });
-  }
-
-  // Section Navigation
-  function showSection(section) {
-    // Hide all sections
-    document.querySelectorAll('.content-section').forEach(sec => {
-      sec.style.display = 'none';
-    });
-    
-    // Remove active class from all nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.classList.remove('active');
-    });
-    
-    // Show selected section
-    document.getElementById(section + '-section').style.display = 'block';
-    
-    // Add active class to clicked nav link
-    event.target.classList.add('active');
-    
-    currentSection = section;
-  }
-
-  // Follow/Unfollow Functionality
-  function toggleFollow(userId, button = null) {
-    if (isProcessing) return;
-    
-    isProcessing = true;
-    const mainButton = button || document.getElementById('follow-btn');
-    const btnText = mainButton.querySelector('.btn-text');
-    const spinner = mainButton.querySelector('.loading-spinner');
-    
-    // Show loading state
-    btnText.style.display = 'none';
-    spinner.style.display = 'inline-block';
-    mainButton.classList.add('loading');
-    
-    const isCurrentlyFollowing = mainButton.classList.contains('btn-outline');
-    
-    fetch(`/api/follow/${userId}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}"
-      }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to follow user");
-      return res.json();
-    })
-    .then(data => {
-      // Update button state
-      if (isCurrentlyFollowing) {
-        mainButton.classList.remove('btn-outline');
-        mainButton.classList.add('btn-primary');
-        btnText.textContent = 'Follow';
-        
-        // Update followers count
-        const followersCount = document.getElementById('followers-count');
-        followersCount.textContent = parseInt(followersCount.textContent) - 1;
-      } else {
-        mainButton.classList.remove('btn-primary');
-        mainButton.classList.add('btn-outline');
-        btnText.textContent = 'Following';
-        
-        // Update followers count
-        const followersCount = document.getElementById('followers-count');
-        followersCount.textContent = parseInt(followersCount.textContent) + 1;
-      }
-      
-      showNotification(isCurrentlyFollowing ? 'Unfollowed user' : 'Now following user');
-    })
-    .catch(err => {
-      showNotification('Error: ' + err.message, 'error');
-    })
-    .finally(() => {
-      btnText.style.display = 'inline-block';
-      spinner.style.display = 'none';
-      mainButton.classList.remove('loading');
-      isProcessing = false;
-    });
-  }
-
-  // Show Followers Modal
-  function showFollowers() {
-    // In a real implementation, this would fetch and show all followers
-    const modal = new bootstrap.Modal(document.getElementById('followersModal'));
-    
-    // Fetch all followers
-    fetch(`/api/profile/{{ profile_user.username }}/followers/`)
-      .then(res => res.json())
-      .then(data => {
-        const modalBody = document.querySelector('#followersModal .modal-body');
-        modalBody.innerHTML = '<div class="loading-spinner" style="margin: 20px auto;"></div>';
-        
-        // Populate with followers data
-        setTimeout(() => {
-          modalBody.innerHTML = `
-            <div class="user-list">
-              ${data.followers.map(user => `
-                <a href="/profile/${user.username}/" class="user-item">
-                  ${user.avatar ? 
-                    `<img src="${user.avatar}" alt="${user.username}" class="user-avatar">` : 
-                    `<div class="avatar-fallback" style="width: 40px; height: 40px; font-size: 16px;">
-                      ${user.name.charAt(0)}
-                    </div>`
-                  }
-                  <div class="user-info">
-                    <div class="user-name">${user.name}</div>
-                    <div class="user-username">@${user.username}</div>
-                  </div>
-                </a>
-              `).join('')}
+          
+          <div class="control-panel" id="adjustPanel" style="display: none;">
+            <div class="slider-control">
+              <label>Brightness</label>
+              <input type="range" id="brightness" min="-100" max="100" value="0" oninput="applyAdjustments()">
             </div>
-          `;
-        }, 1000);
-      })
-      .catch(err => {
-        document.querySelector('#followersModal .modal-body').innerHTML = 
-          '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Error loading followers</div>';
-      });
-    
-    modal.show();
-  }
-
-  // Show Following Modal
-  function showFollowing() {
-    // Similar to showFollowers but for following
-    const modal = new bootstrap.Modal(document.getElementById('followingModal'));
-    
-    fetch(`/api/profile/{{ profile_user.username }}/following/`)
-      .then(res => res.json())
-      .then(data => {
-        const modalBody = document.querySelector('#followingModal .modal-body');
-        modalBody.innerHTML = '<div class="loading-spinner" style="margin: 20px auto;"></div>';
-        
-        // Populate with following data
-        setTimeout(() => {
-          modalBody.innerHTML = `
-            <div class="user-list">
-              ${data.following.map(user => `
-                <a href="/profile/${user.username}/" class="user-item">
-                  ${user.avatar ? 
-                    `<img src="${user.avatar}" alt="${user.username}" class="user-avatar">` : 
-                    `<div class="avatar-fallback" style="width: 40px; height: 40px; font-size: 16px;">
-                      ${user.name.charAt(0)}
-                    </div>`
-                  }
-                  <div class="user-info">
-                    <div class="user-name">${user.name}</div>
-                    <div class="user-username">@${user.username}</div>
-                  </div>
-                </a>
-              `).join('')}
+            <div class="slider-control">
+              <label>Contrast</label>
+              <input type="range" id="contrast" min="-100" max="100" value="0" oninput="applyAdjustments()">
             </div>
-          `;
-        }, 1000);
-      })
-      .catch(err => {
-        document.querySelector('#followingModal .modal-body').innerHTML = 
-          '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Error loading following</div>';
-      });
+            <div class="slider-control">
+              <label>Saturation</label>
+              <input type="range" id="saturation" min="-100" max="100" value="0" oninput="applyAdjustments()">
+            </div>
+            <div class="slider-control">
+              <label>Blur</label>
+              <input type="range" id="blur" min="0" max="10" value="0" oninput="applyAdjustments()">
+            </div>
+          </div>
+          
+          <div class="control-panel" id="filtersPanel" style="display: none;">
+            <div class="filter-grid">
+              <button class="filter-btn active" onclick="applyFilter('none')">Original</button>
+              <button class="filter-btn" onclick="applyFilter('grayscale')">B&W</button>
+              <button class="filter-btn" onclick="applyFilter('sepia')">Sepia</button>
+              <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+              <button class="filter-btn" onclick="applyFilter('warm')">Warm</button>
+              <button class="filter-btn" onclick="applyFilter('cool')">Cool</button>
+              <button class="filter-btn" onclick="applyFilter('dramatic')">Dramatic</button>
+              <button class="filter-btn" onclick="applyFilter('vivid')">Vivid</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     
-    modal.show();
-  }
+    <div class="editor-footer">
+      <button class="btn-cancel" onclick="closePhotoEditor()">Cancel</button>
+      <button class="btn-reset" onclick="resetEditor()">Reset</button>
+      <button class="btn-save" onclick="savePhoto()">Save</button>
+    </div>
+  </div>
+</div>
 
-  function showAllFollowers() {
-    showFollowers();
-  }
-
-  function showAllFollowing() {
-    showFollowing();
-  }
-
-  // Open Post
-  function openPost(postId) {
-    window.location.href = `/post/${postId}/`;
-  }
-
-  // Send Message
-  function sendMessage(userId) {
-    showNotification('Message feature would open here', 'info');
-    // In real implementation, this would open a chat with the user
-  }
-
-  // Share Profile
-  function shareProfile() {
-    const profileUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check out this profile on Mytro',
-        text: `Check out ${'{{ profile_user.username }}'}'s profile on Mytro`,
-        url: profileUrl
-      });
-    } else {
-      navigator.clipboard.writeText(profileUrl)
-        .then(() => showNotification('Profile link copied to clipboard'))
-        .catch(() => showNotification('Failed to copy link', 'error'));
-    }
-  }
-
-  // Share Post
-  function sharePost(postId) {
-    const postUrl = `${window.location.origin}/post/${postId}/`;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check out this post on Mytro',
-        text: 'Check out this post on Mytro',
-        url: postUrl
-      });
-    } else {
-      navigator.clipboard.writeText(postUrl)
-        .then(() => showNotification('Post link copied to clipboard'))
-        .catch(() => showNotification('Failed to copy link', 'error'));
-    }
-  }
-
-  // Like Post
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.like-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const postId = this.getAttribute('data-post-id');
-        const likeCount = this.querySelector('.like-count');
-        
-        fetch(`/api/post/${postId}/like/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-          }
-        })
-        .then(res => res.json())
-        .then(data => {
-          likeCount.textContent = data.likes_count;
-          if (data.liked) {
-            this.classList.add('liked');
-          } else {
-            this.classList.remove('liked');
-          }
-        })
-        .catch(err => {
-          showNotification('Error liking post', 'error');
-        });
-      });
-    });
-  });
-
-  // Notification System
-  function showNotification(message, type = 'success') {
-    // Create toast notification
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--card-bg);
-      color: var(--text-primary);
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 10000;
-      border-left: 4px solid ${type === 'error' ? '#e0245e' : '#17bf63'};
-    `;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
-  }
-
-  // Theme synchronization
-  function syncTheme() {
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-  }
-
-  // Initialize theme
-  syncTheme();
-</script>
+<input type="file" id="coverFileInput" accept="image/*" style="display: none;">
+<input type="file" id="profileFileInput" accept="image/*" style="display: none;">
 
 <style>
-  .profile-details-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+.photo-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-  .detail-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
-  }
+.cover-section:hover .photo-edit-overlay {
+  opacity: 1;
+}
 
-  .detail-item:last-child {
-    border-bottom: none;
-  }
+.edit-photo-btn {
+  background: #ff6b35;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
 
-  .detail-item.full-width {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+.photo-editor-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
 
-  .detail-item strong {
-    color: var(--text-primary);
-    font-weight: 600;
-  }
+.editor-container {
+  background: white;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-  .detail-item span {
-    color: var(--text-secondary);
-    text-align: right;
-  }
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
 
-  .detail-item.full-width span {
-    text-align: left;
-  }
+.editor-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
 
-  /* Modal Styles */
-  .modal-content {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-  }
+.editor-main {
+  flex: 1;
+  display: flex;
+}
 
-  .modal-header {
-    border-bottom: 1px solid var(--border-color);
-    padding: 20px;
-  }
+.image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  padding: 20px;
+}
 
-  .modal-title {
-    color: var(--text-primary);
-    font-weight: 700;
-  }
+#imageCanvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  cursor: crosshair;
+}
 
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--text-secondary);
-    cursor: pointer;
-  }
+.editor-controls {
+  width: 300px;
+  background: #f8f9fa;
+  border-left: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+}
 
-  .modal-body {
-    padding: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
+.control-tabs {
+  display: flex;
+  border-bottom: 1px solid #eee;
+}
 
-  /* Post Grid Styles */
-  .posts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 2px;
-  }
+.tab-btn {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+}
 
-  .post-grid-item {
-    aspect-ratio: 1;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    background: #000;
-  }
+.tab-btn.active {
+  background: #ff6b35;
+  color: white;
+}
 
-  .post-grid-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
+.control-panel {
+  padding: 20px;
+  flex: 1;
+}
 
-  .post-grid-item:hover .post-grid-image {
-    transform: scale(1.05);
-  }
+.crop-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-  .post-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
+.control-btn {
+  padding: 15px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
 
-  .post-grid-item:hover .post-overlay {
-    opacity: 1;
-  }
+.crop-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 15px;
+}
 
-  .post-stats-overlay {
-    display: flex;
-    gap: 20px;
-    color: white;
-    font-weight: 600;
-  }
+.preset-btn {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
 
-  .post-stat {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+.preset-btn.active {
+  background: #ff6b35;
+  color: white;
+  border-color: #ff6b35;
+}
+
+.crop-info {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.crop-overlay {
+  position: absolute;
+  border: 2px dashed #ff6b35;
+  background: rgba(255, 107, 53, 0.1);
+  cursor: move;
+}
+
+.crop-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ff6b35;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.crop-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+.crop-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+.crop-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+.crop-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+
+.slider-control {
+  margin-bottom: 20px;
+}
+
+.slider-control label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.slider-control input[type="range"] {
+  width: 100%;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 12px 8px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.filter-btn.active {
+  border-color: #ff6b35;
+  background: #fff5f2;
+  color: #ff6b35;
+}
+
+.editor-footer {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.btn-cancel, .btn-reset, .btn-save {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-cancel { background: #f8f9fa; color: #666; }
+.btn-reset { background: #6c757d; color: white; }
+.btn-save { background: #ff6b35; color: white; }
 </style>
+
+<script>
+let currentPhotoType = '';
+let originalImage = null;
+let canvas = null;
+let ctx = null;
+let currentFilter = 'none';
+let adjustments = { brightness: 0, contrast: 0, saturation: 0, blur: 0 };
+let rotation = 0;
+let flipH = false;
+let flipV = false;
+let cropArea = { x: 0, y: 0, width: 0, height: 0 };
+let isDragging = false;
+let isResizing = false;
+let dragStart = { x: 0, y: 0 };
+let cropRatio = 0;
+
+function editCoverPhoto() {
+  currentPhotoType = 'cover';
+  document.getElementById('coverFileInput').click();
+}
+
+function editProfilePhoto() {
+  currentPhotoType = 'profile';
+  document.getElementById('profileFileInput').click();
+}
+
+document.getElementById('coverFileInput').addEventListener('change', handleFileSelect);
+document.getElementById('profileFileInput').addEventListener('change', handleFileSelect);
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      openPhotoEditor(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function openPhotoEditor(imageSrc) {
+  document.getElementById('editorTitle').textContent = `Edit ${currentPhotoType === 'cover' ? 'Cover' : 'Profile'} Photo`;
+  document.getElementById('photoEditorModal').style.display = 'flex';
+  
+  canvas = document.getElementById('imageCanvas');
+  ctx = canvas.getContext('2d');
+  
+  originalImage = new Image();
+  originalImage.onload = function() {
+    if (currentPhotoType === 'cover') {
+      canvas.width = 800;
+      canvas.height = 300;
+      cropRatio = 800/300;
+    } else {
+      canvas.width = 400;
+      canvas.height = 400;
+      cropRatio = 1;
+    }
+    initializeCropArea();
+    drawImage();
+    setupCanvasEvents();
+  };
+  originalImage.src = imageSrc;
+}
+
+function closePhotoEditor() {
+  document.getElementById('photoEditorModal').style.display = 'none';
+  resetEditor();
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.control-panel').forEach(panel => panel.style.display = 'none');
+  
+  event.target.classList.add('active');
+  document.getElementById(tab + 'Panel').style.display = 'block';
+}
+
+function drawImage() {
+  if (!originalImage) return;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rotation * Math.PI / 180);
+  ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  
+  ctx.filter = getFilterString();
+  
+  const scale = Math.min(canvas.width / originalImage.width, canvas.height / originalImage.height);
+  const width = originalImage.width * scale;
+  const height = originalImage.height * scale;
+  
+  ctx.drawImage(originalImage, -width / 2, -height / 2, width, height);
+  ctx.restore();
+  
+  drawCropOverlay();
+}
+
+function drawCropOverlay() {
+  if (cropArea.width === 0 || cropArea.height === 0) return;
+  
+  ctx.save();
+  ctx.strokeStyle = '#ff6b35';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.strokeRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
+  
+  ctx.fillStyle = 'rgba(255, 107, 53, 0.1)';
+  ctx.fillRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
+  
+  ctx.restore();
+}
+
+function initializeCropArea() {
+  const margin = 50;
+  cropArea = {
+    x: margin,
+    y: margin,
+    width: canvas.width - (margin * 2),
+    height: canvas.height - (margin * 2)
+  };
+  
+  if (cropRatio > 0) {
+    const maxWidth = canvas.width - (margin * 2);
+    const maxHeight = canvas.height - (margin * 2);
+    
+    if (maxWidth / cropRatio <= maxHeight) {
+      cropArea.width = maxWidth;
+      cropArea.height = maxWidth / cropRatio;
+    } else {
+      cropArea.height = maxHeight;
+      cropArea.width = maxHeight * cropRatio;
+    }
+    
+    cropArea.x = (canvas.width - cropArea.width) / 2;
+    cropArea.y = (canvas.height - cropArea.height) / 2;
+  }
+}
+
+function setupCanvasEvents() {
+  canvas.addEventListener('mousedown', handleMouseDown);
+  canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mouseup', handleMouseUp);
+}
+
+function handleMouseDown(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  // Check if clicking inside existing crop area to move it
+  if (x >= cropArea.x && x <= cropArea.x + cropArea.width &&
+      y >= cropArea.y && y <= cropArea.y + cropArea.height) {
+    isDragging = true;
+    dragStart = { x: x - cropArea.x, y: y - cropArea.y };
+  } else {
+    // Start new crop area
+    isResizing = true;
+    cropArea.x = x;
+    cropArea.y = y;
+    cropArea.width = 0;
+    cropArea.height = 0;
+    dragStart = { x, y };
+  }
+}
+
+function handleMouseMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  if (isDragging) {
+    // Move existing crop area
+    cropArea.x = Math.max(0, Math.min(canvas.width - cropArea.width, x - dragStart.x));
+    cropArea.y = Math.max(0, Math.min(canvas.height - cropArea.height, y - dragStart.y));
+  } else if (isResizing) {
+    // Create new crop area
+    const width = x - dragStart.x;
+    const height = y - dragStart.y;
+    
+    cropArea.x = Math.min(dragStart.x, x);
+    cropArea.y = Math.min(dragStart.y, y);
+    cropArea.width = Math.abs(width);
+    cropArea.height = Math.abs(height);
+    
+    // Apply ratio constraint if set
+    if (cropRatio > 0) {
+      if (cropArea.width / cropRatio > cropArea.height) {
+        cropArea.height = cropArea.width / cropRatio;
+      } else {
+        cropArea.width = cropArea.height * cropRatio;
+      }
+    }
+    
+    // Keep within canvas bounds
+    cropArea.x = Math.max(0, Math.min(canvas.width - cropArea.width, cropArea.x));
+    cropArea.y = Math.max(0, Math.min(canvas.height - cropArea.height, cropArea.y));
+    cropArea.width = Math.min(cropArea.width, canvas.width - cropArea.x);
+    cropArea.height = Math.min(cropArea.height, canvas.height - cropArea.y);
+  }
+  
+  drawImage();
+}
+
+function handleMouseUp() {
+  isDragging = false;
+  isResizing = false;
+}
+
+function setCropRatio(ratio) {
+  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  cropRatio = ratio;
+  initializeCropArea();
+  drawImage();
+}
+
+function getFilterString() {
+  let filters = [];
+  
+  if (adjustments.brightness !== 0) filters.push(`brightness(${100 + adjustments.brightness}%)`);
+  if (adjustments.contrast !== 0) filters.push(`contrast(${100 + adjustments.contrast}%)`);
+  if (adjustments.saturation !== 0) filters.push(`saturate(${100 + adjustments.saturation}%)`);
+  if (adjustments.blur > 0) filters.push(`blur(${adjustments.blur}px)`);
+  
+  switch (currentFilter) {
+    case 'grayscale': filters.push('grayscale(100%)'); break;
+    case 'sepia': filters.push('sepia(100%)'); break;
+    case 'vintage': filters.push('sepia(50%) contrast(120%) brightness(90%)'); break;
+    case 'warm': filters.push('sepia(20%) saturate(120%) brightness(110%)'); break;
+    case 'cool': filters.push('hue-rotate(180deg) saturate(120%)'); break;
+    case 'dramatic': filters.push('contrast(150%) brightness(90%) saturate(130%)'); break;
+    case 'vivid': filters.push('saturate(150%) contrast(110%)'); break;
+  }
+  
+  return filters.join(' ') || 'none';
+}
+
+function rotateCrop(degrees) {
+  rotation += degrees;
+  drawImage();
+}
+
+function flipCrop(direction) {
+  if (direction === 'horizontal') flipH = !flipH;
+  else flipV = !flipV;
+  drawImage();
+}
+
+function applyAdjustments() {
+  adjustments.brightness = parseInt(document.getElementById('brightness').value);
+  adjustments.contrast = parseInt(document.getElementById('contrast').value);
+  adjustments.saturation = parseInt(document.getElementById('saturation').value);
+  adjustments.blur = parseInt(document.getElementById('blur').value);
+  
+  drawImage();
+}
+
+function applyFilter(filter) {
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  currentFilter = filter;
+  drawImage();
+}
+
+function resetEditor() {
+  rotation = 0;
+  flipH = false;
+  flipV = false;
+  currentFilter = 'none';
+  adjustments = { brightness: 0, contrast: 0, saturation: 0, blur: 0 };
+  
+  document.getElementById('brightness').value = 0;
+  document.getElementById('contrast').value = 0;
+  document.getElementById('saturation').value = 0;
+  document.getElementById('blur').value = 0;
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+  
+  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  
+  initializeCropArea();
+  if (originalImage) drawImage();
+}
+
+function savePhoto() {
+  // Create a new canvas with the cropped area
+  const croppedCanvas = document.createElement('canvas');
+  const croppedCtx = croppedCanvas.getContext('2d');
+  
+  croppedCanvas.width = cropArea.width;
+  croppedCanvas.height = cropArea.height;
+  
+  // Draw the cropped portion
+  croppedCtx.drawImage(canvas, cropArea.x, cropArea.y, cropArea.width, cropArea.height, 0, 0, cropArea.width, cropArea.height);
+  
+  const dataURL = croppedCanvas.toDataURL('image/jpeg', 0.9);
+  
+  const formData = new FormData();
+  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  formData.append(currentPhotoType + '_pic_data', dataURL);
+  
+  fetch('/edit_profile/', {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert('Error saving photo: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error saving photo. Please try again.');
+  });
+  
+  closePhotoEditor();
+}
+</script>
+
 {% endblock %}

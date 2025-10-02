@@ -1,0 +1,72 @@
+/* Profile About Section Styles */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.about-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    border-left: 4px solid #ff6b35;
+    transition: all 0.3s ease;
+}
+
+.about-item:hover {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.about-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.about-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.about-label::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #ff6b35;
+    border-radius: 50%;
+}
+
+.about-value {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.about-value a {
+    color: #ff6b35;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.about-value a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .about-item {
+        padding: 12px;
+    }
+}

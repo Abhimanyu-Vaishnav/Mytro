@@ -1,3719 +1,1134 @@
-{% extends "core/base.html" %}
+{% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Mytro Feed{% endblock %}
-{% block extra_head %}
-<style>
-  /* =============================================
-     MODERN CSS WITH INSTAGRAM-LIKE UI - ENHANCED
-     ============================================= */
-  :root {
-    --primary-color: #ff7f50;
-    --primary-dark: #e6733d;
-    --primary-light: #ffa07a;
-    --secondary-color: #7e4b21;
-    --background: #fafafa;
-    --card-bg: #ffffff;
-    --text-primary: #262626;
-    --text-secondary: #8e8e8e;
-    --border-color: #dbdbdb;
-    --shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    --like-red: #ed4956;
-    --comment-blue: #0095f6;
-    --success-color: #17bf63;
-    --error-color: #e0245e;
-    --repost-green: #17bf63;
-  }
-
-  [data-theme="dark"] {
-    --background: #15202b;
-    --card-bg: #192734;
-    --text-primary: #ffffff;
-    --text-secondary: #8899a6;
-    --border-color: #38444d;
-  }
-
-  body {
-    background: var(--background);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    color: var(--text-primary);
-    margin: 0;
-    padding: 0;
-    transition: background 0.3s ease;
-  }
-
-  .container-fluid {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px 15px;
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 20px;
-  }
-
-  /* =============================================
-     THEME TOGGLE - ENHANCED
-     ============================================= */
-  .theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1001;
-    box-shadow: var(--shadow);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-  }
-
-  .theme-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  /* =============================================
-     FLOATING POST BUTTON - ENHANCED
-     ============================================= */
-  #postBtn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 50%;
-    width: 65px;
-    height: 65px;
-    box-shadow: 0 6px 25px rgba(255, 127, 80, 0.5);
-    color: white;
-    font-size: 30px;
-    font-weight: 300;
-    border: none;
-    z-index: 1000;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-  }
-
-  #postBtn:hover {
-    transform: scale(1.15) rotate(90deg);
-    box-shadow: 0 8px 30px rgba(255, 127, 80, 0.7);
-  }
-
-  #postBtn.pulsing {
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-  }
-
-  /* =============================================
-     STORIES SECTION - ENHANCED
-     ============================================= */
-  .stories-container {
-    display: flex;
-    gap: 15px;
-    padding: 18px;
-    overflow-x: auto;
-    margin-bottom: 20px;
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    scrollbar-width: none;
-    position: relative;
-  }
-
-  .stories-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-  }
-
-  .stories-container::-webkit-scrollbar {
-    display: none;
-  }
-
-  .story {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    min-width: 75px;
-    transition: transform 0.2s ease;
-  }
-
-  .story:hover {
-    transform: translateY(-2px);
-  }
-
-  .story-avatar {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    padding: 2px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark), #ff6b6b);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: gradientShift 3s ease infinite;
-    background-size: 200% 200%;
-  }
-
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  .story-avatar img {
-    width: 59px;
-    height: 59px;
-    border-radius: 50%;
-    border: 2px solid var(--card-bg);
-    object-fit: cover;
-  }
-
-  .story-username {
-    font-size: 12px;
-    color: var(--text-primary);
-    max-width: 75px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 500;
-  }
-
-  /* =============================================
-     MAIN FEED CONTENT - ENHANCED
-     ============================================= */
-  .feed-content {
-    max-width: 600px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  /* =============================================
-     SIDEBAR - ENHANCED PEOPLE TO FOLLOW
-     ============================================= */
-  .sidebar {
-    position: sticky;
-    top: 20px;
-    height: fit-content;
-  }
-
-  .suggestions-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 18px;
-    padding: 22px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  }
-
-  .suggestions-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-  }
-
-  .suggestions-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .refresh-suggestions {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-
-  .refresh-suggestions:hover {
-    background: rgba(255, 127, 80, 0.1);
-  }
-
-  .suggestions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .suggestion-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 8px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-
-  .suggestion-item:hover {
-    background: rgba(29, 161, 242, 0.05);
-    transform: translateX(5px);
-  }
-
-  .suggestion-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 2px solid transparent;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) border-box;
-  }
-
-  .avatar-fallback {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
-    font-weight: 600;
-    font-size: 18px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .suggestion-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .suggestion-name {
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--text-primary);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    transition: color 0.2s ease;
-  }
-
-  .suggestion-name:hover {
-    color: var(--primary-color);
-  }
-
-  .suggestion-username {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 2px 0 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: none; /* Hide username as requested */
-  }
-
-  .follow-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 8px 18px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-    min-width: 80px;
-  }
-
-  .follow-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
-  }
-
-  .follow-btn.following {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-  }
-
-  .follow-btn.following:hover {
-    background: rgba(237, 73, 86, 0.1);
-    color: var(--error-color);
-    border-color: var(--error-color);
-  }
-
-  /* =============================================
-     CARD STYLES - ENHANCED MODERN INSTAGRAM-LIKE
-     ============================================= */
-  .feed-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    margin-bottom: 25px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-    position: relative;
-  }
-
-  .feed-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  }
-
-  .feed-card.pinned::before {
-    content: '📌 Pinned';
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--primary-color);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    z-index: 2;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    padding: 18px;
-    position: relative;
-  }
-
-  /* Profile photos and avatar - Enhanced */
-  .profile-photo {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 2px solid transparent;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) border-box;
-    transition: transform 0.2s ease;
-  }
-
-  .profile-photo:hover {
-    transform: scale(1.1);
-  }
-
-  .user-info {
-    margin-left: 14px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .username {
-    font-weight: 700;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-size: 15px;
-    display: block;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: color 0.2s ease;
-  }
-
-  .username:hover {
-    text-decoration: underline;
-    color: var(--primary-color);
-  }
-
-  .full-name {
-    font-size: 15px;
-    color: var(--text-primary);
-    font-weight: 600;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .location {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 2px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Post content - Enhanced */
-  .post-content {
-    padding: 10px 18px 14px;
-    white-space: pre-line;
-    word-break: break-word;
-    line-height: 1.6;
-    font-size: 15px;
-    margin-bottom: 10px;
-  }
-
-  .post-hashtag {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
-  }
-
-  .post-hashtag:hover {
-    text-decoration: underline;
-    background: rgba(255, 127, 80, 0.1);
-    padding: 2px 4px;
-    border-radius: 4px;
-  }
-
-  .post-mention {
-    color: var(--primary-color);
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
-
-  .post-mention:hover {
-    text-decoration: underline;
-    background: rgba(255, 127, 80, 0.1);
-    padding: 2px 4px;
-    border-radius: 4px;
-  }
-
-  /* Media container - Enhanced */
-  .post-media-container {
-    position: relative;
-    width: 100%;
-    background: #000;
-    overflow: hidden;
-  }
-
-  .post-image {
-    width: 100%;
-    display: block;
-    max-height: 650px;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-    cursor: zoom-in;
-  }
-
-  .post-image:hover {
-    transform: scale(1.02);
-  }
-
-  .post-video {
-    width: 100%;
-    max-height: 650px;
-    background: #000;
-  }
-
-  /* POST ACTIONS - Enhanced Modern Line Icons */
-  .post-actions {
-    padding: 12px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid var(--border-color);
-  }
-
-  .action-buttons-left {
-    display: flex;
-    gap: 20px;
-  }
-
-  .action-btn {
-    background: none;
-    border: none;
-    font-size: 26px;
-    cursor: pointer;
-    padding: 10px;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-secondary);
-    border-radius: 50%;
-  }
-
-  .action-btn:hover {
-    color: var(--primary-color);
-    background: rgba(29, 161, 242, 0.1);
-    transform: scale(1.1);
-  }
-
-  .action-btn .action-count {
-    font-size: 14px;
-    font-weight: 600;
-    min-width: 12px;
-    margin-left: 6px;
-    transition: all 0.3s ease;
-  }
-
-  /* Like button - Enhanced */
-  .like-btn:hover {
-    color: var(--like-red);
-    background: rgba(237, 73, 86, 0.1);
-  }
-
-  .like-btn.liked {
-    color: var(--like-red);
-    animation: heartBeat 0.6s ease;
-  }
-
-  @keyframes heartBeat {
-    0% { transform: scale(1); }
-    25% { transform: scale(1.3); }
-    50% { transform: scale(1.1); }
-    75% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-
-  .like-btn.liked .action-count {
-    color: var(--like-red);
-  }
-
-  /* Comment button - Enhanced */
-  .comment-btn:hover {
-    color: var(--comment-blue);
-    background: rgba(0, 149, 246, 0.1);
-  }
-
-  .comment-btn.active {
-    color: var(--comment-blue);
-  }
-
-  .comment-btn.active .action-count {
-    color: var(--comment-blue);
-  }
-
-  /* Repost button - Enhanced */
-  .repost-btn:hover {
-    color: var(--repost-green);
-    background: rgba(23, 191, 99, 0.1);
-  }
-
-  .repost-btn.reposted {
-    color: var(--repost-green);
-    animation: repostSpin 0.6s ease;
-  }
-
-  @keyframes repostSpin {
-    0% { transform: scale(1) rotate(0deg); }
-    50% { transform: scale(1.2) rotate(180deg); }
-    100% { transform: scale(1) rotate(360deg); }
-  }
-
-  .repost-btn.reposted .action-count {
-    color: var(--repost-green);
-  }
-
-  .post-stats {
-    padding: 0 18px 12px;
-    font-size: 14px;
-    color: var(--text-primary);
-    font-weight: 600;
-    border-top: 1px solid var(--border-color);
-    padding-top: 14px;
-    display: flex;
-    gap: 20px;
-  }
-
-  .post-time {
-    padding: 0 18px 18px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    letter-spacing: 0.3px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* Dropdown menu for post options - Enhanced */
-  .post-menu {
-    position: relative;
-  }
-
-  .post-menu-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 6px 10px;
-    color: var(--text-secondary);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-
-  .post-menu-btn:hover {
-    background: rgba(29, 161, 242, 0.15);
-    color: var(--primary-color);
-    transform: scale(1.1);
-  }
-
-  .post-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: var(--card-bg);
-    border-radius: 14px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-    padding: 10px 0;
-    min-width: 200px;
-    z-index: 1000;
-    display: none;
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(20px);
-  }
-
-  .post-dropdown.show {
-    display: block;
-    animation: slideDown 0.2s ease;
-  }
-
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    padding: 14px 18px;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-size: 14px;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    gap: 14px;
-    transition: all 0.2s;
-    border-radius: 0;
-  }
-
-  .dropdown-item:hover {
-    background: rgba(29, 161, 242, 0.1);
-    transform: translateX(5px);
-  }
-
-  .dropdown-item.delete {
-    color: var(--error-color);
-  }
-
-  .dropdown-item.delete:hover {
-    background: rgba(224, 36, 94, 0.1);
-  }
-
-  .dropdown-item.pin {
-    color: var(--primary-color);
-  }
-
-  /* =============================================
-     ENHANCED CREATE POST MODAL
-     ============================================= */
-  .create-post-modal .modal-dialog {
-    max-width: 600px;
-    margin: 20px auto;
-  }
-
-  .create-post-modal .modal-content {
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    background: var(--card-bg);
-  }
-
-  .create-post-modal .modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--card-bg);
-    position: relative;
-  }
-
-  .create-post-modal .modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-align: center;
-    flex: 1;
-  }
-
-  .create-post-modal .close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .create-post-modal .close-btn:hover {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-  }
-
-  .create-post-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 24px 16px;
-  }
-
-  .create-post-textarea {
-    width: 100%;
-    border: none;
-    background: transparent;
-    resize: none;
-    font-size: 18px;
-    color: var(--text-primary);
-    font-family: inherit;
-    padding: 0 24px;
-    min-height: 150px;
-    line-height: 1.5;
-  }
-
-  .create-post-textarea:focus {
-    outline: none;
-  }
-
-  .create-post-textarea::placeholder {
-    color: var(--text-secondary);
-    font-size: 18px;
-  }
-
-  .media-previews {
-    padding: 16px 24px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .media-preview {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 12px;
-    display: none;
-  }
-
-  .image-preview {
-    object-fit: contain;
-  }
-
-  .create-post-modal .modal-footer {
-    padding: 20px 24px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card-bg);
-  }
-
-  .media-options {
-    display: flex;
-    gap: 8px;
-  }
-
-  .create-post-modal .icon-btn {
-    background: rgba(29, 161, 242, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 20px;
-    color: var(--primary-color);
-    transition: all 0.3s ease;
-  }
-
-  .create-post-modal .icon-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: scale(1.1);
-  }
-
-  .create-post-modal .post-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .create-post-modal .btn {
-    padding: 10px 24px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-    min-width: 80px;
-  }
-
-  .create-post-modal .btn-secondary {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-  }
-
-  .create-post-modal .btn-secondary:hover {
-    background: rgba(29, 161, 242, 0.2);
-    transform: translateY(-1px);
-  }
-
-  .create-post-modal .btn-primary {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  .create-post-modal .btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(255, 127, 80, 0.4);
-  }
-
-  .create-post-modal .btn-primary:disabled {
-    background: var(--text-secondary);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-
-  /* Image Editor in Create Post */
-  .image-editor-create {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border-color);
-  }
-
-  .editor-tools {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-
-  .editor-tool-btn {
-    background: rgba(29, 161, 242, 0.1);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 12px;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .editor-tool-btn:hover {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  /* =============================================
-     ENHANCED EDIT POST UI
-     ============================================= */
-  .edit-container {
-    padding: 20px;
-    border-top: 1px solid var(--border-color);
-    background: rgba(29, 161, 242, 0.05);
-    border-radius: 0 0 20px 20px;
-  }
-
-  .edit-textarea {
-    width: 100%;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 15px;
-    resize: vertical;
-    min-height: 120px;
-    margin-bottom: 16px;
-    background: var(--card-bg);
-    color: var(--text-primary);
-    font-family: inherit;
-    transition: all 0.3s ease;
-  }
-
-  .edit-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.1);
-  }
-
-  .edit-image-preview {
-    width: 100%;
-    max-height: 350px;
-    object-fit: contain;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    border: 2px solid var(--border-color);
-    transition: all 0.3s ease;
-  }
-
-  .edit-image-preview:hover {
-    transform: scale(1.02);
-  }
-
-  .edit-controls {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-
-  .edit-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .btn {
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-    flex: 1;
-  }
-
-  .btn-primary {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 127, 80, 0.4);
-  }
-
-  .btn-secondary {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-  }
-
-  .btn-secondary:hover {
-    background: rgba(29, 161, 242, 0.2);
-    transform: translateY(-2px);
-  }
-
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-  }
-
-  .btn-outline:hover {
-    background: #fafafa;
-  }
-
-  .btn-danger {
-    background: #ed4956;
-    color: white;
-  }
-
-  .btn-danger:hover {
-    background: #e02d3a;
-    transform: translateY(-2px);
-  }
-
-  .icon-btn {
-    background: rgba(29, 161, 242, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    color: var(--primary-color);
-    transition: all 0.3s ease;
-  }
-
-  .icon-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: scale(1.1);
-  }
-
-  /* =============================================
-     ENHANCED COMMENTS SECTION
-     ============================================= */
-  .comments-section {
-    border-top: 1px solid var(--border-color);
-    padding: 16px 18px;
-  }
-
-  .comments-container {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-bottom: 16px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) transparent;
-  }
-
-  .comments-container::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .comments-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .comments-container::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 10px;
-  }
-
-  .comment {
-    display: flex;
-    margin-bottom: 18px;
-    align-items: flex-start;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-10px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .comment:last-child {
-    margin-bottom: 0;
-  }
-
-  .comment-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 12px;
-    flex-shrink: 0;
-    border: 2px solid transparent;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) border-box;
-  }
-
-  .comment-content {
-    flex: 1;
-    background: rgba(29, 161, 242, 0.05);
-    padding: 14px;
-    border-radius: 16px;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-
-  .comment-content:hover {
-    background: rgba(29, 161, 242, 0.08);
-    transform: translateX(5px);
-  }
-
-  .comment-user {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-    text-decoration: none;
-    margin-right: 4px;
-    transition: color 0.2s ease;
-  }
-
-  .comment-user:hover {
-    text-decoration: underline;
-    color: var(--primary-color);
-  }
-
-  .comment-text {
-    font-size: 14px;
-    color: var(--text-primary);
-    line-height: 1.5;
-    margin-top: 6px;
-    white-space: pre-line;
-  }
-
-  .comment-edit-input {
-    width: 100%;
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 14px;
-    resize: vertical;
-    min-height: 80px;
-    background: var(--card-bg);
-    color: var(--text-primary);
-    font-family: inherit;
-    transition: all 0.3s ease;
-  }
-
-  .comment-edit-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.1);
-  }
-
-  .comment-actions {
-    display: flex;
-    gap: 14px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-
-  .comment-action {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-  }
-
-  .comment-action:hover {
-    color: var(--primary-color);
-    background: rgba(29, 161, 242, 0.1);
-  }
-
-  .add-comment {
-    display: flex;
-    border-top: 1px solid var(--border-color);
-    padding-top: 16px;
-    gap: 12px;
-    align-items: flex-end;
-  }
-
-  .comment-input-container {
-    flex: 1;
-    background: rgba(29, 161, 242, 0.05);
-    border-radius: 24px;
-    padding: 12px 18px;
-    display: flex;
-    align-items: center;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-
-  .comment-input-container:focus-within {
-    background: rgba(29, 161, 242, 0.1);
-    box-shadow: 0 0 0 2px rgba(255, 127, 80, 0.2);
-  }
-
-  .comment-input {
-    border: none;
-    background: none;
-    resize: none;
-    font-size: 14px;
-    padding: 0;
-    max-height: 80px;
-    font-family: inherit;
-    width: 100%;
-    color: var(--text-primary);
-    line-height: 1.5;
-  }
-
-  .comment-input:focus {
-    outline: none;
-  }
-
-  .comment-toolbar {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    padding: 0 8px;
-  }
-
-  .toolbar-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    padding: 6px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-  }
-
-  .toolbar-btn:hover {
-    background: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-    transform: scale(1.1);
-  }
-
-  .post-comment-btn {
-    background: var(--primary-color);
-    border: none;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: all 0.3s ease;
-    font-size: 14px;
-    padding: 10px 20px;
-    border-radius: 20px;
-    min-width: 70px;
-  }
-
-  .post-comment-btn.active {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-
-  .post-comment-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-  }
-
-  .post-comment-btn.active:hover {
-    transform: translateY(-1px) scale(1.05);
-  }
-
-  .view-comments-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 14px;
-    cursor: pointer;
-    padding: 10px 0;
-    margin-top: 12px;
-    width: 100%;
-    text-align: left;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-  }
-
-  .view-comments-btn:hover {
-    color: var(--primary-color);
-    background: rgba(29, 161, 242, 0.05);
-  }
-
-  /* =============================================
-     ENHANCED MODERN IMAGE EDITOR
-     ============================================= */
-  .image-editor-modal .modal-dialog {
-    max-width: 900px;
-    margin: 20px auto;
-  }
-
-  .image-editor-modal .modal-content {
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    background: var(--card-bg);
-  }
-
-  .image-editor-modal .modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--card-bg);
-  }
-
-  .image-editor-modal .modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .image-editor-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px 24px;
-  }
-
-  .editor-preview-container {
-    display: flex;
-    justify-content: center;
-    background: #000;
-    border-radius: 12px;
-    padding: 20px;
-    max-height: 450px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .editor-preview {
-    max-width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-    transition: all 0.3s ease;
-  }
-
-  .editor-controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px;
-  }
-
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .control-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .control-value {
-    font-size: 12px;
-    color: var(--text-secondary);
-    background: rgba(29, 161, 242, 0.1);
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-
-  .control-slider {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border-color);
-    outline: none;
-    -webkit-appearance: none;
-    transition: all 0.2s ease;
-  }
-
-  .control-slider:hover {
-    background: var(--primary-light);
-  }
-
-  .control-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-  }
-
-  .control-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 4px 12px rgba(255, 127, 80, 0.4);
-  }
-
-  .filter-presets {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-top: 20px;
-  }
-
-  .filter-preset {
-    aspect-ratio: 1;
-    border-radius: 12px;
-    border: 3px solid transparent;
-    cursor: pointer;
-    overflow: hidden;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-
-  .filter-preset:hover {
-    transform: scale(1.05);
-    border-color: var(--primary-light);
-  }
-
-  .filter-preset.active {
-    border-color: var(--primary-color);
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(255, 127, 80, 0.3);
-  }
-
-  .filter-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .filter-name {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    font-size: 11px;
-    padding: 6px;
-    text-align: center;
-    font-weight: 600;
-  }
-
-  .image-editor-modal .modal-footer {
-    padding: 20px 24px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    background: var(--card-bg);
-  }
-
-  /* =============================================
-     ENHANCED NOTIFICATION TOAST
-     ============================================= */
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--card-bg);
-    color: var(--text-primary);
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    max-width: 400px;
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    border-left: 4px solid transparent;
-    backdrop-filter: blur(20px);
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .toast.success {
-    border-left-color: var(--success-color);
-  }
-
-  .toast.error {
-    border-left-color: var(--error-color);
-  }
-
-  .toast.info {
-    border-left-color: var(--comment-blue);
-  }
-
-  /* =============================================
-     LOADING AND ANIMATIONS
-     ============================================= */
-  .loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .fade-in {
-    animation: fadeIn 0.5s ease;
-  }
-
-  .slide-up {
-    animation: slideUp 0.5s ease;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* =============================================
-     UTILITY CLASSES - ENHANCED
-     ============================================= */
-  .d-none {
-    display: none !important;
-  }
-
-  .text-muted {
-    color: var(--text-secondary) !important;
-  }
-
-  .text-center {
-    text-align: center;
-  }
-
-  .mt-3 {
-    margin-top: 16px;
-  }
-
-  .py-5 {
-    padding-top: 48px;
-    padding-bottom: 48px;
-  }
-
-  .w-100 {
-    width: 100%;
-  }
-
-  /* =============================================
-     RESPONSIVE DESIGN - ENHANCED
-     ============================================= */
-  @media (max-width: 1200px) {
-    .container-fluid {
-      grid-template-columns: 1fr 280px;
-      gap: 15px;
-    }
-  }
-
-  @media (max-width: 992px) {
-    .container-fluid {
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-    
-    .sidebar {
-      display: none;
-    }
-    
-    .feed-content {
-      max-width: 100%;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .container-fluid {
-      padding: 0;
-    }
-    
-    .feed-card {
-      border-radius: 0;
-      border-left: none;
-      border-right: none;
-      margin-bottom: 1px;
-      box-shadow: none;
-    }
-    
-    .feed-card:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    
-    #postBtn {
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      font-size: 28px;
-    }
-    
-    .theme-toggle {
-      top: 15px;
-      right: 15px;
-      width: 40px;
-      height: 40px;
-    }
-    
-    .modal-dialog {
-      margin: 0;
-      height: 100vh;
-      max-width: 100%;
-    }
-    
-    .modal-content {
-      height: 100%;
-      border-radius: 0;
-    }
-    
-    .create-post-modal .modal-dialog {
-      margin: 0;
-      max-width: 100%;
-    }
-    
-    .image-editor-modal .modal-dialog {
-      margin: 0;
-      max-width: 100%;
-    }
-    
-    .stories-container {
-      border-radius: 0;
-      margin-bottom: 10px;
-    }
-    
-    .post-actions {
-      padding: 10px 15px;
-    }
-    
-    .action-buttons-left {
-      gap: 15px;
-    }
-    
-    .action-btn {
-      font-size: 24px;
-      padding: 8px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .card-header {
-      padding: 15px;
-    }
-    
-    .post-content {
-      padding: 8px 15px 12px;
-    }
-    
-    .comments-section {
-      padding: 12px 15px;
-    }
-    
-    .add-comment {
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .post-comment-btn {
-      align-self: flex-end;
-    }
-    
-    .edit-buttons {
-      flex-direction: column;
-    }
-    
-    .btn {
-      flex: none;
-    }
-    
-    .suggestions-card {
-      margin: 10px;
-      border-radius: 12px;
-    }
-  }
-
-  /* Dark mode enhancements */
-  [data-theme="dark"] .create-post-modal .icon-btn {
-    background: rgba(255, 255, 255, 0.1);
-  }
-  
-  [data-theme="dark"] .comment-input-container {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  
-  [data-theme="dark"] .comment-content {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  
-  [data-theme="dark"] .edit-container {
-    background: rgba(255, 255, 255, 0.03);
-  }
-</style>
-{% endblock %}
+{% block title %}Feed - Mytro{% endblock %}
 
 {% block content %}
-<!-- =============================================
-     THEME TOGGLE - ENHANCED
-     ============================================= -->
-<div class="theme-toggle" id="themeToggle" title="Toggle Theme">
-  <span id="themeIcon">🌙</span>
-</div>
+<div class="feed-container">
+    <!-- Left Sidebar -->
+    <div class="sidebar left-sidebar">
 
-<div class="container-fluid">
-  <!-- =============================================
-       MAIN FEED CONTENT
-       ============================================= -->
-  <div class="feed-content">
-    <!-- =============================================
-         STORIES SECTION - ENHANCED
-         ============================================= -->
-    <div class="stories-container">
-      {% for user in active_users %}
-      <div class="story" onclick="viewStory('{{ user.username }}')">
-        <div class="story-avatar">
-          {% if user.profile.profile_pic %}
-            <img src="{{ user.profile.profile_pic.url }}" alt="{{ user.username }}" />
-          {% else %}
-            <div class="avatar-fallback">{{ user.get_full_name|default:user.username|first }}</div>
-          {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-card">
+            <h4 class="card-title">Quick Actions</h4>
+            <div class="action-buttons">
+                <button class="action-btn primary-action" onclick="window.openCreatePostModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Post</span>
+                </button>
+                <button class="action-btn secondary-action" onclick="openStoryCreator()">
+                    <i class="fas fa-camera"></i>
+                    <span>Add Story</span>
+                </button>
+                <button class="action-btn secondary-action" onclick="window.openLiveStream()">
+                    <i class="fas fa-video"></i>
+                    <span>Go Live</span>
+                </button>
+            </div>
         </div>
-        <div class="story-username">{{ user.username }}</div>
-      </div>
-      {% empty %}
-      <div class="text-center text-muted w-100 py-3">
-        No active stories
-      </div>
-      {% endfor %}
-    </div>
 
-    <!-- =============================================
-         MAIN FEED POSTS - ENHANCED
-         ============================================= -->
-    <div id="postsContainer">
-      {% if posts %}
-        {% for post in posts %}
-          <!-- POST CARD START -->
-          <div class="feed-card {% if post.is_pinned %}pinned{% endif %}" data-post-id="{{ post.id }}">
-            
-            <!-- POST HEADER -->
+        <!-- Enhanced Suggestions -->
+        <div class="suggestions-card">
             <div class="card-header">
-              <!-- User Avatar and Info -->
-              <a href="{% url 'profile' post.author.username %}" style="text-decoration: none; display: flex; align-items: center;">
-                {% if post.author.profile.profile_pic %}
-                  <img src="{{ post.author.profile.profile_pic.url }}" alt="Profile" class="profile-photo" />
-                {% else %}
-                  <div class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|first }}</div>
-                {% endif %}
-              </a>
-              
-              <div class="user-info">
-                <a href="{% url 'profile' post.author.username %}" class="full-name">
-                  {{ post.author.get_full_name|default:post.author.username }}
-                </a>
-                <a href="{% url 'profile' post.author.username %}" class="username">
-                  @{{ post.author.username }}
-                </a>
-                {% if post.location %}
-                  <div class="location">📍 {{ post.location }}</div>
-                {% endif %}
-              </div>
-              
-              <!-- Post Menu Dropdown -->
-              {% if post.author == user %}
-                <div class="post-menu">
-                  <button class="post-menu-btn" onclick="togglePostMenu({{ post.id }})" title="Post options">⋯</button>
-                  <div class="post-dropdown" id="post-menu-{{ post.id }}">
-                    <button class="dropdown-item" onclick="enablePostEdit({{ post.id }})">
-                      <span>✏️</span> Edit Post
-                    </button>
-                    {% if post.image %}
-                      <button class="dropdown-item" onclick="openImageEditor({{ post.id }})">
-                        <span>🖼️</span> Edit Image
-                      </button>
-                    {% endif %}
-                    <button class="dropdown-item pin" onclick="pinPost({{ post.id }})">
-                      <span>📌</span> {% if post.is_pinned %}Unpin Post{% else %}Pin Post{% endif %}
-                    </button>
-                    <button class="dropdown-item delete" onclick="deletePost({{ post.id }})">
-                      <span>🗑️</span> Delete Post
-                    </button>
-                  </div>
-                </div>
-              {% endif %}
-            </div>
-            
-            <!-- POST CONTENT -->
-            <div class="post-content" id="post-content-{{ post.id }}">
-              {{ post.content|safe }}
-            </div>
-            
-            <!-- POST MEDIA (IMAGE/VIDEO) -->
-            {% if post.image %}
-              <div class="post-media-container">
-                <img src="{{ post.image.url }}" alt="Post Image" class="post-image" id="post-image-{{ post.id }}" 
-                     onclick="openImagePreview('{{ post.image.url }}')" />
-              </div>
-            {% endif %}
-            
-            <!-- POST ACTIONS - Enhanced Modern Line Icons -->
-            <div class="post-actions">
-              <div class="action-buttons-left">
-                <!-- Like Button -->
-                <button class="action-btn like-btn {% if user in post.likes.all %}liked{% endif %}" 
-                        onclick="likePost({{ post.id }})"
-                        id="like-btn-{{ post.id }}"
-                        title="Like post">
-                  <span class="like-icon">🤍</span>
-                  <span class="action-count" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                <h4 class="card-title">People You May Know</h4>
+                <button class="refresh-btn" onclick="window.refreshSuggestions()" title="Refresh suggestions">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
-                
-                <!-- Comment Button -->
-                <button class="action-btn comment-btn" onclick="focusCommentInput({{ post.id }})" title="Comment">
-                  <span>💬</span>
-                  <span class="action-count" id="comment-count-{{ post.id }}">{{ post.comments.count }}</span>
-                </button>
-                
-                <!-- Repost Button -->
-                <button class="action-btn repost-btn {% if user in post.reposts.all %}reposted{% endif %}" 
-                        onclick="repostPost({{ post.id }})"
-                        id="repost-btn-{{ post.id }}"
-                        title="Repost">
-                  <span>🔄</span>
-                  <span class="action-count" id="repost-count-{{ post.id }}">{{ post.reposts.count }}</span>
-                </button>
-              </div>
-              
-              <!-- Share Button -->
-              <button class="action-btn share-btn" onclick="openShareModal({{ post.id }})" title="Share">
-                <span>📤</span>
-              </button>
             </div>
             
-            <!-- POST STATS -->
-            <div class="post-stats">
-              <span id="like-count-text-{{ post.id }}">
-                {% if post.likes.count > 0 %}
-                  {% if user in post.likes.all %}
-                    You{% if post.likes.count > 1 %} and {{ post.likes.count|add:"-1" }} other{% if post.likes.count > 2 %}s{% endif %}{% endif %}
-                  {% else %}
-                    {{ post.likes.count }} like{% if post.likes.count > 1 %}s{% endif %}
-                  {% endif %}
-                {% else %}
-                  0 likes
-                {% endif %}
-              </span>
-              {% if post.comments.count > 0 %}
-                <span>{{ post.comments.count }} comment{% if post.comments.count > 1 %}s{% endif %}</span>
-              {% endif %}
-              {% if post.reposts.count > 0 %}
-                <span>{{ post.reposts.count }} repost{% if post.reposts.count > 1 %}s{% endif %}</span>
-              {% endif %}
-            </div>
-            
-            <!-- POST TIME -->
-            <div class="post-time">
-              {{ post.created_at|timesince }} ago
-              {% if post.updated_at and post.updated_at > post.created_at %}
-                • <span class="text-muted">Edited</span>
-              {% endif %}
-              {% if post.is_pinned %}
-                • <span class="text-muted">📌 Pinned</span>
-              {% endif %}
-            </div>
-            
-            <!-- COMMENTS SECTION -->
-            <div class="comments-section">
-              <div class="comments-container" id="comments-container-{{ post.id }}">
-                {% for comment in post.comments.all|slice:":2" %}
-                  <div class="comment" id="comment-{{ comment.id }}">
-                    <a href="{% url 'profile' comment.user.username %}">
-                      {% if comment.user.profile.profile_pic %}
-                        <img src="{{ comment.user.profile.profile_pic.url }}" alt="Commenter" class="comment-avatar" />
-                      {% else %}
-                        <div class="avatar-fallback" style="width: 36px; height: 36px; font-size: 14px;">
-                          {{ comment.user.get_full_name|default:comment.user.username|first }}
+            <div class="suggestions-list" id="suggestionsList">
+                {% for suggested_user in suggestions %}
+                <div class="suggestion-item" data-user-id="{{ suggested_user.id }}">
+                    <div class="suggestion-user">
+                        <a href="{% url 'profile' suggested_user.username %}" class="user-avatar-link">
+                            {% if suggested_user.profile.profile_pic %}
+                                <img src="{{ suggested_user.profile.profile_pic.url }}" alt="{{ suggested_user.username }}" class="user-avatar suggestion-avatar">
+                            {% else %}
+                                <div class="default-avatar suggestion-avatar">
+                                    {{ suggested_user.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </a>
+                        
+                        <div class="user-details">
+                            <a href="{% url 'profile' suggested_user.username %}" class="user-name">
+                                {{ suggested_user.profile.full_name }}
+                            </a>
+                            <span class="user-mutual">5 mutual friends</span>
                         </div>
-                      {% endif %}
-                    </a>
-                    
-                    <div class="comment-content">
-                      <a href="{% url 'profile' comment.user.username %}" class="comment-user">
-                        {{ comment.user.get_full_name|default:comment.user.username }}
-                      </a>
-                      <div class="comment-text" id="comment-text-{{ comment.id }}">{{ comment.content }}</div>
-                      
-                      {% if comment.user == user %}
-                        <div class="comment-actions">
-                          <button class="comment-action" onclick="enableCommentEdit({{ comment.id }})">Edit</button>
-                          <button class="comment-action" onclick="deleteComment({{ comment.id }})">Delete</button>
-                        </div>
-                      {% endif %}
                     </div>
-                  </div>
-                {% endfor %}
-              </div>
-              
-              {% if post.comments.count > 2 %}
-                <button class="view-comments-btn" onclick="loadAllComments({{ post.id }})">
-                  View all {{ post.comments.count }} comments
-                </button>
-              {% endif %}
-              
-              <!-- ADD COMMENT FORM -->
-              <div class="add-comment">
-                <div class="comment-input-container">
-                  <textarea class="comment-input" placeholder="Add a comment..." 
-                            id="comment-input-{{ post.id }}" 
-                            oninput="togglePostCommentBtn({{ post.id }})"
-                            rows="1"></textarea>
+                    
+                    <button class="follow-btn {% if suggested_user in user.profile.following.all %}following{% endif %}" 
+                            onclick="toggleFollow({{ suggested_user.id }}, this)">
+                        {% if suggested_user in user.profile.following.all %}
+                            <i class="fas fa-check"></i>
+                            Following
+                        {% else %}
+                            <i class="fas fa-user-plus"></i>
+                            Follow
+                        {% endif %}
+                    </button>
                 </div>
-                <button class="post-comment-btn" id="post-comment-btn-{{ post.id }}" 
-                        onclick="addComment({{ post.id }})" disabled>Post</button>
-              </div>
-              <div class="comment-toolbar">
-                <button class="toolbar-btn" onclick="toggleEmojiPicker('comment-input-{{ post.id }}')" title="Add Emoji">😊</button>
-                <button class="toolbar-btn" onclick="addSticker('comment-input-{{ post.id }}')" title="Add Sticker">⭐</button>
-                <button class="toolbar-btn" onclick="addGIF('comment-input-{{ post.id }}')" title="Add GIF">🎬</button>
-              </div>
+                {% empty %}
+                <div class="empty-suggestions">
+                    <i class="fas fa-users"></i>
+                    <p>No suggestions available</p>
+                    <button class="btn-secondary small" onclick="refreshSuggestions()">Find More People</button>
+                </div>
+                {% endfor %}
             </div>
             
-            <!-- EDIT POST UI (Hidden by default) - ENHANCED -->
-            <div class="edit-container d-none" id="edit-container-{{ post.id }}">
-              <textarea class="edit-textarea" id="post-edit-{{ post.id }}" placeholder="What's on your mind?">{{ post.content }}</textarea>
-              
-              {% if post.image %}
-                <img src="{{ post.image.url }}" alt="Post Image" class="edit-image-preview" id="post-edit-image-preview-{{ post.id }}" />
-              {% endif %}
-              
-              <div class="edit-controls">
-                {% if post.image %}
-                  <button class="icon-btn" onclick="openImageEditor({{ post.id }})" title="Edit Image">🖼️</button>
-                  <button class="icon-btn" onclick="document.getElementById('post-photo-input-{{ post.id }}').click()" title="Change Image">📎</button>
-                  <button class="icon-btn btn-danger" onclick="removePostImage({{ post.id }})" title="Remove Image">🗑️</button>
+            <div class="card-footer">
+                <a href="#" class="see-more-link">See More Suggestions</a>
+            </div>
+        </div>
+
+        <!-- Shortcuts -->
+        <div class="shortcuts-card">
+            <h4 class="card-title">Your Shortcuts</h4>
+            <div class="shortcuts-list">
+                <a href="#" class="shortcut-item">
+                    <i class="fas fa-users"></i>
+                    <span>Groups</span>
+                </a>
+                <a href="#" class="shortcut-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Events</span>
+                </a>
+                <a href="#" class="shortcut-item">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Saved</span>
+                </a>
+                <a href="#" class="shortcut-item">
+                    <i class="fas fa-history"></i>
+                    <span>Memories</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Feed -->
+    <div class="main-feed">
+        <!-- Create Post Card -->
+        <div class="create-post-card">
+            <div class="create-post-header">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="user-avatar">
                 {% else %}
-                  <button class="icon-btn" onclick="document.getElementById('post-photo-input-{{ post.id }}').click()" title="Add Image">📷</button>
+                    <div class="default-avatar">
+                        {{ user.username|first|upper }}
+                    </div>
                 {% endif %}
-                <button class="icon-btn" onclick="toggleEmojiPicker('post-edit-{{ post.id }}')" title="Add Emoji">😊</button>
-                <button class="icon-btn" onclick="addHashtag('post-edit-{{ post.id }}')" title="Add Hashtag">#</button>
-                <input type="file" id="post-photo-input-{{ post.id }}" class="d-none" accept="image/*" onchange="previewPostEditImage(event, {{ post.id }})" />
-              </div>
-              
-              <div class="edit-buttons">
-                <button class="btn btn-primary" onclick="savePostEdit({{ post.id }})">
-                  <span class="save-text">Save Changes</span>
-                  <span class="loading-spinner d-none"></span>
-                </button>
-                <button class="btn btn-secondary" onclick="cancelPostEdit({{ post.id }})">Cancel</button>
-              </div>
+                <div class="post-input-container">
+                    <input type="text" 
+                           placeholder="What's on your mind, {{ user.profile.full_name }}?" 
+                           class="post-input"
+                           onclick="window.openCreatePostModal()"
+                           readonly>
+                </div>
             </div>
-          </div>
-          <!-- POST CARD END -->
-        {% endfor %}
-      {% else %}
-        <!-- EMPTY STATE WHEN NO POSTS -->
-        <div class="text-center py-5 fade-in">
-          <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
-          <h4 style="color: var(--text-secondary); margin-bottom: 12px;">No posts to show</h4>
-          <p class="text-muted" style="margin-bottom: 24px;">Follow more users to see their posts here or create your first post!</p>
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal" 
-                  style="background: var(--primary-color); border: none; padding: 12px 24px; border-radius: 12px;">
-            Create your first post
-          </button>
-        </div>
-      {% endif %}
-    </div>
-
-    <!-- LOAD MORE SPINNER -->
-    <div id="loadMoreSpinner" class="text-center py-4 d-none">
-      <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-      <p class="text-muted mt-2">Loading more posts...</p>
-    </div>
-  </div>
-
-  <!-- =============================================
-       SIDEBAR - ENHANCED PEOPLE TO FOLLOW SUGGESTIONS
-       ============================================= -->
-  <div class="sidebar">
-    <div class="suggestions-card">
-      <div class="suggestions-header">
-        <h3 class="suggestions-title">People to Follow</h3>
-        <button class="refresh-suggestions" onclick="refreshSuggestions()" title="Refresh suggestions">
-          <span class="refresh-text">Refresh</span>
-          <span class="loading-spinner d-none" style="width: 16px; height: 16px;"></span>
-        </button>
-      </div>
-      <div class="suggestions-list" id="suggestionsList">
-        {% for suggested_user in suggestions %}
-        <div class="suggestion-item" onclick="visitProfile('{{ suggested_user.username }}')">
-          <a href="{% url 'profile' suggested_user.username %}" onclick="event.stopPropagation();">
-            {% if suggested_user.profile.profile_pic %}
-              <img src="{{ suggested_user.profile.profile_pic.url }}" alt="{{ suggested_user.username }}" class="suggestion-avatar" />
-            {% else %}
-              <div class="avatar-fallback">{{ suggested_user.get_full_name|default:suggested_user.username|first }}</div>
-            {% endif %}
-          </a>
-          <div class="suggestion-info">
-            <a href="{% url 'profile' suggested_user.username %}" class="suggestion-name" onclick="event.stopPropagation();">
-              {{ suggested_user.get_full_name|default:suggested_user.username }}
-            </a>
-            <!-- Username hidden as requested -->
-          </div>
-          <button class="follow-btn {% if suggested_user in user.profile.following.all %}following{% endif %}" 
-                  onclick="event.stopPropagation(); followUser({{ suggested_user.id }}, this)">
-            {% if suggested_user in user.profile.following.all %}Following{% else %}Follow{% endif %}
-          </button>
-        </div>
-        {% empty %}
-        <div class="text-center text-muted py-3">
-          No suggestions available
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    
-    <!-- TRENDING HASHTAGS -->
-    <div class="suggestions-card">
-      <div class="suggestions-header">
-        <h3 class="suggestions-title">Trending Hashtags</h3>
-      </div>
-      <div class="suggestions-list">
-        <div class="suggestion-item" onclick="searchHashtag('MytroApp')">
-          <span style="font-size: 22px; color: var(--primary-color);">#</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">MytroApp</p>
-            <p class="suggestion-username">189 posts</p>
-          </div>
-        </div>
-        <div class="suggestion-item" onclick="searchHashtag('Community')">
-          <span style="font-size: 22px; color: var(--primary-color);">#</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">Community</p>
-            <p class="suggestion-username">156 posts</p>
-          </div>
-        </div>
-        <div class="suggestion-item" onclick="searchHashtag('NewFriends')">
-          <span style="font-size: 22px; color: var(--primary-color);">#</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">NewFriends</p>
-            <p class="suggestion-username">142 posts</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- QUICK ACTIONS -->
-    <div class="suggestions-card">
-      <div class="suggestions-header">
-        <h3 class="suggestions-title">Quick Actions</h3>
-      </div>
-      <div class="suggestions-list">
-        <div class="suggestion-item" onclick="openCreatePostModal()" style="cursor: pointer;">
-          <span style="font-size: 22px; color: var(--primary-color);">📝</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">Create Post</p>
-          </div>
-        </div>
-        <div class="suggestion-item" onclick="openCamera()" style="cursor: pointer;">
-          <span style="font-size: 22px; color: var(--primary-color);">📸</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">Take Photo</p>
-          </div>
-        </div>
-        <div class="suggestion-item" onclick="refreshFeed()" style="cursor: pointer;">
-          <span style="font-size: 22px; color: var(--primary-color);">🔄</span>
-          <div class="suggestion-info">
-            <p class="suggestion-name">Refresh Feed</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =============================================
-     ENHANCED CREATE POST MODAL
-     ============================================= -->
-<div class="modal fade create-post-modal" id="createPostModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Create New Post</h5>
-        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
-      </div>
-      <form method="post" enctype="multipart/form-data" id="create-post-form" action="{% url 'create_post' %}">
-        {% csrf_token %}
-        <div class="modal-body">
-          <div class="create-post-header">
-            {% if user.profile.profile_pic %}
-              <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="profile-photo" />
-            {% else %}
-              <div class="avatar-fallback">{{ user.get_full_name|default:user.username|first }}</div>
-            {% endif %}
-            <div class="user-info">
-              <div class="full-name">{{ user.get_full_name|default:user.username }}</div>
-              <div class="username">@{{ user.username }}</div>
-            </div>
-          </div>
-          
-          <textarea class="create-post-textarea" placeholder="What's happening?" name="content" id="create-post-content"></textarea>
-          
-          <!-- Media Previews -->
-          <div id="media-previews" class="media-previews">
-            <img id="image-preview" class="media-preview image-preview" src="" alt="Image preview" />
-          </div>
-
-          <!-- Image Editor Tools -->
-          <div class="image-editor-create d-none" id="imageEditorCreate">
-            <div class="editor-tools">
-              <button type="button" class="editor-tool-btn" onclick="applyFilterToCreate('normal')">Normal</button>
-              <button type="button" class="editor-tool-btn" onclick="applyFilterToCreate('vintage')">Vintage</button>
-              <button type="button" class="editor-tool-btn" onclick="applyFilterToCreate('bw')">B&W</button>
-              <button type="button" class="editor-tool-btn" onclick="applyFilterToCreate('warm')">Warm</button>
-              <button type="button" class="editor-tool-btn" onclick="rotateImage()">Rotate</button>
-              <button type="button" class="editor-tool-btn" onclick="cropImage()">Crop</button>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="media-options">
-            <input type="file" id="create-post-image" name="image" accept="image/*" class="d-none" onchange="handleCreatePostImage(event)" />
-            <input type="file" id="create-post-video" name="video" accept="video/*" class="d-none" />
             
-            <button type="button" class="icon-btn" onclick="document.getElementById('create-post-image').click()" title="Add Photo">
-              📷
-            </button>
-            <button type="button" class="icon-btn" onclick="document.getElementById('create-post-video').click()" title="Add Video">
-              🎥
-            </button>
-            <button type="button" class="icon-btn" onclick="toggleEmojiPicker('create-post-content')" title="Add Emoji">
-              😊
-            </button>
-            <button type="button" class="icon-btn" onclick="addLocationToPost()" title="Add Location">
-              📍
-            </button>
-            <button type="button" class="icon-btn" onclick="addHashtagToPost()" title="Add Hashtag">
-              #
-            </button>
-          </div>
-          <div class="post-actions">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="submit-create-post-btn">
-              <span class="submit-text">Post</span>
-              <span class="loading-spinner d-none"></span>
-            </button>
-          </div>
+            <div class="create-post-options">
+                <button class="post-option" onclick="window.openCreatePostModal('photo')">
+                    <i class="fas fa-image" style="color: #45bd62;"></i>
+                    <span>Photo</span>
+                </button>
+                <button class="post-option" onclick="window.openCreatePostModal('video')">
+                    <i class="fas fa-video" style="color: #f5533d;"></i>
+                    <span>Video</span>
+                </button>
+                <button class="post-option" onclick="window.openCreatePostModal('feeling')">
+                    <i class="fas fa-smile" style="color: #f7b928;"></i>
+                    <span>Feeling</span>
+                </button>
+                <button class="post-option" onclick="window.openCreatePostModal('poll')">
+                    <i class="fas fa-chart-bar" style="color: #1877f2;"></i>
+                    <span>Poll</span>
+                </button>
+            </div>
         </div>
-      </form>
-    </div>
-  </div>
-</div>
 
-<!-- =============================================
-     ENHANCED MODERN IMAGE EDITOR MODAL
-     ============================================= -->
-<div class="modal fade image-editor-modal" id="imageEditorModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Image</h5>
-        <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="image-editor-container">
-          <div class="editor-preview-container">
-            <img id="editor-preview" class="editor-preview" src="" alt="Image to edit" />
-          </div>
-          
-          <div class="editor-controls">
-            <div class="control-group">
-              <label class="control-label">
-                Brightness
-                <span class="control-value" id="brightnessValue">100%</span>
-              </label>
-              <input type="range" class="control-slider" id="brightnessSlider" min="0" max="200" value="100" oninput="updateBrightness(this.value)">
+        <!-- Stories Section -->
+        <div class="stories-section">
+            <div class="stories-header">
+                <h3 class="section-title">Stories</h3>
+                <button class="see-all-stories" onclick="viewAllStories()">See All</button>
             </div>
-            <div class="control-group">
-              <label class="control-label">
-                Contrast
-                <span class="control-value" id="contrastValue">100%</span>
-              </label>
-              <input type="range" class="control-slider" id="contrastSlider" min="0" max="200" value="100" oninput="updateContrast(this.value)">
+            <div class="stories-container" id="storiesContainer">
+                <div class="story-item create-story" onclick="openStoryCreator()">
+                    <div class="story-avatar">
+                        {% if user.profile.profile_pic %}
+                            <img src="{{ user.profile.profile_pic.url }}" alt="Profile">
+                        {% else %}
+                            <div class="default-avatar">
+                                {{ user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="add-story-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    <span class="story-label">Create Story</span>
+                </div>
+                
+                <div class="loading-stories">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading stories...</span>
+                </div>
             </div>
-            <div class="control-group">
-              <label class="control-label">
-                Saturation
-                <span class="control-value" id="saturationValue">100%</span>
-              </label>
-              <input type="range" class="control-slider" id="saturationSlider" min="0" max="200" value="100" oninput="updateSaturation(this.value)">
-            </div>
-            <div class="control-group">
-              <label class="control-label">
-                Rotation
-                <span class="control-value" id="rotationValue">0°</span>
-              </label>
-              <input type="range" class="control-slider" id="rotationSlider" min="0" max="360" value="0" oninput="updateRotation(this.value)">
-            </div>
-          </div>
-          
-          <div class="filter-presets">
-            <div class="filter-preset active" onclick="applyFilter('normal')">
-              <img id="filter-normal" class="filter-preview" src="" alt="Normal" />
-              <div class="filter-name">Normal</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('clarendon')">
-              <img id="filter-clarendon" class="filter-preview" src="" alt="Clarendon" />
-              <div class="filter-name">Clarendon</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('gingham')">
-              <img id="filter-gingham" class="filter-preview" src="" alt="Gingham" />
-              <div class="filter-name">Gingham</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('moon')">
-              <img id="filter-moon" class="filter-preview" src="" alt="Moon" />
-              <div class="filter-name">Moon</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('lark')">
-              <img id="filter-lark" class="filter-preview" src="" alt="Lark" />
-              <div class="filter-name">Lark</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('reyes')">
-              <img id="filter-reyes" class="filter-preview" src="" alt="Reyes" />
-              <div class="filter-name">Reyes</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('juno')">
-              <img id="filter-juno" class="filter-preview" src="" alt="Juno" />
-              <div class="filter-name">Juno</div>
-            </div>
-            <div class="filter-preset" onclick="applyFilter('slumber')">
-              <img id="filter-slumber" class="filter-preview" src="" alt="Slumber" />
-              <div class="filter-name">Slumber</div>
-            </div>
-          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="resetImageEditor()">Reset</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveImageEdit()">
-          <span class="save-text">Save Changes</span>
-          <span class="loading-spinner d-none"></span>
-        </button>
-      </div>
+
+        <!-- Posts Feed -->
+        <div class="posts-feed" id="postsContainer">
+            {% for post in posts %}
+                {% include 'core/components/post_card.html' with post=post %}
+            {% empty %}
+                <div class="empty-feed-state">
+                    <div class="empty-feed-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h3>Your feed is empty</h3>
+                    <p>Start following people or create your first post to see content here.</p>
+                    <div class="empty-feed-actions">
+                        <button class="btn-primary" onclick="window.openCreatePostModal()">
+                            <i class="fas fa-plus"></i>
+                            Create First Post
+                        </button>
+                        <button class="btn-secondary" onclick="findPeople()">
+                            <i class="fas fa-user-plus"></i>
+                            Find People to Follow
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Loading Indicator -->
+            <div class="loading-posts" id="loadingPosts" style="display: none;">
+                <div class="loading-spinner"></div>
+                <span>Loading more posts...</span>
+            </div>
+            
+            <!-- End of Feed -->
+            <div class="end-of-feed" id="endOfFeed" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <p>You're all caught up!</p>
+                <button class="btn-secondary" onclick="refreshFeed()">Refresh Feed</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- IMAGE PREVIEW MODAL -->
-<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content" style="background: transparent; border: none;">
-      <div class="modal-header" style="border: none; position: absolute; top: 10px; right: 10px; z-index: 1;">
-        <button type="button" class="close-btn" data-bs-dismiss="modal" style="background: rgba(0,0,0,0.5); color: white;">×</button>
-      </div>
-      <div class="modal-body text-center p-0">
-        <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 90vh; object-fit: contain;" />
-      </div>
+    <!-- Right Sidebar -->
+    <div class="sidebar right-sidebar">
+        <!-- Trending Topics -->
+        <div class="trending-card">
+            <div class="card-header">
+                <h4 class="card-title">Trending Topics</h4>
+                <i class="fas fa-fire trending-icon"></i>
+            </div>
+            
+            <div class="trending-list">
+                <div id="trendingHashtags">
+                    <div class="loading-trends">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading trending hashtags...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="#" class="see-more-link">See More Trends</a>
+            </div>
+        </div>
+
+        <!-- Online Friends -->
+        <div class="friends-card">
+            <div class="card-header">
+                <h4 class="card-title">Online Friends</h4>
+                <span class="online-count">3 online</span>
+            </div>
+            
+            <div class="friends-list" id="onlineFriendsList">
+                <div class="loading-friends">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading online friends...</span>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="#" class="see-more-link">View All Friends</a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card">
+            <div class="card-header">
+                <h4 class="card-title">Recent Activity</h4>
+            </div>
+            
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-avatar">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p><strong>Sarah</strong> liked your post</p>
+                        <span class="activity-time">2 min ago</span>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-avatar">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p><strong>Mike</strong> started following you</p>
+                        <span class="activity-time">1 hour ago</span>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-avatar">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p><strong>Emma</strong> commented on your photo</p>
+                        <span class="activity-time">3 hours ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="footer-links">
+            <div class="links-row">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Advertising</a>
+                <a href="#">Cookies</a>
+            </div>
+            <div class="links-row">
+                <a href="#">About</a>
+                <a href="#">Blog</a>
+                <a href="#">Careers</a>
+                <a href="#">Help</a>
+            </div>
+            <div class="copyright">
+                Mytro © 2024. All rights reserved.
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-
-<!-- =============================================
-     ENHANCED NOTIFICATION TOAST
-     ============================================= -->
-<div class="toast" id="notificationToast">
-  <span id="toastMessage">Notification message</span>
-</div>
-
-<!-- =============================================
-     ENHANCED FLOATING POST BUTTON
-     ============================================= -->
-<button id="postBtn" data-bs-toggle="modal" data-bs-target="#createPostModal" title="Create New Post" class="pulsing">
-  +
-</button>
 {% endblock %}
 
-{% block extra_js %}
-<!-- Emoji Picker Library -->
-<script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
-
+{% block scripts %}
 <script>
-  // =============================================
-  // ENHANCED MYTRO FEED - COMPLETE JAVASCRIPT
-  // =============================================
+// Feed-specific JavaScript
+let feedCurrentPage = 1;
+let feedIsLoading = false;
+let feedHasMorePosts = true;
 
-  // Global variables
-  const emojiPickers = {};
-  let currentEditingPostId = null;
-  let currentEditingImage = null;
-  let currentEditingCommentId = null;
-  let currentImageFilters = {
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    rotation: 0,
-    filter: 'normal'
-  };
-  let isSubmitting = false;
-  let postsOffset = {{ posts|length }};
-  let isLoading = false;
-
-  // Initialize when DOM is ready
-  document.addEventListener("DOMContentLoaded", function() {
-    initializeEnhancedFeed();
-    setupMediaUploads();
-    initializeTheme();
-    processHashtagsAndMentions();
-    loadLikeStates();
-    initializeInfiniteScroll();
-  });
-
-  // =============================================
-  // ENHANCED THEME MANAGEMENT
-  // =============================================
-
-  function initializeTheme() {
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-    
-    themeToggle.addEventListener('click', function() {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
-      document.documentElement.setAttribute('data-theme', newTheme);
-      themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-      localStorage.setItem('theme', newTheme);
-      
-      showNotification(`Switched to ${newTheme} mode`, 'info');
-    });
-  }
-
-  // =============================================
-  // ENHANCED INITIALIZATION FUNCTIONS
-  // =============================================
-
-  function initializeEnhancedFeed() {
-    // Focus handling for post modal
-    const postModal = document.getElementById("createPostModal");
-    if (postModal) {
-      postModal.addEventListener("shown.bs.modal", function() {
-        document.getElementById("create-post-content").focus();
-        document.getElementById('postBtn').classList.remove('pulsing');
-      });
-      
-      postModal.addEventListener("hidden.bs.modal", function() {
-        resetCreatePostForm();
-      });
-    }
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-      // Close post menus
-      document.querySelectorAll('.post-dropdown').forEach(menu => {
-        if (!e.target.closest('.post-menu')) {
-          menu.classList.remove('show');
-        }
-      });
-    });
-
-    // Auto-resize textareas
-    document.querySelectorAll('textarea').forEach(textarea => {
-      textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-      });
-    });
-  }
-
-  function initializeInfiniteScroll() {
-    let ticking = false;
-    
-    window.addEventListener('scroll', function() {
-      if (!ticking) {
-        window.requestAnimationFrame(function() {
-          if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !isLoading) {
-            loadMorePosts();
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    });
-  }
-
-  function setupMediaUploads() {
-    // Image upload for new posts
-    const imageInput = document.getElementById('create-post-image');
-    if (imageInput) {
-      imageInput.addEventListener('change', function(e) {
-        handleMediaUpload(e, 'image');
-      });
-    }
-  }
-
-  function handleMediaUpload(event, mediaType) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      if (mediaType === 'image') {
-        const preview = document.getElementById('image-preview');
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-        
-        // Show image editor tools
-        document.getElementById('imageEditorCreate').classList.remove('d-none');
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // =============================================
-  // ENHANCED NOTIFICATION SYSTEM
-  // =============================================
-
-  function showNotification(message, type = 'success') {
-    const toast = document.getElementById('notificationToast');
-    const toastMessage = document.getElementById('toastMessage');
-    
-    toastMessage.textContent = message;
-    toast.className = `toast ${type} show`;
-    
+// Initialize feed functionality
+document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
-      toast.classList.remove('show');
-    }, 4000);
-  }
+        initializeFeed();
+        setupInfiniteScroll();
+        loadStories();
+        loadOnlineFriends();
+        loadTrendingHashtags();
+    }, 500);
+});
 
-  // =============================================
-  // ENHANCED PEOPLE TO FOLLOW FUNCTIONS
-  // =============================================
+// Load stories
+async function loadStories() {
+    try {
+        const response = await fetch('/api/stories/');
+        if (response.ok) {
+            const data = await response.json();
+            displayStories(data.stories);
+        } else {
+            displayStories([]);
+        }
+    } catch (error) {
+        console.error('Error loading stories:', error);
+        displayStories([]);
+    }
+}
 
-  function followUser(userId, button) {
-    if (isSubmitting) return;
+function displayStories(stories) {
+    const container = document.getElementById('storiesContainer');
+    const createStory = container.querySelector('.create-story');
+    const loading = container.querySelector('.loading-stories');
     
-    isSubmitting = true;
+    if (loading) loading.remove();
     
-    // Optimistic UI update
-    const isFollowing = button.classList.contains('following');
+    // Remove existing story items (except create story)
+    container.querySelectorAll('.story-item:not(.create-story)').forEach(item => item.remove());
     
-    if (isFollowing) {
-      button.classList.remove('following');
-      button.textContent = 'Follow';
-    } else {
-      button.classList.add('following');
-      button.textContent = 'Following';
+    if (!stories || stories.length === 0) {
+        return;
     }
     
-    // API call
-    fetch(`/api/follow/${userId}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}"
-      }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to follow user");
-      return res.json();
-    })
-    .then(data => {
-      showNotification(isFollowing ? `Unfollowed user` : `Now following user`);
-    })
-    .catch(err => {
-      // Revert UI on error
-      if (isFollowing) {
-        button.classList.add('following');
-        button.textContent = 'Following';
-      } else {
-        button.classList.remove('following');
-        button.textContent = 'Follow';
-      }
-      showNotification('Error: ' + err.message, 'error');
-    })
-    .finally(() => {
-      isSubmitting = false;
+    // Display each user's stories
+    stories.forEach(userStory => {
+        const storyElement = document.createElement('div');
+        storyElement.className = 'story-item';
+        storyElement.onclick = () => viewUserStories(userStory.user.id);
+        
+        storyElement.innerHTML = `
+            <div class="story-avatar ${userStory.is_viewed ? 'viewed' : 'unviewed'}">
+                ${userStory.user.avatar ? 
+                    `<img src="${userStory.user.avatar}" alt="${userStory.user.name}">` :
+                    `<div class="default-avatar" style="width: 100%; height: 100%; background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 24px; border-radius: 50%;">${userStory.user.name.charAt(0)}</div>`
+                }
+                ${userStory.story_count > 1 ? `<div class="story-count" style="position: absolute; top: -5px; right: -5px; background: #ff6b35; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; border: 2px solid white;">${userStory.story_count}</div>` : ''}
+            </div>
+            <span class="story-user">${userStory.user.name.split(' ')[0]}</span>
+        `;
+        
+        container.insertBefore(storyElement, createStory.nextSibling);
     });
-  }
+}
 
-  function visitProfile(username) {
-    window.location.href = `/profile/${username}/`;
-  }
+function viewUserStories(userId) {
+    openStoryViewer(userId, 'user');
+}
 
-  function refreshSuggestions() {
-    if (isSubmitting) return;
+function viewStory(storyId) {
+    openStoryViewer(storyId, 'story');
+}
+
+function openStoryViewer(id, type) {
+    // Create story viewer modal
+    let modal = document.getElementById('storyViewerModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'storyViewerModal';
+        modal.className = 'modal-overlay story-viewer';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        modal.innerHTML = `
+            <div class="story-viewer-container" style="
+                width: 400px;
+                height: 700px;
+                background: #000;
+                border-radius: 12px;
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            ">
+                <div class="story-viewer-header" style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    padding: 16px;
+                    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+                    z-index: 10;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                ">
+                    <div class="story-user-info" style="display: flex; align-items: center; gap: 12px;">
+                        <img id="storyUserAvatar" src="" alt="" class="story-user-avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white;">
+                        <div class="story-user-details">
+                            <span id="storyUserName" style="color: white; font-weight: 600; font-size: 14px; display: block;"></span>
+                            <span id="storyTime" style="color: rgba(255,255,255,0.8); font-size: 12px;"></span>
+                        </div>
+                    </div>
+                    <button class="story-close" onclick="closeStoryViewer()" style="
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: white;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">×</button>
+                </div>
+                <div class="story-progress" style="
+                    position: absolute;
+                    top: 8px;
+                    left: 16px;
+                    right: 16px;
+                    height: 2px;
+                    background: rgba(255,255,255,0.3);
+                    border-radius: 1px;
+                    z-index: 11;
+                ">
+                    <div class="progress-bar" id="storyProgress" style="
+                        height: 100%;
+                        background: white;
+                        border-radius: 1px;
+                        width: 0%;
+                        transition: width 0.1s linear;
+                    "></div>
+                </div>
+                <div class="story-content" id="storyContent" style="
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                "></div>
+                <div class="story-navigation" style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                ">
+                    <button class="story-nav prev" onclick="previousStory()" style="
+                        flex: 1;
+                        background: transparent;
+                        border: none;
+                        cursor: pointer;
+                        color: transparent;
+                    "></button>
+                    <button class="story-nav next" onclick="nextStory()" style="
+                        flex: 1;
+                        background: transparent;
+                        border: none;
+                        cursor: pointer;
+                        color: transparent;
+                    "></button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
     
+    if (type === 'user') {
+        loadUserStories(id);
+    } else {
+        loadStoryContent(id);
+    }
+    modal.style.display = 'flex';
+}
+
+let currentUserStories = [];
+let currentStoryIndex = 0;
+
+async function loadUserStories(userId) {
+    try {
+        const response = await fetch(`/api/stories/user/${userId}/`);
+        if (response.ok) {
+            const data = await response.json();
+            currentUserStories = data.stories;
+            currentStoryIndex = 0;
+            if (currentUserStories.length > 0) {
+                displayStoryContent(currentUserStories[0]);
+                updateStoryProgress();
+            }
+        } else {
+            // Show sample story for demo
+            currentUserStories = [{
+                id: 1,
+                story_type: 'text',
+                text_content: 'Sample Story!',
+                background_color: '#ff6b35',
+                user: { name: 'Demo User', avatar: null },
+                created_at: 'Just now'
+            }];
+            currentStoryIndex = 0;
+            displayStoryContent(currentUserStories[0]);
+        }
+    } catch (error) {
+        console.error('Error loading user stories:', error);
+        closeStoryViewer();
+    }
+}
+
+function updateStoryProgress() {
+    const progressBar = document.getElementById('storyProgress');
+    if (progressBar && currentUserStories.length > 0) {
+        const progress = ((currentStoryIndex + 1) / currentUserStories.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+}
+
+async function loadStoryContent(storyId) {
+    try {
+        const response = await fetch(`/api/stories/${storyId}/`);
+        if (response.ok) {
+            const story = await response.json();
+            displayStoryContent(story);
+        } else {
+            // Show sample story for demo
+            const sampleStory = {
+                id: storyId,
+                story_type: 'text',
+                text_content: 'This is a sample story!',
+                background_color: '#ff6b35',
+                user: {
+                    name: 'Sample User',
+                    avatar: null
+                },
+                created_at: '2 hours ago'
+            };
+            displayStoryContent(sampleStory);
+        }
+    } catch (error) {
+        console.error('Error loading story:', error);
+        // Show sample story on error
+        const sampleStory = {
+            id: storyId,
+            story_type: 'text',
+            text_content: 'Sample Story Content',
+            background_color: '#42b883',
+            user: {
+                name: 'Demo User',
+                avatar: null
+            },
+            created_at: 'Just now'
+        };
+        displayStoryContent(sampleStory);
+    }
+}
+
+function displayStoryContent(story) {
+    const avatar = document.getElementById('storyUserAvatar');
+    if (story.user.avatar) {
+        avatar.src = story.user.avatar;
+        avatar.style.display = 'block';
+    } else {
+        // Create default avatar
+        const defaultAvatar = document.createElement('div');
+        defaultAvatar.style.cssText = `
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            border: 2px solid white;
+        `;
+        defaultAvatar.textContent = story.user.name.charAt(0);
+        avatar.parentNode.replaceChild(defaultAvatar, avatar);
+    }
+    
+    document.getElementById('storyUserName').textContent = story.user.name;
+    document.getElementById('storyTime').textContent = story.created_at;
+    
+    const content = document.getElementById('storyContent');
+    if (story.story_type === 'text') {
+        content.innerHTML = `
+            <div class="text-story" style="
+                width: 100%;
+                height: 100%;
+                background: ${story.background_color};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 40px;
+                box-sizing: border-box;
+            ">
+                <p style="
+                    color: white;
+                    font-size: 24px;
+                    font-weight: 600;
+                    text-align: center;
+                    margin: 0;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    font-family: ${story.font_family || 'Inter'};
+                ">${story.text_content}</p>
+            </div>
+        `;
+    } else if (story.story_type === 'image') {
+        content.innerHTML = `
+            <img src="${story.image}" alt="Story" style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            ">
+            ${story.caption ? `<div class="story-caption" style="position: absolute; bottom: 60px; left: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; padding: 12px; border-radius: 8px; font-size: 16px;">${story.caption}</div>` : ''}
+        `;
+    } else if (story.story_type === 'video') {
+        content.innerHTML = `
+            <video autoplay muted loop style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            ">
+                <source src="${story.video}" type="video/mp4">
+            </video>
+            ${story.caption ? `<div class="story-caption" style="position: absolute; bottom: 60px; left: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; padding: 12px; border-radius: 8px; font-size: 16px;">${story.caption}</div>` : ''}
+        `;
+    }
+    
+    // Add delete button if own story
+    if (story.can_delete) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.className = 'story-delete-btn';
+        deleteBtn.style.cssText = `
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        deleteBtn.onclick = () => deleteStory(story.id);
+        content.appendChild(deleteBtn);
+    }
+    
+    // Start progress animation
+    const progressBar = document.getElementById('storyProgress');
+    progressBar.style.width = '0%';
+    setTimeout(() => {
+        progressBar.style.transition = 'width 5s linear';
+        progressBar.style.width = '100%';
+    }, 100);
+    
+    // Auto-advance story after 5 seconds
+    setTimeout(() => {
+        nextStory();
+    }, 5000);
+}
+
+async function deleteStory(storyId) {
+    if (!confirm('Delete this story?')) return;
+    
+    try {
+        const response = await fetch(`/api/stories/${storyId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            window.showGlobalNotification('Story deleted', 'success');
+            closeStoryViewer();
+            loadStories();
+        }
+    } catch (error) {
+        console.error('Error deleting story:', error);
+    }
+}
+
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+function closeStoryViewer() {
+    const modal = document.getElementById('storyViewerModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function previousStory() {
+    if (currentStoryIndex > 0) {
+        currentStoryIndex--;
+        displayStoryContent(currentUserStories[currentStoryIndex]);
+    } else {
+        closeStoryViewer();
+    }
+}
+
+function nextStory() {
+    if (currentStoryIndex < currentUserStories.length - 1) {
+        currentStoryIndex++;
+        displayStoryContent(currentUserStories[currentStoryIndex]);
+    } else {
+        closeStoryViewer();
+    }
+}
+
+function viewAllStories() {
+    window.showGlobalNotification('View all stories', 'info');
+}
+
+function initializeFeed() {
+    // Load initial posts if needed
+    if (document.querySelectorAll('.post-card').length === 0) {
+        loadMorePosts();
+    }
+}
+
+function setupInfiniteScroll() {
+    window.addEventListener('scroll', throttle(function() {
+        const scrollPosition = window.innerHeight + window.pageYOffset;
+        const pageHeight = document.documentElement.scrollHeight;
+        const threshold = 500;
+
+        if (scrollPosition >= pageHeight - threshold && !feedIsLoading && feedHasMorePosts) {
+            loadMorePosts();
+        }
+    }, 200));
+}
+
+async function loadMorePosts() {
+    if (feedIsLoading || !feedHasMorePosts) return;
+    
+    feedIsLoading = true;
+    const loadingIndicator = document.getElementById('loadingPosts');
+    loadingIndicator.style.display = 'flex';
+    
+    try {
+        const response = await fetch(`/api/load_more_posts/?offset=${currentPage * 10}`);
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.posts && data.posts.length > 0) {
+                appendPosts(data.posts);
+                feedCurrentPage++;
+            } else {
+                feedHasMorePosts = false;
+                document.getElementById('endOfFeed').style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading more posts:', error);
+        showNotification('Error loading posts', 'error');
+    } finally {
+        feedIsLoading = false;
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+function appendPosts(posts) {
+    const postsContainer = document.getElementById('postsContainer');
+    const endOfFeed = document.getElementById('endOfFeed');
+    
+    if (endOfFeed.style.display !== 'none') {
+        endOfFeed.style.display = 'none';
+    }
+    
+    posts.forEach(post => {
+        const postElement = createPostElement(post);
+        postsContainer.insertBefore(postElement, document.getElementById('loadingPosts'));
+    });
+}
+
+function createPostElement(post) {
+    // This would create a post element from template
+    // For now, we'll create a simple placeholder
+    const div = document.createElement('div');
+    div.className = 'post-card';
+    div.innerHTML = `
+        <div class="post-header">
+            <div class="post-user-info">
+                <div class="user-avatar small"></div>
+                <div class="user-details">
+                    <span class="user-name">${post.author.name}</span>
+                    <span class="post-time">Just now</span>
+                </div>
+            </div>
+        </div>
+        <div class="post-content">
+            <p>${post.content}</p>
+        </div>
+    `;
+    return div;
+}
+
+// Enhanced follow functionality
+async function toggleFollow(userId, button) {
+    try {
+        button.disabled = true;
+        const originalHTML = button.innerHTML;
+        
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        const response = await fetch(`/api/follow/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.following) {
+                button.innerHTML = '<i class="fas fa-check"></i> Following';
+                button.classList.add('following');
+                showNotification(`You started following ${data.username}`);
+                
+                // Remove from suggestions after following
+                const suggestionItem = button.closest('.suggestion-item');
+                suggestionItem.style.opacity = '0.5';
+                setTimeout(() => {
+                    suggestionItem.style.transition = 'all 0.3s ease';
+                    suggestionItem.style.height = '0';
+                    suggestionItem.style.opacity = '0';
+                    suggestionItem.style.margin = '0';
+                    suggestionItem.style.padding = '0';
+                    
+                    setTimeout(() => {
+                        suggestionItem.remove();
+                        checkEmptySuggestions();
+                    }, 300);
+                }, 1000);
+            } else {
+                button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                button.classList.remove('following');
+                showNotification(`You unfollowed ${data.username}`);
+            }
+        }
+    } catch (error) {
+        console.error('Error following user:', error);
+        showNotification('Error following user', 'error');
+        button.innerHTML = originalHTML;
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function checkEmptySuggestions() {
     const suggestionsList = document.getElementById('suggestionsList');
-    const refreshBtn = document.querySelector('.refresh-suggestions');
-    const refreshText = refreshBtn.querySelector('.refresh-text');
-    const spinner = refreshBtn.querySelector('.loading-spinner');
+    const suggestionItems = suggestionsList.querySelectorAll('.suggestion-item');
     
-    // Show loading state
-    refreshText.classList.add('d-none');
-    spinner.classList.remove('d-none');
+    if (suggestionItems.length === 0) {
+        suggestionsList.innerHTML = `
+            <div class="empty-suggestions">
+                <i class="fas fa-check-circle"></i>
+                <p>You're following all suggestions!</p>
+                <button class="btn-secondary small" onclick="refreshSuggestions()">Find More People</button>
+            </div>
+        `;
+    }
+}
+
+async function refreshSuggestions() {
+    const refreshBtn = document.querySelector('.refresh-btn');
+    const suggestionsList = document.getElementById('suggestionsList');
+    
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     refreshBtn.disabled = true;
     
-    fetch('/api/suggested_users/')
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load suggestions");
-        return res.json();
-      })
-      .then(data => {
-        // Update suggestions list
-        suggestionsList.innerHTML = '';
-        
-        if (data.users && data.users.length > 0) {
-          data.users.forEach(user => {
-            const suggestionHTML = `
-              <div class="suggestion-item" onclick="visitProfile('${user.username}')">
-                ${user.photo ? 
-                  `<img src="${user.photo}" alt="${user.username}" class="suggestion-avatar" />` : 
-                  `<div class="avatar-fallback">${user.name ? user.name.charAt(0) : user.username.charAt(0)}</div>`
-                }
-                <div class="suggestion-info">
-                  <p class="suggestion-name">${user.name || user.username}</p>
-                </div>
-                <button class="follow-btn" onclick="event.stopPropagation(); followUser(${user.id}, this)">Follow</button>
-              </div>`;
-            suggestionsList.innerHTML += suggestionHTML;
-          });
-        } else {
-          suggestionsList.innerHTML = '<div class="text-center text-muted py-3">No suggestions available</div>';
-        }
-        
-        showNotification('Suggestions updated');
-      })
-      .catch(err => {
-        showNotification('Error loading suggestions', 'error');
-      })
-      .finally(() => {
-        refreshText.classList.remove('d-none');
-        spinner.classList.add('d-none');
-        refreshBtn.disabled = false;
-      });
-  }
-
-  // =============================================
-  // ENHANCED CONTENT PROCESSING
-  // =============================================
-
-  function processHashtagsAndMentions() {
-    document.querySelectorAll('.post-content').forEach(content => {
-      let text = content.innerHTML;
-      // Process hashtags
-      text = text.replace(/#(\w+)/g, '<a href="/hashtag/$1" class="post-hashtag">#$1</a>');
-      // Process mentions
-      text = text.replace(/@(\w+)/g, '<a href="/profile/$1" class="post-mention">@$1</a>');
-      content.innerHTML = text;
-    });
-  }
-
-  // =============================================
-  // ENHANCED EMOJI PICKER FUNCTIONS
-  // =============================================
-
-  function toggleEmojiPicker(inputId) {
-    if (emojiPickers[inputId]) {
-      emojiPickers[inputId].togglePicker(document.getElementById(inputId));
-      return;
-    }
-    
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    
-    const picker = new EmojiButton({
-      position: 'top-end',
-      zIndex: 9999,
-      theme: document.documentElement.getAttribute('data-theme') || 'light'
-    });
-    
-    picker.on('emoji', emoji => {
-      insertAtCursor(input, emoji);
-      input.focus();
-    });
-    
-    emojiPickers[inputId] = picker;
-    picker.togglePicker(input);
-  }
-
-  function insertAtCursor(input, textToInsert) {
-    const start = input.selectionStart || 0;
-    const end = input.selectionEnd || 0;
-    const text = input.value || '';
-    input.value = text.slice(0, start) + textToInsert + text.slice(end);
-    input.selectionStart = input.selectionEnd = start + textToInsert.length;
-    input.focus();
-    
-    // Trigger input event for auto-resize
-    const event = new Event('input', { bubbles: true });
-    input.dispatchEvent(event);
-  }
-
-  // =============================================
-  // ENHANCED POST INTERACTION FUNCTIONS
-  // =============================================
-
-  function likePost(postId) {
-    const likeBtn = document.getElementById(`like-btn-${postId}`);
-    const likeCount = document.getElementById(`like-count-${postId}`);
-    const likeCountText = document.getElementById(`like-count-text-${postId}`);
-    
-    // Optimistic UI update
-    const currentLikes = parseInt(likeCount.textContent) || 0;
-    const isLiked = likeBtn.classList.contains('liked');
-    
-    if (isLiked) {
-      // Unlike
-      likeBtn.classList.remove('liked');
-      likeBtn.querySelector('.like-icon').textContent = '🤍';
-      likeCount.textContent = currentLikes - 1;
-      
-      // Update like text
-      if (currentLikes - 1 === 0) {
-        likeCountText.textContent = '0 likes';
-      } else if (currentLikes - 1 === 1) {
-        likeCountText.textContent = '1 like';
-      } else {
-        likeCountText.textContent = `${currentLikes - 1} likes`;
-      }
-      
-      // Remove from localStorage
-      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
-      delete likedPosts[postId];
-      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
-    } else {
-      // Like
-      likeBtn.classList.add('liked');
-      likeBtn.querySelector('.like-icon').textContent = '❤️';
-      likeCount.textContent = currentLikes + 1;
-      
-      // Update like text
-      if (currentLikes + 1 === 1) {
-        likeCountText.textContent = 'You liked this';
-      } else {
-        likeCountText.textContent = `You and ${currentLikes} other${currentLikes > 1 ? 's' : ''}`;
-      }
-      
-      // Save to localStorage
-      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
-      likedPosts[postId] = true;
-      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
-    }
-    
-    // API call
-    fetch(`/api/like_post/${postId}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-    })
-    .then(async (res) => {
-      if (!res.ok) {
-        // Revert UI if API call fails
-        if (isLiked) {
-          likeBtn.classList.add('liked');
-          likeBtn.querySelector('.like-icon').textContent = '❤️';
-          likeCount.textContent = currentLikes;
-        } else {
-          likeBtn.classList.remove('liked');
-          likeBtn.querySelector('.like-icon').textContent = '🤍';
-          likeCount.textContent = currentLikes;
-        }
-        throw new Error("Failed to like post");
-      }
-      return res.json();
-    })
-    .then(data => {
-      // Update with actual count from server
-      likeCount.textContent = data.like_count;
-    })
-    .catch((err) => {
-      showNotification('Error: ' + err.message, 'error');
-    });
-  }
-
-  function repostPost(postId) {
-    const repostBtn = document.getElementById(`repost-btn-${postId}`);
-    const repostCount = document.getElementById(`repost-count-${postId}`);
-    
-    // Optimistic UI update
-    const currentReposts = parseInt(repostCount.textContent) || 0;
-    const isReposted = repostBtn.classList.contains('reposted');
-    
-    if (isReposted) {
-      repostBtn.classList.remove('reposted');
-      repostCount.textContent = currentReposts - 1;
-    } else {
-      repostBtn.classList.add('reposted');
-      repostCount.textContent = currentReposts + 1;
-    }
-    
-    // API call
-    fetch(`/api/repost/${postId}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}"
-      },
-      body: JSON.stringify({ repost: !isReposted })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to repost");
-      return res.json();
-    })
-    .then(data => {
-      // Update with actual count from server
-      repostCount.textContent = data.repost_count;
-      showNotification(isReposted ? 'Removed repost' : 'Post reposted');
-    })
-    .catch(err => {
-      // Revert UI on error
-      if (isReposted) {
-        repostBtn.classList.add('reposted');
-        repostCount.textContent = currentReposts;
-      } else {
-        repostBtn.classList.remove('reposted');
-        repostCount.textContent = currentReposts;
-      }
-      showNotification('Error: ' + err.message, 'error');
-    });
-  }
-
-  // =============================================
-  // ENHANCED COMMENT SYSTEM FUNCTIONS
-  // =============================================
-
-  function togglePostCommentBtn(postId) {
-    const input = document.getElementById(`comment-input-${postId}`);
-    const btn = document.getElementById(`post-comment-btn-${postId}`);
-    if (input && btn) {
-      const hasText = input.value.trim().length > 0;
-      btn.disabled = !hasText;
-      btn.classList.toggle('active', hasText);
-    }
-  }
-
-  function focusCommentInput(postId) {
-    const input = document.getElementById(`comment-input-${postId}`);
-    if (input) {
-      input.focus();
-      // Scroll to comments section
-      const commentsSection = input.closest('.comments-section');
-      commentsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-
-  function addComment(postId) {
-    const input = document.getElementById(`comment-input-${postId}`);
-    const btn = document.getElementById(`post-comment-btn-${postId}`);
-    
-    if (!input || !btn || isSubmitting) return;
-    
-    const content = input.value.trim();
-    if (!content) return;
-    
-    isSubmitting = true;
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<div class="loading-spinner"></div>';
-    
-    fetch("/api/add_comment/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-      body: JSON.stringify({ post_id: postId, comment: content }),
-    })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to add comment");
-      return res.json();
-    })
-    .then((data) => {
-      // Add new comment to UI
-      const commentsContainer = document.getElementById(`comments-container-${postId}`);
-      if (!commentsContainer) return;
-      
-      const newCommentHTML = `
-        <div class="comment slide-up" id="comment-${data.id}">
-          <a href="${data.profile_url}">
-            <div class="avatar-fallback" style="width: 36px; height: 36px; font-size: 14px;">
-              ${data.name ? data.name.charAt(0) : 'U'}
-            </div>
-          </a>
-          <div class="comment-content">
-            <a href="${data.profile_url}" class="comment-user">${data.name || 'User'}</a>
-            <div class="comment-text" id="comment-text-${data.id}">${data.content}</div>
-            <div class="comment-actions">
-              <button class="comment-action" onclick="enableCommentEdit(${data.id})">Edit</button>
-              <button class="comment-action" onclick="deleteComment(${data.id})">Delete</button>
-            </div>
-          </div>
-        </div>`;
-      
-      commentsContainer.insertAdjacentHTML('beforeend', newCommentHTML);
-      
-      // Clear input and reset button
-      input.value = '';
-      input.style.height = 'auto';
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      togglePostCommentBtn(postId);
-      
-      // Update comment count
-      const commentCount = document.getElementById(`comment-count-${postId}`);
-      if (commentCount) {
-        const currentCount = parseInt(commentCount.textContent) || 0;
-        commentCount.textContent = currentCount + 1;
-      }
-      
-      // Update view comments button
-      const viewCommentsBtn = commentsContainer.nextElementSibling;
-      if (viewCommentsBtn && viewCommentsBtn.classList.contains('view-comments-btn')) {
-        const currentCount = parseInt(viewCommentsBtn.textContent.match(/\d+/)[0]) || 0;
-        viewCommentsBtn.textContent = `View all ${currentCount + 1} comments`;
-      }
-      
-      showNotification('Comment added');
-    })
-    .catch((err) => {
-      showNotification('Error adding comment: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-    })
-    .finally(() => {
-      isSubmitting = false;
-    });
-  }
-
-  // =============================================
-  // ENHANCED COMMENT EDITING
-  // =============================================
-
-  function enableCommentEdit(commentId) {
-    const commentElement = document.getElementById(`comment-${commentId}`);
-    const commentText = document.getElementById(`comment-text-${commentId}`);
-    const currentText = commentText.textContent;
-    
-    // Replace text with input field
-    const editInput = document.createElement('textarea');
-    editInput.className = 'comment-edit-input';
-    editInput.value = currentText;
-    
-    const editButtons = document.createElement('div');
-    editButtons.className = 'comment-actions';
-    editButtons.innerHTML = `
-      <button class="comment-action" onclick="saveCommentEdit(${commentId})">Save</button>
-      <button class="comment-action" onclick="cancelCommentEdit(${commentId})">Cancel</button>
-    `;
-    
-    commentText.replaceWith(editInput);
-    commentElement.querySelector('.comment-actions').replaceWith(editButtons);
-    
-    currentEditingCommentId = commentId;
-    editInput.focus();
-    editInput.style.height = editInput.scrollHeight + 'px';
-  }
-
-  function saveCommentEdit(commentId) {
-    const editInput = document.querySelector(`#comment-${commentId} .comment-edit-input`);
-    const newText = editInput.value.trim();
-    
-    if (!newText) {
-      showNotification("Comment cannot be empty", "error");
-      return;
-    }
-    
-    fetch(`/api/edit_comment/${commentId}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}"
-      },
-      body: JSON.stringify({ content: newText })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to edit comment");
-      return res.json();
-    })
-    .then(data => {
-      // Restore comment display
-      const commentElement = document.getElementById(`comment-${commentId}`);
-      const commentText = document.createElement('div');
-      commentText.className = 'comment-text';
-      commentText.id = `comment-text-${commentId}`;
-      commentText.textContent = data.content;
-      
-      const actions = document.createElement('div');
-      actions.className = 'comment-actions';
-      actions.innerHTML = `
-        <button class="comment-action" onclick="enableCommentEdit(${commentId})">Edit</button>
-        <button class="comment-action" onclick="deleteComment(${commentId})">Delete</button>
-      `;
-      
-      editInput.replaceWith(commentText);
-      commentElement.querySelector('.comment-actions').replaceWith(actions);
-      
-      currentEditingCommentId = null;
-      showNotification('Comment updated');
-    })
-    .catch(err => {
-      showNotification('Error editing comment: ' + err.message, 'error');
-    });
-  }
-
-  function cancelCommentEdit(commentId) {
-    const editInput = document.querySelector(`#comment-${commentId} .comment-edit-input`);
-    const originalText = document.getElementById(`comment-text-${commentId}`).textContent;
-    
-    // Restore original comment
-    const commentElement = document.getElementById(`comment-${commentId}`);
-    const commentText = document.createElement('div');
-    commentText.className = 'comment-text';
-    commentText.id = `comment-text-${commentId}`;
-    commentText.textContent = originalText;
-    
-    const actions = document.createElement('div');
-    actions.className = 'comment-actions';
-    actions.innerHTML = `
-      <button class="comment-action" onclick="enableCommentEdit(${commentId})">Edit</button>
-      <button class="comment-action" onclick="deleteComment(${commentId})">Delete</button>
-    `;
-    
-    editInput.replaceWith(commentText);
-    commentElement.querySelector('.comment-actions').replaceWith(actions);
-    
-    currentEditingCommentId = null;
-  }
-
-  function addSticker(inputId) {
-    const stickers = ['⭐', '❤️', '🔥', '🎉', '😊', '😂', '😍', '👍', '👏', '🎈', '✨', '💫'];
-    const sticker = stickers[Math.floor(Math.random() * stickers.length)];
-    insertAtCursor(document.getElementById(inputId), sticker);
-  }
-
-  function addGIF(inputId) {
-    showNotification('GIF picker would open here', 'info');
-  }
-
-  function addHashtag(inputId) {
-    insertAtCursor(document.getElementById(inputId), '#');
-  }
-
-  // =============================================
-  // ENHANCED POST EDITING FUNCTIONS
-  // =============================================
-
-  function togglePostMenu(postId) {
-    const menu = document.getElementById(`post-menu-${postId}`);
-    const allMenus = document.querySelectorAll('.post-dropdown');
-    
-    // Close all other menus
-    allMenus.forEach(otherMenu => {
-      if (otherMenu !== menu) {
-        otherMenu.classList.remove('show');
-      }
-    });
-    
-    menu.classList.toggle('show');
-  }
-
-  function enablePostEdit(postId) {
-    currentEditingPostId = postId;
-    
-    // Hide normal post view
-    const card = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
-    card.querySelector('.comments-section').classList.add('d-none');
-    card.querySelector('.post-content').classList.add('d-none');
-    card.querySelector('.post-time').classList.add('d-none');
-    card.querySelector('.post-actions').classList.add('d-none');
-    card.querySelector('.post-stats').classList.add('d-none');
-    
-    // Show edit UI
-    const editContainer = document.getElementById(`edit-container-${postId}`);
-    editContainer.classList.remove('d-none');
-    
-    // Focus textarea
-    const textarea = document.getElementById(`post-edit-${postId}`);
-    textarea.focus();
-    
-    // Close menu
-    togglePostMenu(postId);
-  }
-
-  function cancelPostEdit(postId) {
-    // Show normal post view
-    const card = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
-    card.querySelector('.comments-section').classList.remove('d-none');
-    card.querySelector('.post-content').classList.remove('d-none');
-    card.querySelector('.post-time').classList.remove('d-none');
-    card.querySelector('.post-actions').classList.remove('d-none');
-    card.querySelector('.post-stats').classList.remove('d-none');
-    
-    // Hide edit UI
-    document.getElementById(`edit-container-${postId}`).classList.add('d-none');
-    
-    currentEditingPostId = null;
-  }
-
-  function savePostEdit(postId) {
-    const content = document.getElementById(`post-edit-${postId}`).value.trim();
-    if (!content) {
-      showNotification("Post content cannot be empty", "error");
-      return;
-    }
-
-    if (isSubmitting) return;
-    isSubmitting = true;
-
     // Show loading state
-    const saveBtn = document.querySelector(`#edit-container-${postId} .btn-primary`);
-    const saveText = saveBtn.querySelector('.save-text');
-    const spinner = saveBtn.querySelector('.loading-spinner');
-    
-    saveText.classList.add('d-none');
-    spinner.classList.remove('d-none');
-    saveBtn.disabled = true;
-
-    // Prepare form data for potential image upload
-    const formData = new FormData();
-    formData.append('content', content);
-    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    
-    // Check if there's a new image
-    const imageInput = document.getElementById(`post-photo-input-${postId}`);
-    if (imageInput.files[0]) {
-      formData.append('image', imageInput.files[0]);
-    }
-
-    fetch(`/api/edit_post/${postId}/`, {
-      method: "POST",
-      body: formData
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to save post");
-      return res.json();
-    })
-    .then(data => {
-      // Update post content
-      document.getElementById(`post-content-${postId}`).innerHTML = data.content;
-      processHashtagsAndMentions(); // Reprocess hashtags and mentions
-      
-      // Update time to show "Edited" only if it wasn't already there
-      const timeElement = document.querySelector(`.feed-card[data-post-id="${postId}"] .post-time`);
-      if (!timeElement.innerHTML.includes('Edited')) {
-        timeElement.innerHTML += ' • <span class="text-muted">Edited</span>';
-      }
-      
-      // Update image if changed
-      if (data.image_url) {
-        const postImage = document.getElementById(`post-image-${postId}`);
-        if (postImage) {
-          postImage.src = data.image_url;
-        }
-      }
-      
-      cancelPostEdit(postId);
-      showNotification('Post updated successfully');
-    })
-    .catch(err => {
-      showNotification('Error saving post: ' + err.message, 'error');
-    })
-    .finally(() => {
-      saveText.classList.remove('d-none');
-      spinner.classList.add('d-none');
-      saveBtn.disabled = false;
-      isSubmitting = false;
-    });
-  }
-
-  function previewPostEditImage(event, postId) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById(`post-edit-image-preview-${postId}`);
-      if (preview) {
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-      } else {
-        // Create preview if it doesn't exist
-        const editContainer = document.getElementById(`edit-container-${postId}`);
-        const newPreview = document.createElement('img');
-        newPreview.className = 'edit-image-preview';
-        newPreview.id = `post-edit-image-preview-${postId}`;
-        newPreview.src = e.target.result;
-        newPreview.alt = 'Post Image';
-        editContainer.insertBefore(newPreview, editContainer.querySelector('.edit-controls'));
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function removePostImage(postId) {
-    if (confirm("Are you sure you want to remove this image?")) {
-      fetch(`/api/remove_post_image/${postId}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": "{{ csrf_token }}"
-        }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to remove image");
-        return res.json();
-      })
-      .then(data => {
-        // Hide image preview in edit mode
-        const preview = document.getElementById(`post-edit-image-preview-${postId}`);
-        if (preview) {
-          preview.style.display = 'none';
-        }
-        
-        // Also hide image in main view
-        const postImage = document.querySelector(`.feed-card[data-post-id="${postId}"] .post-media-container`);
-        if (postImage) {
-          postImage.style.display = 'none';
-        }
-        
-        showNotification("Image removed successfully!");
-      })
-      .catch(err => {
-        showNotification("Error removing image: " + err.message, 'error');
-      });
-    }
-  }
-
-  // =============================================
-  // ENHANCED MODERN IMAGE EDITOR
-  // =============================================
-
-  function openImageEditor(postId) {
-    currentEditingPostId = postId;
-    const imageSrc = document.getElementById(`post-edit-image-preview-${postId}`).src;
-    
-    // Set up editor
-    document.getElementById('editor-preview').src = imageSrc;
-    
-    // Create filter previews
-    const filters = ['normal', 'clarendon', 'gingham', 'moon', 'lark', 'reyes', 'juno', 'slumber'];
-    filters.forEach(filter => {
-      const preview = document.getElementById(`filter-${filter}`);
-      if (preview) {
-        preview.src = imageSrc;
-        // Apply filter preview (simplified)
-        preview.style.filter = getFilterStyle(filter);
-      }
-    });
-    
-    // Reset filters
-    currentImageFilters = {
-      brightness: 100,
-      contrast: 100,
-      saturation: 100,
-      rotation: 0,
-      filter: 'normal'
-    };
-    
-    document.getElementById('brightnessSlider').value = 100;
-    document.getElementById('contrastSlider').value = 100;
-    document.getElementById('saturationSlider').value = 100;
-    document.getElementById('rotationSlider').value = 0;
-    
-    updateBrightness(100);
-    updateContrast(100);
-    updateSaturation(100);
-    updateRotation(0);
-    
-    // Show modal
-    const imageEditorModal = new bootstrap.Modal(document.getElementById('imageEditorModal'));
-    imageEditorModal.show();
-  }
-
-  function getFilterStyle(filterName) {
-    const styles = {
-      'normal': 'none',
-      'clarendon': 'contrast(1.2) saturate(1.3)',
-      'gingham': 'sepia(0.3) brightness(1.1)',
-      'moon': 'grayscale(1) brightness(1.1) contrast(1.1)',
-      'lark': 'contrast(0.9) brightness(1.1) saturate(1.2)',
-      'reyes': 'sepia(0.4) contrast(0.9) brightness(1.1) saturate(1.4)',
-      'juno': 'contrast(1.2) brightness(1.1) hue-rotate(-10deg) saturate(1.4)',
-      'slumber': 'contrast(0.9) brightness(0.9) saturate(0.9) hue-rotate(350deg)'
-    };
-    return styles[filterName] || 'none';
-  }
-
-  function updateBrightness(value) {
-    document.getElementById('brightnessValue').textContent = value + '%';
-    currentImageFilters.brightness = value;
-    applyImageFilter();
-  }
-
-  function updateContrast(value) {
-    document.getElementById('contrastValue').textContent = value + '%';
-    currentImageFilters.contrast = value;
-    applyImageFilter();
-  }
-
-  function updateSaturation(value) {
-    document.getElementById('saturationValue').textContent = value + '%';
-    currentImageFilters.saturation = value;
-    applyImageFilter();
-  }
-
-  function updateRotation(value) {
-    document.getElementById('rotationValue').textContent = value + '°';
-    currentImageFilters.rotation = value;
-    applyImageFilter();
-  }
-
-  function applyImageFilter() {
-    const image = document.getElementById('editor-preview');
-    if (!image) return;
-    
-    const filterStyle = `brightness(${currentImageFilters.brightness}%) contrast(${currentImageFilters.contrast}%) saturate(${currentImageFilters.saturation}%) ${getFilterStyle(currentImageFilters.filter)}`;
-    
-    image.style.filter = filterStyle;
-    image.style.transform = `rotate(${currentImageFilters.rotation}deg)`;
-  }
-
-  function applyFilter(filterName) {
-    const image = document.getElementById('editor-preview');
-    if (!image) return;
-    
-    // Remove active class from all filters
-    document.querySelectorAll('.filter-preset').forEach(preset => {
-      preset.classList.remove('active');
-    });
-    
-    // Add active class to selected filter
-    event.target.closest('.filter-preset').classList.add('active');
-    
-    // Apply filter preset
-    currentImageFilters.filter = filterName;
-    applyImageFilter();
-  }
-
-  function resetImageEditor() {
-    document.getElementById('brightnessSlider').value = 100;
-    document.getElementById('contrastSlider').value = 100;
-    document.getElementById('saturationSlider').value = 100;
-    document.getElementById('rotationSlider').value = 0;
-    
-    updateBrightness(100);
-    updateContrast(100);
-    updateSaturation(100);
-    updateRotation(0);
-    
-    // Reset to normal filter
-    document.querySelectorAll('.filter-preset').forEach(preset => {
-      preset.classList.remove('active');
-    });
-    document.querySelector('.filter-preset').classList.add('active');
-    currentImageFilters.filter = 'normal';
-    
-    applyImageFilter();
-  }
-
-  function saveImageEdit() {
-    if (currentEditingPostId) {
-      const saveBtn = document.querySelector('#imageEditorModal .btn-primary');
-      const saveText = saveBtn.querySelector('.save-text');
-      const spinner = saveBtn.querySelector('.loading-spinner');
-      
-      saveText.classList.add('d-none');
-      spinner.classList.remove('d-none');
-      saveBtn.disabled = true;
-      
-      // Simulate processing
-      setTimeout(() => {
-        const editedImage = document.getElementById('editor-preview');
-        const postPreview = document.getElementById(`post-edit-image-preview-${currentEditingPostId}`);
-        
-        if (postPreview) {
-          postPreview.src = editedImage.src;
-          postPreview.style.filter = editedImage.style.filter;
-          postPreview.style.transform = editedImage.style.transform;
-        }
-        
-        // Close modal
-        const imageEditorModal = bootstrap.Modal.getInstance(document.getElementById('imageEditorModal'));
-        imageEditorModal.hide();
-        
-        showNotification('Image edited successfully!');
-        
-        saveText.classList.remove('d-none');
-        spinner.classList.add('d-none');
-        saveBtn.disabled = false;
-      }, 1500);
-    }
-  }
-
-  // =============================================
-  // ENHANCED CREATE POST FUNCTIONS
-  // =============================================
-
-  function openCreatePostModal() {
-    const modal = new bootstrap.Modal(document.getElementById('createPostModal'));
-    modal.show();
-  }
-
-  function handleCreatePostImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById('image-preview');
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-      
-      // Show image editor tools
-      document.getElementById('imageEditorCreate').classList.remove('d-none');
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function applyFilterToCreate(filter) {
-    const preview = document.getElementById('image-preview');
-    if (preview) {
-      preview.style.filter = getFilterStyle(filter);
-      showNotification(`Applied ${filter} filter`);
-    }
-  }
-
-  function rotateImage() {
-    const preview = document.getElementById('image-preview');
-    if (preview) {
-      const currentRotation = parseInt(preview.style.transform.replace('rotate(', '').replace('deg)', '')) || 0;
-      preview.style.transform = `rotate(${currentRotation + 90}deg)`;
-      showNotification('Image rotated');
-    }
-  }
-
-  function cropImage() {
-    showNotification('Crop tool would open here', 'info');
-  }
-
-  function addLocationToPost() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        const textarea = document.getElementById('create-post-content');
-        insertAtCursor(textarea, ' 📍');
-        showNotification("Location added to your post");
-      }, function(error) {
-        showNotification("Unable to get your location. Please enable location services.", "error");
-      });
-    } else {
-      showNotification("Geolocation is not supported by this browser.", "error");
-    }
-  }
-
-  function addHashtagToPost() {
-    const textarea = document.getElementById('create-post-content');
-    insertAtCursor(textarea, ' #');
-  }
-
-  function resetCreatePostForm() {
-    document.getElementById('create-post-content').value = '';
-    document.getElementById('image-preview').style.display = 'none';
-    document.getElementById('imageEditorCreate').classList.add('d-none');
-    document.getElementById('create-post-image').value = '';
-    document.getElementById('create-post-video').value = '';
-    
-    const submitBtn = document.getElementById('submit-create-post-btn');
-    const submitText = submitBtn.querySelector('.submit-text');
-    const spinner = submitBtn.querySelector('.loading-spinner');
-    
-    submitText.classList.remove('d-none');
-    spinner.classList.add('d-none');
-    submitBtn.disabled = false;
-  }
-
-  // =============================================
-  // ENHANCED ADDITIONAL FUNCTIONS
-  // =============================================
-
-  function deletePost(postId) {
-    if (confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
-      fetch(`/api/delete_post/${postId}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": "{{ csrf_token }}"
-        }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to delete post");
-        return res.json();
-      })
-      .then(data => {
-        document.querySelector(`.feed-card[data-post-id="${postId}"]`).remove();
-        showNotification("✅ Post deleted successfully!");
-      })
-      .catch(err => {
-        showNotification("Error deleting post: " + err.message, 'error');
-      });
-    }
-  }
-
-  function deleteComment(commentId) {
-    if (confirm("Are you sure you want to delete this comment?")) {
-      fetch(`/api/delete_comment/${commentId}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": "{{ csrf_token }}"
-        }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to delete comment");
-        return res.json();
-      })
-      .then(data => {
-        document.getElementById(`comment-${commentId}`).remove();
-        showNotification('Comment deleted');
-        
-        // Update comment count
-        const postId = document.getElementById(`comment-${commentId}`).closest('.feed-card').dataset.postId;
-        const commentCount = document.getElementById(`comment-count-${postId}`);
-        if (commentCount) {
-          const currentCount = parseInt(commentCount.textContent) || 0;
-          commentCount.textContent = Math.max(0, currentCount - 1);
-        }
-      })
-      .catch(err => {
-        showNotification('Error deleting comment: ' + err.message, 'error');
-      });
-    }
-  }
-
-  function pinPost(postId) {
-    fetch(`/api/pin_post/${postId}/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": "{{ csrf_token }}"
-      }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to pin post");
-      return res.json();
-    })
-    .then(data => {
-      const postElement = document.querySelector(`.feed-card[data-post-id="${postId}"]`);
-      const isPinned = postElement.classList.contains('pinned');
-      
-      if (isPinned) {
-        postElement.classList.remove('pinned');
-        showNotification("Post unpinned from your profile!");
-      } else {
-        postElement.classList.add('pinned');
-        showNotification("Post pinned to your profile!");
-      }
-      
-      togglePostMenu(postId);
-    })
-    .catch(err => {
-      showNotification("Error pinning post: " + err.message, 'error');
-    });
-  }
-
-  function viewStory(username) {
-    showNotification(`Viewing ${username}'s story`);
-    // In a real implementation, this would open a story viewer
-  }
-
-  function loadMorePosts() {
-    if (isLoading) return;
-    
-    isLoading = true;
-    const spinner = document.getElementById('loadMoreSpinner');
-    spinner.classList.remove('d-none');
-    
-    fetch(`/api/load_more_posts/?offset=${postsOffset}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load more posts");
-        return res.json();
-      })
-      .then(data => {
-        if (data.posts.length > 0) {
-          const postsContainer = document.getElementById('postsContainer');
-          
-          data.posts.forEach(post => {
-            const postHTML = createPostHTML(post);
-            postsContainer.insertAdjacentHTML('beforeend', postHTML);
-          });
-          
-          postsOffset += data.posts.length;
-          processHashtagsAndMentions(); // Reprocess new posts
-          showNotification(`Loaded ${data.posts.length} more posts`, 'info');
-        } else {
-          showNotification('No more posts to load', 'info');
-        }
-      })
-      .catch(err => {
-        console.error('Error loading more posts:', err);
-        showNotification('Error loading more posts', 'error');
-      })
-      .finally(() => {
-        isLoading = false;
-        spinner.classList.add('d-none');
-      });
-  }
-
-  function createPostHTML(post) {
-    // This function would generate HTML for new posts
-    // Simplified version - you would need to implement based on your template
-    return `
-      <div class="feed-card" data-post-id="${post.id}">
-        <!-- Post content would be generated here -->
-      </div>
+    suggestionsList.innerHTML = `
+        <div class="loading-suggestions">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Finding new suggestions...</p>
+        </div>
     `;
-  }
-
-  function openImagePreview(imageUrl) {
-    document.getElementById('preview-image').src = imageUrl;
-    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-    modal.show();
-  }
-
-  function openShareModal(postId) {
-    const url = `${window.location.origin}/post/${postId}/`;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check out this post on Mytro',
-        text: 'I found this interesting post on Mytro!',
-        url: url
-      });
-    } else {
-      navigator.clipboard.writeText(url)
-        .then(() => showNotification('Post link copied to clipboard'))
-        .catch(() => showNotification('Failed to copy link', 'error'));
+    
+    try {
+        const response = await fetch('/api/suggested_users/');
+        if (response.ok) {
+            const data = await response.json();
+            displayNewSuggestions(data.users);
+        }
+    } catch (error) {
+        console.error('Error refreshing suggestions:', error);
+        showNotification('Error refreshing suggestions', 'error');
+    } finally {
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+        refreshBtn.disabled = false;
     }
-  }
+}
 
-  function loadAllComments(postId) {
-    fetch(`/api/comments/${postId}/`)
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to load comments");
-      return res.json();
-    })
-    .then(data => {
-      const commentsContainer = document.getElementById(`comments-container-${postId}`);
-      commentsContainer.innerHTML = '';
-      
-      data.comments.forEach(comment => {
-        const commentHTML = `
-          <div class="comment" id="comment-${comment.id}">
-            <a href="${comment.profile_url}">
-              <div class="avatar-fallback" style="width: 36px; height: 36px; font-size: 14px;">
-                ${comment.name.charAt(0)}
-              </div>
-            </a>
-            <div class="comment-content">
-              <a href="${comment.profile_url}" class="comment-user">${comment.name}</a>
-              <div class="comment-text" id="comment-text-${comment.id}">${comment.content}</div>
-              ${comment.is_owner ? `
-                <div class="comment-actions">
-                  <button class="comment-action" onclick="enableCommentEdit(${comment.id})">Edit</button>
-                  <button class="comment-action" onclick="deleteComment(${comment.id})">Delete</button>
-                </div>
-              ` : ''}
+function displayNewSuggestions(users) {
+    const suggestionsList = document.getElementById('suggestionsList');
+    
+    if (!users || users.length === 0) {
+        suggestionsList.innerHTML = `
+            <div class="empty-suggestions">
+                <i class="fas fa-users"></i>
+                <p>No suggestions available right now</p>
+                <button class="btn-secondary small" onclick="refreshSuggestions()">Try Again</button>
             </div>
-          </div>`;
-        commentsContainer.innerHTML += commentHTML;
-      });
-      
-      // Hide the view comments button
-      const viewCommentsBtn = commentsContainer.nextElementSibling;
-      if (viewCommentsBtn && viewCommentsBtn.classList.contains('view-comments-btn')) {
-        viewCommentsBtn.style.display = 'none';
-      }
-    })
-    .catch(err => {
-      showNotification('Error loading comments: ' + err.message, 'error');
-    });
-  }
+        `;
+        return;
+    }
+    
+    suggestionsList.innerHTML = users.map(user => `
+        <div class="suggestion-item" data-user-id="${user.id}">
+            <div class="suggestion-user">
+                <a href="/profile/${user.username}/" class="user-avatar-link">
+                    ${user.avatar ? 
+                        `<img src="${user.avatar}" alt="${user.username}" class="user-avatar suggestion-avatar">` :
+                        `<div class="default-avatar suggestion-avatar">${user.name.charAt(0)}</div>`
+                    }
+                </a>
+                
+                <div class="user-details">
+                    <a href="/profile/${user.username}/" class="user-name">${user.name}</a>
+                    <span class="user-mutual">5 mutual friends</span>
+                </div>
+            </div>
+            
+            <button class="follow-btn" onclick="toggleFollow(${user.id}, this)">
+                <i class="fas fa-user-plus"></i>
+                Follow
+            </button>
+        </div>
+    `).join('');
+}
 
-  function searchHashtag(hashtag) {
-    showNotification(`Searching for #${hashtag}`, 'info');
-    // In real implementation, this would navigate to hashtag search page
-  }
+// Remove duplicate function since it's already in main.js
 
-  function openCamera() {
-    showNotification('Camera would open here', 'info');
-  }
-
-  function refreshFeed() {
+function refreshFeed() {
     window.location.reload();
-  }
+}
 
-  // =============================================
-  // ENHANCED FORM HANDLING
-  // =============================================
+function findPeople() {
+    // Navigate to people discovery page
+    window.location.href = '/discover/';
+}
 
-  document.getElementById('create-post-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (isSubmitting) return;
-    isSubmitting = true;
-    
-    const submitBtn = document.getElementById('submit-create-post-btn');
-    const submitText = submitBtn.querySelector('.submit-text');
-    const spinner = submitBtn.querySelector('.loading-spinner');
-    
-    submitText.classList.add('d-none');
-    spinner.classList.remove('d-none');
-    submitBtn.disabled = true;
-    
-    const formData = new FormData(this);
-    
-    fetch(this.action, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to create post');
-      return response.json();
-    })
-    .then(data => {
-      if (data.success) {
-        showNotification('Post created successfully!');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
-        modal.hide();
-        // Refresh the page to show new post
-        setTimeout(() => window.location.reload(), 1000);
-      } else {
-        throw new Error(data.error || 'Unknown error occurred');
-      }
-    })
-    .catch(error => {
-      showNotification('Error creating post: ' + error.message, 'error');
-    })
-    .finally(() => {
-      submitText.classList.remove('d-none');
-      spinner.classList.add('d-none');
-      submitBtn.disabled = false;
-      isSubmitting = false;
-    });
-  });
+// Utility function for throttling
+// Load online friends
+async function loadOnlineFriends() {
+    try {
+        const response = await fetch('/api/online-users/');
+        if (response.ok) {
+            const data = await response.json();
+            displayOnlineFriends(data.online_users);
+        }
+    } catch (error) {
+        console.error('Error loading online friends:', error);
+        displayOnlineFriends([]);
+    }
+}
 
-  // =============================================
-  // LOAD LIKE STATES FROM LOCAL STORAGE
-  // =============================================
+// Load trending hashtags
+async function loadTrendingHashtags() {
+    try {
+        const response = await fetch('/api/trending-hashtags/');
+        if (response.ok) {
+            const data = await response.json();
+            displayTrendingHashtags(data.hashtags);
+        } else {
+            displayTrendingHashtags([
+                { tag: 'QuickTrust', count: 245 },
+                { tag: 'StartingSmart', count: 189 },
+                { tag: 'MytroUpdate', count: 156 },
+                { tag: 'TechNews', count: 142 }
+            ]);
+        }
+    } catch (error) {
+        console.error('Error loading trending hashtags:', error);
+        displayTrendingHashtags([
+            { tag: 'QuickTrust', count: 245 },
+            { tag: 'StartingSmart', count: 189 },
+            { tag: 'MytroUpdate', count: 156 },
+            { tag: 'TechNews', count: 142 }
+        ]);
+    }
+}
 
-  function loadLikeStates() {
-    const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+function displayTrendingHashtags(hashtags) {
+    const container = document.getElementById('trendingHashtags');
+    if (!container) return;
     
-    Object.keys(likedPosts).forEach(postId => {
-      const likeBtn = document.getElementById(`like-btn-${postId}`);
-      if (likeBtn) {
-        likeBtn.classList.add('liked');
-        likeBtn.querySelector('.like-icon').textContent = '❤️';
-      }
-    });
-  }
+    if (!hashtags || hashtags.length === 0) {
+        container.innerHTML = `
+            <div class="empty-trends">
+                <i class="fas fa-hashtag"></i>
+                <p>No trending hashtags</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = hashtags.map((hashtag, index) => `
+        <div class="trending-item">
+            <span class="trend-rank">${index + 1}</span>
+            <div class="trend-info">
+                <a href="/hashtag/${hashtag.tag}/" class="trend-topic">#${hashtag.tag}</a>
+                <span class="trend-stats">${hashtag.count} posts</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayOnlineFriends(users) {
+    const friendsList = document.getElementById('onlineFriendsList');
+    if (!friendsList) return;
+    
+    if (!users || users.length === 0) {
+        friendsList.innerHTML = `
+            <div class="empty-friends" style="text-align: center; padding: 20px; color: #65676b;">
+                <i class="fas fa-user-friends" style="font-size: 24px; margin-bottom: 8px;"></i>
+                <p>No friends online</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const onlineUsers = users.filter(user => user.is_online);
+    const offlineUsers = users.filter(user => !user.is_online);
+    
+    friendsList.innerHTML = [...onlineUsers, ...offlineUsers].map(user => `
+        <div class="friend-item ${user.is_online ? 'online' : 'offline'}" onclick="openChatWith(${user.id})" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 8px; transition: background 0.2s; opacity: ${user.is_online ? '1' : '0.6'};" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='none'">
+            <div class="friend-avatar" style="position: relative;">
+                ${user.avatar ? 
+                    `<img src="${user.avatar}" alt="${user.name}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` :
+                    `<div class="default-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #ff6b35; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">${user.name.charAt(0)}</div>`
+                }
+                ${user.is_online ? '<div class="online-indicator" style="position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #42b883; border: 2px solid white; border-radius: 50%;"></div>' : ''}
+            </div>
+            <div class="friend-info" style="flex: 1;">
+                <span class="friend-name" style="font-weight: 600; color: #1c1e21; font-size: 14px; display: block;">${user.name}</span>
+                <div class="friend-status" style="font-size: 12px; color: ${user.is_online ? '#42b883' : '#65676b'};">${user.is_online ? 'Active now' : 'Offline'}</div>
+            </div>
+            <button class="message-btn" onclick="event.stopPropagation(); startChatWith(${user.id})" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 50%; color: #1877f2;" onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='none'">
+                <i class="fas fa-comment"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    // Update online count
+    const onlineCount = document.querySelector('.online-count');
+    if (onlineCount) {
+        const count = onlineUsers.length;
+        onlineCount.textContent = `${count} online`;
+        onlineCount.style.cssText = 'font-size: 12px; color: #42b883; font-weight: 600;';
+    }
+}
+
+window.openChatWith = function(userId) {
+    window.location.href = `/messages/?user=${userId}`;
+};
+
+window.startChatWith = function(userId) {
+    window.location.href = `/messages/?user=${userId}`;
+};
+
+// Utility function for throttling
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
 </script>
 {% endblock %}

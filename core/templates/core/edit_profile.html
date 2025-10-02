@@ -1,156 +1,701 @@
-{% extends "core/base.html" %}
+{% extends 'core/base.html' %}
 {% load static %}
-{% load widget_tweaks %}
 
 {% block title %}Edit Profile - Mytro{% endblock %}
 
 {% block content %}
+<div class="edit-profile-container">
+    <div class="edit-profile-header">
+        <h1><i class="fas fa-user-edit"></i> Edit Profile</h1>
+        <p>Update your information to connect better with others</p>
+    </div>
 
-<!-- Select2 CSS and JS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    <form method="post" enctype="multipart/form-data" class="edit-profile-form" id="editProfileForm">
+        {% csrf_token %}
+        
+        <!-- Cover Photo Section -->
+        <div class="photo-section cover-section">
+            <div class="photo-container">
+                <div class="cover-photo-wrapper">
+                    {% if user.profile.cover_pic %}
+                        <img src="{{ user.profile.cover_pic.url }}" alt="Cover" id="coverDisplay" class="cover-photo">
+                    {% else %}
+                        <div class="cover-placeholder" id="coverDisplay">
+                            <i class="fas fa-image"></i>
+                            <span>Add Cover Photo</span>
+                        </div>
+                    {% endif %}
+                    <div class="photo-overlay">
+                        <button type="button" class="photo-btn" onclick="selectCoverPhoto()">
+                            <i class="fas fa-camera"></i> Change Cover
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="container my-5" style="max-width: 600px;">
-  <div class="card shadow rounded p-4">
-    <h2 class="text-center text-kesri fw-bold mb-4">Edit Your Profile</h2>
+        <!-- Profile Photo Section -->
+        <div class="profile-photo-section">
+            <div class="profile-photo-wrapper">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" alt="Profile" id="profileDisplay" class="profile-photo">
+                {% else %}
+                    <div class="profile-placeholder" id="profileDisplay">
+                        {{ user.profile.full_name|first|upper }}
+                    </div>
+                {% endif %}
+                <button type="button" class="photo-edit-btn" onclick="selectProfilePhoto()">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+        </div>
 
-    <form method="post" enctype="multipart/form-data" novalidate>
-      {% csrf_token %}
+        <!-- Form Fields -->
+        <div class="form-content">
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Basic Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Enter last name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender">
+                            <option value="">Select Gender</option>
+                            <option value="M" {% if user.profile.gender == 'M' %}selected{% endif %}>Male</option>
+                            <option value="F" {% if user.profile.gender == 'F' %}selected{% endif %}>Female</option>
+                            <option value="O" {% if user.profile.gender == 'O' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob" value="{{ user.profile.dob|date:'Y-m-d' }}">
+                    </div>
+                </div>
+            </div>
 
-      <!-- Profile Picture Upload -->
-      <div class="text-center mb-4">
-        <input type="file" name="profile_pic" id="profilePicInput" accept="image/*" class="d-none">
-        <label for="profilePicInput" id="uploadArea" class="position-relative d-inline-block"
-               style="width:160px; height:160px; border:3px solid #ff7f50; border-radius:50%; overflow:hidden; cursor:pointer;">
-          {% if user.profile.profile_pic %}
-            <img id="previewImage" src="{{ user.profile.profile_pic.url }}" alt="Profile Pic"
-                 style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-          {% else %}
-            <img id="previewImage" src="{% static 'default_profile_pic.png' %}" alt="Default Pic"
-                 style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-          {% endif %}
-          <div class="overlay">
-            Click or drag & drop to upload
-          </div>
-        </label>
-      </div>
+            <div class="form-section">
+                <h3><i class="fas fa-info-circle"></i> About</h3>
+                <div class="form-group full-width">
+                    <label>Bio</label>
+                    <textarea name="bio" placeholder="Tell everyone about yourself..." rows="4" maxlength="500">{{ user.profile.bio }}</textarea>
+                    <div class="char-count"><span id="bioCount">{{ user.profile.bio|length }}</span>/500</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Work</label>
+                        <input type="text" name="work" value="{{ user.profile.work }}" placeholder="What do you do?">
+                    </div>
+                    <div class="form-group">
+                        <label>Education</label>
+                        <input type="text" name="education" value="{{ user.profile.education }}" placeholder="Where did you study?">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Relationship Status</label>
+                    <select name="relationship_status">
+                        <option value="">Select Status</option>
+                        <option value="Single" {% if user.profile.relationship_status == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="In a relationship" {% if user.profile.relationship_status == 'In a relationship' %}selected{% endif %}>In a relationship</option>
+                        <option value="Married" {% if user.profile.relationship_status == 'Married' %}selected{% endif %}>Married</option>
+                        <option value="It's complicated" {% if user.profile.relationship_status == "It's complicated" %}selected{% endif %}>It's complicated</option>
+                    </select>
+                </div>
+            </div>
 
-      <!-- User fields -->
-      <div class="mb-3">
-        <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Name</label>
-        {{ user_form.first_name|add_class:"form-control" }}
-        {% for error in user_form.first_name.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
-      </div>
+            <div class="form-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hometown</label>
+                        <input type="text" name="hometown" value="{{ user.profile.hometown }}" placeholder="Where are you from?">
+                    </div>
+                    <div class="form-group">
+                        <label>Current City</label>
+                        <input type="text" name="current_city" value="{{ user.profile.current_city }}" placeholder="Where do you live now?">
+                    </div>
+                </div>
+            </div>
 
-      <div class="mb-3">
-        <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
-        {{ user_form.email|add_class:"form-control" }}
-        {% for error in user_form.email.errors %}
-          <div class="text-danger">{{ error }}</div>
-        {% endfor %}
-      </div>
+            <div class="form-section">
+                <h3><i class="fas fa-globe"></i> Contact & Languages</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Website</label>
+                        <input type="url" name="website" value="{{ user.profile.website }}" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phone_number" value="{{ user.profile.phone_number }}" placeholder="+1 234 567 8900">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Languages Known</label>
+                    <input type="text" name="languages_known" value="{{ user.profile.languages_known }}" placeholder="English, Hindi, Spanish (comma separated)">
+                </div>
+            </div>
 
-      <!-- Profile fields -->
-      <div class="mb-3">
-        <label for="{{ profile_form.gender.id_for_label }}" class="form-label">Gender</label>
-        {{ profile_form.gender|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.dob.id_for_label }}" class="form-label">Date of Birth</label>
-        {{ profile_form.dob|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.interests.id_for_label }}" class="form-label">Interests</label>
-        {{ profile_form.interests }}
-        <small class="form-text text-muted">Type and press Enter to add new interests.</small>
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.website.id_for_label }}" class="form-label">Website</label>
-        {{ profile_form.website|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
-        {{ profile_form.phone_number|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
-        {{ profile_form.bio|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.location.id_for_label }}" class="form-label">Location</label>
-        {{ profile_form.location|add_class:"form-control" }}
-      </div>
-
-      <div class="mb-3">
-        <label for="{{ profile_form.language_preference.id_for_label }}" class="form-label">Language</label>
-        {{ profile_form.language_preference|add_class:"form-control" }}
-      </div>
-
-      <button type="submit" class="btn btn-kesri w-100 py-2 fw-bold">Save Changes</button>
+            <div class="form-actions">
+                <a href="{% url 'profile' user.username %}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
     </form>
+</div>
 
-    <a href="{% url 'profile' user.username %}" class="btn btn-outline-secondary mt-3 d-block text-center">Back to Profile</a>
-  </div>
+<!-- Hidden file inputs -->
+<input type="file" id="coverInput" accept="image/*" style="display: none;">
+<input type="file" id="profileInput" accept="image/*" style="display: none;">
+
+<!-- Image Crop Modal -->
+<div class="crop-modal" id="cropModal">
+    <div class="crop-container">
+        <div class="crop-header">
+            <h3>Crop Image</h3>
+            <button type="button" class="close-btn" onclick="closeCropModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="crop-body">
+            <div class="crop-area">
+                <img id="cropImage" src="" alt="Crop">
+            </div>
+            <div class="crop-controls">
+                <button type="button" class="crop-btn" onclick="rotateCrop(-90)">
+                    <i class="fas fa-undo"></i> Rotate Left
+                </button>
+                <button type="button" class="crop-btn" onclick="rotateCrop(90)">
+                    <i class="fas fa-redo"></i> Rotate Right
+                </button>
+                <button type="button" class="crop-btn" onclick="resetCrop()">
+                    <i class="fas fa-refresh"></i> Reset
+                </button>
+            </div>
+        </div>
+        <div class="crop-footer">
+            <button type="button" class="btn-cancel" onclick="closeCropModal()">Cancel</button>
+            <button type="button" class="btn-save" onclick="applyCrop()">Apply</button>
+        </div>
+    </div>
 </div>
 
 <style>
-.text-kesri { color: #ff7f50 !important; }
-.btn-kesri { background-color: #ff7f50; border: none; color: white; border-radius: 8px; font-weight: 700; }
-.btn-kesri:hover { background-color: #e6733d; }
-.overlay {
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  background:rgba(0,0,0,0.3); color:#fff; opacity:0; transition:opacity 0.3s;
+.edit-profile-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    padding: 20px 0;
 }
-#uploadArea:hover .overlay { opacity:1; }
-.form-control { border-radius:8px; border:1.5px solid #ccc; }
-.select2-container .select2-selection--multiple {
-  min-height: 48px; border-radius: 8px; border: 1.5px solid #ccc;
+
+.edit-profile-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
 }
-.select2-selection__choice {
-  background:#ff7f50 !important; color:#fff !important; border-radius:15px !important;
+
+.edit-profile-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.edit-profile-header p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.edit-profile-form {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.cover-section {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.cover-photo-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.cover-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cover-photo-wrapper:hover .photo-overlay {
+    opacity: 1;
+}
+
+.photo-btn {
+    background: #ff6b35;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-btn:hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+}
+
+.profile-photo-section {
+    position: relative;
+    margin-top: -60px;
+    text-align: center;
+    z-index: 10;
+}
+
+.profile-photo-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    object-fit: cover;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.profile-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.photo-edit-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ff6b35;
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.photo-edit-btn:hover {
+    background: #e55a2b;
+    transform: scale(1.1);
+}
+
+.form-content {
+    padding: 40px;
+}
+
+.form-section {
+    margin-bottom: 40px;
+}
+
+.form-section h3 {
+    color: #ff6b35;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 14px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #ff6b35;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding-top: 30px;
+    margin-top: 30px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-cancel, .btn-save {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 16px;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.btn-cancel:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,107,53,0.3);
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+}
+
+/* Crop Modal */
+.crop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.crop-container {
+    background: white;
+    border-radius: 15px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.crop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.crop-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+}
+
+.crop-body {
+    padding: 20px;
+}
+
+.crop-area {
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.crop-area img {
+    max-width: 100%;
+    height: auto;
+}
+
+.crop-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.crop-btn {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.crop-btn:hover {
+    background: #e9ecef;
+}
+
+.crop-footer {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-content {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
 }
 </style>
 
 <script>
-const profilePicInput = document.getElementById("profilePicInput");
-const previewImage = document.getElementById("previewImage");
-const uploadArea = document.getElementById("uploadArea");
-const overlay = document.querySelector(".overlay");
+let currentCropType = '';
+let cropperInstance = null;
 
-uploadArea.addEventListener("click", () => profilePicInput.click());
-profilePicInput.addEventListener("change", (e) => {
-  const [file] = e.target.files;
-  if (file) previewImage.src = URL.createObjectURL(file);
-});
-uploadArea.addEventListener("dragover", (e) => { e.preventDefault(); overlay.style.opacity=1; });
-uploadArea.addEventListener("dragleave", (e) => { e.preventDefault(); overlay.style.opacity=0; });
-uploadArea.addEventListener("drop", (e) => {
-  e.preventDefault(); overlay.style.opacity=0;
-  if (e.dataTransfer.files.length) {
-    profilePicInput.files = e.dataTransfer.files;
-    previewImage.src = URL.createObjectURL(e.dataTransfer.files[0]);
-  }
+// Bio character counter
+document.querySelector('textarea[name="bio"]').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('bioCount').textContent = count;
+    
+    if (count > 500) {
+        this.value = this.value.substring(0, 500);
+        document.getElementById('bioCount').textContent = 500;
+    }
 });
 
-// Init Select2
-$(document).ready(function() {
-  $('#id_interests').select2({
-    tags: true,
-    tokenSeparators: [',', ' '],
-    placeholder: 'Select or type your interests',
-    allowClear: true,
-    width: '100%'
-  });
+// Photo selection functions
+function selectCoverPhoto() {
+    currentCropType = 'cover';
+    document.getElementById('coverInput').click();
+}
+
+function selectProfilePhoto() {
+    currentCropType = 'profile';
+    document.getElementById('profileInput').click();
+}
+
+// File input handlers
+document.getElementById('coverInput').addEventListener('change', handleImageSelect);
+document.getElementById('profileInput').addEventListener('change', handleImageSelect);
+
+function handleImageSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            openCropModal(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function openCropModal(imageSrc) {
+    const modal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    
+    cropImage.src = imageSrc;
+    modal.style.display = 'flex';
+    
+    // Initialize basic cropping (you can integrate Cropper.js here for advanced features)
+    setTimeout(() => {
+        initializeCropper();
+    }, 100);
+}
+
+function closeCropModal() {
+    const modal = document.getElementById('cropModal');
+    modal.style.display = 'none';
+    
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+}
+
+function initializeCropper() {
+    // Basic implementation - you can integrate Cropper.js for advanced features
+    const cropImage = document.getElementById('cropImage');
+    cropImage.style.maxWidth = '100%';
+    cropImage.style.height = 'auto';
+}
+
+function rotateCrop(degrees) {
+    const cropImage = document.getElementById('cropImage');
+    const currentRotation = cropImage.style.transform.match(/rotate\(([^)]+)deg\)/);
+    const rotation = currentRotation ? parseInt(currentRotation[1]) + degrees : degrees;
+    cropImage.style.transform = `rotate(${rotation}deg)`;
+}
+
+function resetCrop() {
+    const cropImage = document.getElementById('cropImage');
+    cropImage.style.transform = 'rotate(0deg)';
+}
+
+function applyCrop() {
+    const cropImage = document.getElementById('cropImage');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size based on crop type
+    if (currentCropType === 'profile') {
+        canvas.width = 300;
+        canvas.height = 300;
+    } else {
+        canvas.width = 800;
+        canvas.height = 300;
+    }
+    
+    // Draw the image to canvas
+    ctx.drawImage(cropImage, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to blob and update display
+    canvas.toBlob(function(blob) {
+        const url = URL.createObjectURL(blob);
+        
+        if (currentCropType === 'cover') {
+            document.getElementById('coverDisplay').innerHTML = `<img src="${url}" alt="Cover" class="cover-photo">`;
+            // Create hidden input for form submission
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'cover_pic_data';
+            input.value = canvas.toDataURL();
+            document.getElementById('editProfileForm').appendChild(input);
+        } else {
+            document.getElementById('profileDisplay').innerHTML = `<img src="${url}" alt="Profile" class="profile-photo">`;
+            // Create hidden input for form submission
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'profile_pic_data';
+            input.value = canvas.toDataURL();
+            document.getElementById('editProfileForm').appendChild(input);
+        }
+        
+        closeCropModal();
+    }, 'image/jpeg', 0.8);
+}
+
+// Form submission with image data
+document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+    // Form will submit normally with hidden image data inputs
 });
 </script>
-
 {% endblock %}

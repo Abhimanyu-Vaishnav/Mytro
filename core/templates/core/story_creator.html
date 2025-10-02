@@ -1,0 +1,1176 @@
+<!-- Super Modern Story Creator Modal -->
+<div class="modal-overlay" id="storyCreatorModal">
+    <div class="modal-container story-creator">
+        <div class="modal-header">
+            <div class="header-left">
+                <button class="back-btn" onclick="closeStoryCreator()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3>Create Story</h3>
+            </div>
+            <div class="header-right">
+                <button class="settings-btn" onclick="toggleStorySettings()">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="modal-body">
+            <div class="story-type-selector">
+                <button class="story-type-btn active" data-type="text" onclick="selectStoryType('text')">
+                    <i class="fas fa-font"></i>
+                    <span>Text</span>
+                </button>
+                <button class="story-type-btn" data-type="image" onclick="selectStoryType('image')">
+                    <i class="fas fa-image"></i>
+                    <span>Photo</span>
+                </button>
+                <button class="story-type-btn" data-type="video" onclick="selectStoryType('video')">
+                    <i class="fas fa-video"></i>
+                    <span>Video</span>
+                </button>
+                <button class="story-type-btn" data-type="camera" onclick="selectStoryType('camera')">
+                    <i class="fas fa-camera"></i>
+                    <span>Camera</span>
+                </button>
+            </div>
+            
+            <div class="story-content-area">
+                <!-- Text Story -->
+                <div class="text-story-creator" id="textStoryCreator">
+                    <div class="story-preview-container">
+                        <div class="story-preview" id="storyPreview">
+                            <div class="story-timer">24h</div>
+                            <textarea placeholder="Share what's on your mind..." id="storyText" maxlength="200" oninput="updateTextPreview()"></textarea>
+                            <div class="story-tools">
+                                <button class="tool-btn" onclick="addSticker()">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addText()">
+                                    <i class="fas fa-font"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addDrawing()">
+                                    <i class="fas fa-paint-brush"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="background-selector">
+                        <div class="selector-header">
+                            <h4>Background</h4>
+                            <button class="gradient-btn" onclick="openGradientCreator()">
+                                <i class="fas fa-palette"></i>
+                                Custom
+                            </button>
+                        </div>
+                        <div class="background-options">
+                            <div class="bg-option active" data-color="#ff6b35" style="background: #ff6b35;"></div>
+                            <div class="bg-option" data-color="#42b883" style="background: #42b883;"></div>
+                            <div class="bg-option" data-color="#f7931e" style="background: #f7931e;"></div>
+                            <div class="bg-option" data-color="#1877f2" style="background: #1877f2;"></div>
+                            <div class="bg-option" data-color="#e91e63" style="background: #e91e63;"></div>
+                            <div class="bg-option" data-color="#9c27b0" style="background: #9c27b0;"></div>
+                            <div class="bg-option gradient" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="bg-option gradient" data-color="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="bg-option gradient" data-color="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);"></div>
+                            <div class="bg-option gradient" data-color="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);"></div>
+                        </div>
+                        
+                        <div class="font-selector">
+                            <h4>Font Style</h4>
+                            <div class="font-options">
+                                <button class="font-option active" data-font="Inter" style="font-family: Inter;">Aa</button>
+                                <button class="font-option" data-font="serif" style="font-family: serif;">Aa</button>
+                                <button class="font-option" data-font="cursive" style="font-family: cursive;">Aa</button>
+                                <button class="font-option" data-font="monospace" style="font-family: monospace;">Aa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Image Story -->
+                <div class="image-story-creator" id="imageStoryCreator" style="display: none;">
+                    <div class="media-upload-area">
+                        <input type="file" id="storyImageInput" accept="image/*" style="display: none;">
+                        <div class="upload-placeholder" onclick="document.getElementById('storyImageInput').click()">
+                            <div class="upload-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <h3>Add Photo</h3>
+                            <p>Choose from gallery or take a new photo</p>
+                            <div class="upload-buttons">
+                                <button class="upload-btn primary">Gallery</button>
+                                <button class="upload-btn secondary" onclick="openCamera()">Camera</button>
+                            </div>
+                        </div>
+                        <div class="media-preview" id="imagePreviewContainer" style="display: none;">
+                            <img id="storyImagePreview">
+                            <div class="media-tools">
+                                <button class="tool-btn" onclick="addCaption()">
+                                    <i class="fas fa-font"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addSticker()">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addDrawing()">
+                                    <i class="fas fa-paint-brush"></i>
+                                </button>
+                                <button class="tool-btn" onclick="cropImage()">
+                                    <i class="fas fa-crop"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video Story -->
+                <div class="video-story-creator" id="videoStoryCreator" style="display: none;">
+                    <div class="media-upload-area">
+                        <input type="file" id="storyVideoInput" accept="video/*" style="display: none;">
+                        <div class="upload-placeholder" onclick="document.getElementById('storyVideoInput').click()">
+                            <div class="upload-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <h3>Add Video</h3>
+                            <p>Maximum 30 seconds</p>
+                            <div class="upload-buttons">
+                                <button class="upload-btn primary">Gallery</button>
+                                <button class="upload-btn secondary" onclick="recordVideo()">Record</button>
+                            </div>
+                        </div>
+                        <div class="media-preview" id="videoPreviewContainer" style="display: none;">
+                            <video id="storyVideoPreview" controls></video>
+                            <div class="video-controls">
+                                <div class="video-timeline">
+                                    <input type="range" id="videoTrimmer" min="0" max="30" value="0">
+                                    <span class="video-duration">0:00 / 0:30</span>
+                                </div>
+                            </div>
+                            <div class="media-tools">
+                                <button class="tool-btn" onclick="addCaption()">
+                                    <i class="fas fa-font"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addSticker()">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button class="tool-btn" onclick="addMusic()">
+                                    <i class="fas fa-music"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Camera Story -->
+                <div class="camera-story-creator" id="cameraStoryCreator" style="display: none;">
+                    <div class="camera-container">
+                        <video id="cameraPreview" autoplay muted></video>
+                        <div class="camera-controls">
+                            <button class="camera-btn switch" onclick="switchCamera()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="camera-btn capture" onclick="capturePhoto()">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                            <button class="camera-btn record" onclick="toggleRecording()">
+                                <i class="fas fa-video"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <div class="story-settings">
+                <div class="privacy-setting">
+                    <label>Who can see this?</label>
+                    <select id="storyPrivacy">
+                        <option value="public">Everyone</option>
+                        <option value="friends">Friends only</option>
+                        <option value="close_friends">Close friends</option>
+                    </select>
+                </div>
+                <div class="story-duration">
+                    <label>Duration</label>
+                    <select id="storyDuration">
+                        <option value="24">24 hours</option>
+                        <option value="12">12 hours</option>
+                        <option value="6">6 hours</option>
+                        <option value="1">1 hour</option>
+                    </select>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="closeStoryCreator()">Cancel</button>
+                <button class="btn btn-primary" onclick="createStory()" id="createStoryBtn">
+                    <i class="fas fa-paper-plane"></i>
+                    Share Story
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.story-creator {
+    max-width: 900px;
+    width: 95vw;
+    max-height: 95vh;
+    border-radius: 20px;
+    overflow-y: auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.back-btn, .settings-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover, .settings-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.story-type-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 0 24px;
+}
+
+.story-type-btn {
+    padding: 16px 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 16px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.story-type-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.story-type-btn:hover::before {
+    left: 100%;
+}
+
+.story-type-btn:hover {
+    border-color: #ff6b35;
+}
+
+.story-type-btn.active {
+    border-color: #ff6b35;
+    background: #fff5f2;
+}
+
+.story-type-btn i {
+    font-size: 24px;
+    color: #65676b;
+}
+
+.story-type-btn.active i {
+    color: #ff6b35;
+}
+
+.story-preview-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.story-preview {
+    width: 280px;
+    height: 500px;
+    border-radius: 20px;
+    background: #ff6b35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 4px solid white;
+}
+
+.story-timer {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.story-tools {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+}
+
+.tool-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.tool-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.story-preview textarea {
+    width: 80%;
+    height: 60%;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    resize: none;
+    outline: none;
+    placeholder-color: rgba(255,255,255,0.8);
+}
+
+.story-preview textarea::placeholder {
+    color: rgba(255,255,255,0.8);
+}
+
+.selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.selector-header h4 {
+    margin: 0;
+    color: #1c1e21;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.gradient-btn {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.gradient-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}
+
+.background-options {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.bg-option {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    cursor: pointer;
+    border: 4px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-option::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.bg-option:hover::after {
+    width: 100%;
+    height: 100%;
+}
+
+.bg-option:hover {
+    transform: scale(1.15);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.bg-option.active {
+    border-color: #ff6b35;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.3);
+}
+
+.font-selector {
+    margin-top: 24px;
+}
+
+.font-selector h4 {
+    margin: 0 0 16px 0;
+    color: #1c1e21;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.font-options {
+    display: flex;
+    gap: 12px;
+}
+
+.font-option {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    border: 2px solid #e1e5e9;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.font-option:hover {
+    border-color: #ff6b35;
+    transform: scale(1.1);
+}
+
+.font-option.active {
+    border-color: #ff6b35;
+    background: #fff5f2;
+    color: #ff6b35;
+}
+
+.media-upload-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 500px;
+}
+
+.upload-placeholder {
+    width: 400px;
+    height: 500px;
+    border: 3px dashed #e1e5e9;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.upload-placeholder:hover {
+    border-color: #ff6b35;
+    background: linear-gradient(135deg, #fff5f2 0%, #ffffff 100%);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.upload-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.upload-placeholder h3 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1c1e21;
+}
+
+.upload-placeholder p {
+    margin: 0 0 20px 0;
+    color: #65676b;
+    font-size: 16px;
+}
+
+.upload-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.upload-btn {
+    padding: 12px 24px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.upload-btn.primary {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+}
+
+.upload-btn.secondary {
+    background: white;
+    color: #ff6b35;
+    border: 2px solid #ff6b35;
+}
+
+.media-preview {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.media-preview img, .media-preview video {
+    width: 280px;
+    height: 500px;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.media-tools {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+}
+
+.camera-container {
+    position: relative;
+    width: 280px;
+    height: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.camera-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+}
+
+.camera-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.camera-btn.capture {
+    background: white;
+    color: #1c1e21;
+    border: 4px solid #ff6b35;
+}
+
+.camera-btn.switch, .camera-btn.record {
+    background: rgba(255,255,255,0.9);
+    color: #1c1e21;
+}
+
+.video-controls {
+    padding: 16px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+}
+
+.video-timeline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.video-timeline input {
+    flex: 1;
+}
+
+.story-settings {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.privacy-setting, .story-duration {
+    flex: 1;
+}
+
+.story-settings label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1c1e21;
+}
+
+.story-settings select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-secondary {
+    background: #f0f2f5;
+    color: #65676b;
+}
+
+.btn-secondary:hover {
+    background: #e4e6ea;
+}
+
+.modal-actions {
+    padding: 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e1e5e9;
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .story-creator {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+    
+    .story-type-selector {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 16px;
+    }
+    
+    .story-preview {
+        width: 250px;
+        height: 450px;
+    }
+    
+    .background-options {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .story-settings {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+</style>
+
+<script>
+let selectedStoryType = 'text';
+let selectedBackground = '#ff6b35';
+let selectedFont = 'Inter';
+let cameraStream = null;
+let isRecording = false;
+
+function openStoryCreator() {
+    document.getElementById('storyCreatorModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeStoryCreator() {
+    document.getElementById('storyCreatorModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    stopCamera();
+    resetStoryCreator();
+}
+
+function selectStoryType(type) {
+    selectedStoryType = type;
+    
+    // Update buttons
+    document.querySelectorAll('.story-type-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-type="${type}"]`).classList.add('active');
+    
+    // Show/hide creators
+    document.getElementById('textStoryCreator').style.display = type === 'text' ? 'block' : 'none';
+    document.getElementById('imageStoryCreator').style.display = type === 'image' ? 'block' : 'none';
+    document.getElementById('videoStoryCreator').style.display = type === 'video' ? 'block' : 'none';
+    document.getElementById('cameraStoryCreator').style.display = type === 'camera' ? 'block' : 'none';
+    
+    if (type === 'camera') {
+        startCamera();
+    } else {
+        stopCamera();
+    }
+}
+
+function updateTextPreview() {
+    const text = document.getElementById('storyText').value;
+    const preview = document.getElementById('storyPreview');
+    const textarea = preview.querySelector('textarea');
+    
+    if (text.length > 0) {
+        textarea.style.fontSize = text.length > 50 ? '18px' : '24px';
+    }
+}
+
+function openGradientCreator() {
+    // Create custom gradient picker
+    const modal = document.createElement('div');
+    modal.className = 'gradient-modal';
+    modal.innerHTML = `
+        <div class="gradient-container">
+            <h3>Create Custom Gradient</h3>
+            <div class="gradient-preview" id="gradientPreview"></div>
+            <div class="color-inputs">
+                <input type="color" id="color1" value="#ff6b35">
+                <input type="color" id="color2" value="#f7931e">
+            </div>
+            <div class="gradient-direction">
+                <button onclick="setGradientDirection('135deg')">↘</button>
+                <button onclick="setGradientDirection('90deg')">→</button>
+                <button onclick="setGradientDirection('45deg')">↗</button>
+            </div>
+            <div class="gradient-actions">
+                <button onclick="closeGradientCreator()">Cancel</button>
+                <button onclick="applyCustomGradient()">Apply</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function addSticker() {
+    window.showGlobalNotification('Sticker feature coming soon!', 'info');
+}
+
+function addText() {
+    window.showGlobalNotification('Text overlay feature coming soon!', 'info');
+}
+
+function addDrawing() {
+    window.showGlobalNotification('Drawing feature coming soon!', 'info');
+}
+
+function addCaption() {
+    window.showGlobalNotification('Caption feature coming soon!', 'info');
+}
+
+function cropImage() {
+    window.showGlobalNotification('Image cropping coming soon!', 'info');
+}
+
+function addMusic() {
+    window.showGlobalNotification('Music feature coming soon!', 'info');
+}
+
+function openCamera() {
+    selectStoryType('camera');
+}
+
+function recordVideo() {
+    window.showGlobalNotification('Video recording coming soon!', 'info');
+}
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' }, 
+            audio: false 
+        });
+        const video = document.getElementById('cameraPreview');
+        video.srcObject = stream;
+        cameraStream = stream;
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        window.showGlobalNotification('Camera access denied', 'error');
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+}
+
+function switchCamera() {
+    window.showGlobalNotification('Camera switching coming soon!', 'info');
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraPreview');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Convert to blob and show in image creator
+    canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        document.getElementById('storyImagePreview').src = url;
+        document.getElementById('imagePreviewContainer').style.display = 'block';
+        selectStoryType('image');
+    });
+}
+
+function toggleRecording() {
+    if (!isRecording) {
+        startRecording();
+    } else {
+        stopRecording();
+    }
+}
+
+function startRecording() {
+    isRecording = true;
+    document.querySelector('.camera-btn.record').style.background = '#e91e63';
+    window.showGlobalNotification('Recording started (30s max)', 'info');
+    
+    // Auto stop after 30 seconds
+    setTimeout(() => {
+        if (isRecording) stopRecording();
+    }, 30000);
+}
+
+function stopRecording() {
+    isRecording = false;
+    document.querySelector('.camera-btn.record').style.background = 'rgba(255,255,255,0.9)';
+    window.showGlobalNotification('Recording stopped', 'success');
+}
+
+function toggleStorySettings() {
+    window.showGlobalNotification('Story settings coming soon!', 'info');
+}
+
+// Enhanced event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Background color selection
+    document.querySelectorAll('.bg-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            selectedBackground = this.dataset.color;
+            const preview = document.getElementById('storyPreview');
+            preview.style.background = selectedBackground;
+        });
+    });
+    
+    // Font selection
+    document.querySelectorAll('.font-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.font-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            selectedFont = this.dataset.font;
+            const textarea = document.getElementById('storyText');
+            textarea.style.fontFamily = selectedFont;
+        });
+    });
+    
+    // Image upload handler
+    document.getElementById('storyImageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                window.showGlobalNotification('Image too large. Max 10MB allowed.', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('storyImagePreview');
+                const container = document.getElementById('imagePreviewContainer');
+                const placeholder = document.querySelector('#imageStoryCreator .upload-placeholder');
+                
+                preview.src = e.target.result;
+                container.style.display = 'block';
+                placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Video upload handler
+    document.getElementById('storyVideoInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file size (max 50MB)
+            if (file.size > 50 * 1024 * 1024) {
+                window.showGlobalNotification('Video too large. Max 50MB allowed.', 'error');
+                return;
+            }
+            
+            const video = document.getElementById('storyVideoPreview');
+            const container = document.getElementById('videoPreviewContainer');
+            const placeholder = document.querySelector('#videoStoryCreator .upload-placeholder');
+            
+            video.src = URL.createObjectURL(file);
+            container.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Check video duration
+            video.addEventListener('loadedmetadata', function() {
+                if (video.duration > 30) {
+                    window.showGlobalNotification('Video too long. Max 30 seconds allowed.', 'warning');
+                }
+            });
+        }
+    });
+});
+
+async function createStory() {
+    const btn = document.getElementById('createStoryBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('story_type', selectedStoryType);
+        
+        // Add privacy and duration settings
+        const privacy = document.getElementById('storyPrivacy').value;
+        const duration = document.getElementById('storyDuration').value;
+        formData.append('privacy', privacy);
+        formData.append('duration_hours', duration);
+        
+        if (selectedStoryType === 'text') {
+            const text = document.getElementById('storyText').value.trim();
+            if (!text) {
+                window.showGlobalNotification('Please enter some text for your story', 'error');
+                return;
+            }
+            formData.append('story_text', text);
+            formData.append('background_color', selectedBackground);
+            formData.append('font_family', selectedFont);
+            
+            console.log('Selected background:', selectedBackground); // Debug log
+        } else if (selectedStoryType === 'image') {
+            const imageFile = document.getElementById('storyImageInput').files[0];
+            if (!imageFile) {
+                window.showGlobalNotification('Please select an image for your story', 'error');
+                return;
+            }
+            formData.append('story_image', imageFile);
+        } else if (selectedStoryType === 'video') {
+            const videoFile = document.getElementById('storyVideoInput').files[0];
+            if (!videoFile) {
+                window.showGlobalNotification('Please select a video for your story', 'error');
+                return;
+            }
+            formData.append('story_video', videoFile);
+        }
+        
+        const response = await fetch('/api/stories/create/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            window.showGlobalNotification('Story shared successfully! 🎉', 'success');
+            closeStoryCreator();
+            // Reload stories
+            if (typeof loadStories === 'function') {
+                loadStories();
+            }
+        } else {
+            const errorData = await response.json();
+            window.showGlobalNotification(errorData.error || 'Error creating story', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating story:', error);
+        window.showGlobalNotification('Network error. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Share Story';
+    }
+}
+
+function resetStoryCreator() {
+    // Reset text
+    document.getElementById('storyText').value = '';
+    
+    // Reset image
+    document.getElementById('storyImageInput').value = '';
+    const imageContainer = document.getElementById('imagePreviewContainer');
+    if (imageContainer) imageContainer.style.display = 'none';
+    const imagePlaceholder = document.querySelector('#imageStoryCreator .upload-placeholder');
+    if (imagePlaceholder) imagePlaceholder.style.display = 'flex';
+    
+    // Reset video
+    document.getElementById('storyVideoInput').value = '';
+    const videoContainer = document.getElementById('videoPreviewContainer');
+    if (videoContainer) videoContainer.style.display = 'none';
+    const videoPlaceholder = document.querySelector('#videoStoryCreator .upload-placeholder');
+    if (videoPlaceholder) videoPlaceholder.style.display = 'flex';
+    
+    // Reset to text type
+    selectStoryType('text');
+    
+    // Reset background
+    document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
+    const defaultBg = document.querySelector('[data-color="#ff6b35"]');
+    if (defaultBg) defaultBg.classList.add('active');
+    selectedBackground = '#ff6b35';
+    const preview = document.getElementById('storyPreview');
+    if (preview) preview.style.background = '#ff6b35';
+    
+    // Reset font
+    document.querySelectorAll('.font-option').forEach(opt => opt.classList.remove('active'));
+    const defaultFont = document.querySelector('[data-font="Inter"]');
+    if (defaultFont) defaultFont.classList.add('active');
+    selectedFont = 'Inter';
+    
+    // Reset settings
+    document.getElementById('storyPrivacy').value = 'public';
+    document.getElementById('storyDuration').value = '24';
+}
+
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+// Auto-cleanup function for 24-hour story expiry
+setInterval(() => {
+    if (typeof loadStories === 'function') {
+        loadStories();
+    }
+}, 60000); // Check every minute
+</script>

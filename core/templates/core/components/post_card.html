@@ -1,0 +1,638 @@
+<!-- core/templates/core/components/post_card.html -->
+{% load static %}
+<div class="post-card" data-post-id="{{ post.id }}">
+    <!-- Repost Header (if this is a repost) -->
+    {% if post.repost_parent %}
+    <div class="repost-header">
+        <i class="fas fa-retweet"></i>
+        <span>
+            <a href="{% url 'profile' post.author.username %}">
+                {{ post.author.profile.full_name }}
+            </a>
+            reposted
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Original Post Header -->
+    <div class="post-header">
+        <div class="post-user-info">
+            <a href="{% url 'profile' post.author.username %}" class="user-avatar-link">
+                {% if post.author.profile.profile_pic %}
+                    <img src="{{ post.author.profile.profile_pic.url }}" alt="{{ post.author.username }}" class="user-avatar">
+                {% else %}
+                    <div class="default-avatar">
+                        {{ post.author.username|first|upper }}
+                    </div>
+                {% endif %}
+            </a>
+            <div class="user-details">
+                <a href="{% url 'profile' post.author.username %}" class="user-name">
+                    {{ post.author.profile.full_name }}
+                </a>
+                <div class="post-meta">
+                    <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                    <span class="post-privacy">
+                        <i class="fas fa-globe-americas"></i>
+                        Public
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Post Options Menu -->
+        <div class="post-options">
+            <button class="post-menu-btn" onclick="window.togglePostMenu('{{ post.id }}')">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="post-menu-dropdown" id="postMenu-{{ post.id }}">
+                {% if post.author == request.user %}
+                    <button class="menu-item" onclick="window.editPost('{{ post.id }}')">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Post</span>
+                    </button>
+                    <button class="menu-item" onclick="window.deletePost('{{ post.id }}')">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete Post</span>
+                    </button>
+                    <div class="menu-divider"></div>
+                {% endif %}
+                <button class="menu-item" onclick="window.repost('{{ post.id }}')">
+                    <i class="fas fa-retweet"></i>
+                    <span>Repost</span>
+                </button>
+                <button class="menu-item" onclick="window.quotePost('{{ post.id }}')">
+                    <i class="fas fa-quote-left"></i>
+                    <span>Quote Post</span>
+                </button>
+                <button class="menu-item" onclick="savePost('{{ post.id }}')">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Save Post</span>
+                </button>
+                <button class="menu-item" onclick="copyPostLink('{{ post.id }}')">
+                    <i class="fas fa-link"></i>
+                    <span>Copy Link</span>
+                </button>
+                <button class="menu-item" onclick="reportPost('{{ post.id }}')">
+                    <i class="fas fa-flag"></i>
+                    <span>Report Post</span>
+                </button>
+                {% if post.author != request.user %}
+                    <div class="menu-divider"></div>
+                    <button class="menu-item" onclick="toggleFollow('{{ post.author.id }}', this)">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Follow {{ post.author.username }}</span>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Content -->
+    <div class="post-content">
+        {% if post.content %}
+            <div class="post-text">
+                {{ post.content|linebreaksbr }}
+            </div>
+        {% endif %}
+        
+        {% if post.image %}
+            <div class="post-media">
+                <div class="media-container">
+                    <img src="{{ post.image.url }}" 
+                         alt="Post image" 
+                         class="post-image"
+                         onclick="openImageModal('{{ post.image.url }}')"
+                         loading="lazy">
+                    
+                    <!-- Image Actions Overlay -->
+                    <div class="media-actions">
+                        <button class="media-action-btn" onclick="editPostImage('{{ post.id }}', '{{ post.image.url }}')">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit</span>
+                        </button>
+                        <button class="media-action-btn" onclick="downloadImage('{{ post.image.url }}')">
+                            <i class="fas fa-download"></i>
+                            <span>Download</span>
+                        </button>
+                        <button class="media-action-btn" onclick="openImageFilters('{{ post.id }}', '{{ post.image.url }}')">
+                            <i class="fas fa-magic"></i>
+                            <span>Filters</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if post.video %}
+            <div class="post-media">
+                <video controls class="post-video">
+                    <source src="{{ post.video.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Post Stats -->
+    <div class="post-stats">
+        <div class="stats-left">
+            <div class="likes-stat" onclick="showLikesModal('{{ post.id }}')">
+                <div class="likes-preview">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">{{ post.likes.count }}</span>
+                </div>
+            </div>
+            <div class="reposts-stat" onclick="showRepostsModal('{{ post.id }}')">
+                <div class="reposts-preview">
+                    <i class="fas fa-retweet"></i>
+                    <span class="repost-count">{{ post.reposts.count }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="stats-right">
+            <span class="comment-count">{{ post.comments.count }} comments</span>
+            <span class="share-count">{{ post.shares.count }} shares</span>
+        </div>
+    </div>
+
+    <!-- Post Actions -->
+    <div class="post-actions">
+        <button class="post-action-btn like-btn {% if request.user in post.likes.all %}liked{% endif %}" 
+                data-post-id="{{ post.id }}"
+                onclick="window.toggleLike('{{ post.id }}', this)">
+            <i class="fas fa-heart"></i>
+            <span class="action-text">
+                {% if request.user in post.likes.all %}Liked{% else %}Like{% endif %}
+            </span>
+        </button>
+        
+        <button class="post-action-btn comment-btn" 
+                onclick="window.toggleComments('{{ post.id }}')">
+            <i class="fas fa-comment"></i>
+            <span>Comment</span>
+        </button>
+        
+        <div class="repost-container">
+            <button class="post-action-btn repost-btn" 
+                    onclick="window.toggleRepostMenu('{{ post.id }}')">
+                <i class="fas fa-retweet"></i>
+                <span>Repost</span>
+            </button>
+            <div class="repost-dropdown" id="repostMenu-{{ post.id }}">
+                <button class="repost-option" onclick="window.repost('{{ post.id }}')">
+                    <i class="fas fa-retweet"></i>
+                    <span>Repost</span>
+                </button>
+                <button class="repost-option" onclick="window.quotePost('{{ post.id }}')">
+                    <i class="fas fa-quote-left"></i>
+                    <span>Quote Post</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="share-container">
+            <button class="post-action-btn share-btn" 
+                    onclick="toggleShareMenu('{{ post.id }}')">
+                <i class="fas fa-share"></i>
+                <span>Share</span>
+            </button>
+            <div class="share-dropdown" id="shareMenu-{{ post.id }}">
+                <button class="share-option" onclick="shareToFeed('{{ post.id }}')">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Share to Feed</span>
+                </button>
+                <button class="share-option" onclick="shareToMessage('{{ post.id }}')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Send in Message</span>
+                </button>
+                <button class="share-option" onclick="shareToStory('{{ post.id }}')">
+                    <i class="fas fa-camera"></i>
+                    <span>Share to Story</span>
+                </button>
+                <div class="share-divider"></div>
+                <button class="share-option" onclick="copyPostLink('{{ post.id }}')">
+                    <i class="fas fa-link"></i>
+                    <span>Copy Link</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" id="commentsSection-{{ post.id }}" style="display: none;">
+        <!-- Enhanced Add Comment Form -->
+        <div class="add-comment-form">
+            <div class="comment-avatar">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="user-avatar small">
+                {% else %}
+                    <div class="default-avatar small">
+                        {{ user.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="comment-input-container">
+                <div class="comment-input-wrapper">
+                    <textarea class="comment-input" 
+                              placeholder="Write a comment..." 
+                              id="commentInput-{{ post.id }}"
+                              oninput="autoResizeComment(this)"
+                              onkeydown="handleCommentKeydown(event, '{{ post.id }}')"></textarea>
+                    
+                    <!-- Comment Media Preview -->
+                    <div class="comment-media-preview" id="commentMediaPreview-{{ post.id }}"></div>
+                </div>
+                
+                <div class="comment-actions-bar">
+                    <div class="comment-attachments">
+                        <button class="comment-action-btn" onclick="openCommentEmojiPicker('{{ post.id }}')" type="button">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <button class="comment-action-btn" onclick="addCommentImage('{{ post.id }}')" type="button">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button class="comment-action-btn" onclick="addCommentSticker('{{ post.id }}')" type="button">
+                            <i class="fas fa-sticky-note"></i>
+                        </button>
+                        <button class="comment-action-btn" onclick="addCommentGIF('{{ post.id }}')" type="button">
+                            <i class="fas fa-film"></i>
+                        </button>
+                    </div>
+                    <button class="comment-submit-btn" onclick="window.submitComment('{{ post.id }}')" type="button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments List -->
+        <div class="comments-list" id="commentsList-{{ post.id }}">
+            {% for comment in post.comments.all|slice:":5" %}
+            <div class="individual-comment" data-comment-id="{{ comment.id }}">
+                <div class="comment-avatar-wrapper">
+                    {% if comment.user.profile.profile_pic %}
+                        <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}" class="comment-user-avatar">
+                    {% else %}
+                        <div class="comment-default-avatar">
+                            {{ comment.user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="comment-main-content">
+                    <div class="comment-bubble-wrapper">
+                        <div class="comment-info-header">
+                            <span class="commenter-name">
+                                {% if comment.user.get_full_name %}
+                                    {{ comment.user.get_full_name }}
+                                {% else %}
+                                    {{ comment.user.username }}
+                                {% endif %}
+                            </span>
+                            <span class="comment-timestamp">{{ comment.created_at|timesince }} ago</span>
+                            
+                            <div class="comment-options-menu">
+                                <button class="comment-menu-trigger" onclick="toggleCommentOptions({{ comment.id }})">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <div class="comment-options-dropdown" id="commentOptions-{{ comment.id }}">
+                                    {% if comment.user == request.user %}
+                                        <button onclick="editCommentAction({{ comment.id }})">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button onclick="deleteCommentAction({{ comment.id }})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    {% else %}
+                                        <button onclick="reportCommentAction({{ comment.id }})">
+                                            <i class="fas fa-flag"></i> Report
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="comment-message">{{ comment.content }}</div>
+                        
+                        <div class="comment-interaction-buttons">
+                            <button class="comment-like-btn" onclick="likeCommentAction({{ comment.id }}, this)">
+                                <i class="fas fa-heart"></i>
+                                <span>Like</span>
+                            </button>
+                            
+                            <button class="comment-reply-btn" onclick="replyToCommentAction({{ comment.id }}, '{{ comment.user.username }}', '{{ post.id }}')">
+                                <i class="fas fa-reply"></i>
+                                <span>Reply</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if post.comments.count > 5 %}
+                <button class="load-more-comments" onclick="loadMoreComments('{{ post.id }}')">
+                    Load {{ post.comments.count|add:"-5" }} more comments
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'css/comment-fix.css' %}">
+
+<style>
+/* Comment Styles - Override all existing styles */
+.comments-section .individual-comment {
+    display: flex !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.comment-avatar-wrapper {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.comment-user-avatar,
+.comment-default-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-default-avatar {
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #65676b;
+    font-size: 12px;
+}
+
+.comment-main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-bubble-wrapper {
+    background: #f0f2f5;
+    border-radius: 16px;
+    padding: 8px 12px;
+    position: relative;
+}
+
+.comment-info-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.commenter-name {
+    font-weight: 600;
+    color: #1c1e21;
+    font-size: 13px;
+}
+
+.comment-timestamp {
+    color: #65676b;
+    font-size: 11px;
+}
+
+.comment-options-menu {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.comment-menu-trigger {
+    background: none;
+    border: none;
+    color: #65676b;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.comment-menu-trigger:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.comment-options-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    min-width: 100px;
+    z-index: 1000;
+    display: none;
+}
+
+.comment-options-dropdown button {
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #1c1e21;
+    transition: background 0.2s;
+}
+
+.comment-options-dropdown button:hover {
+    background: #f8f9fa;
+}
+
+.comment-message {
+    color: #1c1e21;
+    font-size: 14px;
+    line-height: 1.3;
+    margin-bottom: 6px;
+}
+
+.comment-interaction-buttons {
+    display: flex;
+    gap: 12px;
+    padding-top: 2px;
+}
+
+.comment-like-btn,
+.comment-reply-btn {
+    background: none;
+    border: none;
+    color: #65676b;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.comment-like-btn:hover,
+.comment-reply-btn:hover {
+    background: rgba(0,0,0,0.05);
+    color: #1c1e21;
+}
+
+.comment-like-btn.liked {
+    color: #e91e63;
+}
+
+.comment-like-btn i,
+.comment-reply-btn i {
+    font-size: 10px;
+}
+</style>
+
+<script>
+// Comment Functions
+function toggleCommentOptions(commentId) {
+    const dropdown = document.getElementById(`commentOptions-${commentId}`);
+    const isVisible = dropdown.style.display === 'block';
+    
+    // Hide all other comment dropdowns
+    document.querySelectorAll('.comment-options-dropdown').forEach(dd => {
+        dd.style.display = 'none';
+    });
+    
+    dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+function likeCommentAction(commentId, button) {
+    button.classList.toggle('liked');
+    const span = button.querySelector('span');
+    span.textContent = button.classList.contains('liked') ? 'Liked' : 'Like';
+}
+
+function replyToCommentAction(commentId, username, postId) {
+    const commentInput = document.getElementById(`commentInput-${postId}`);
+    commentInput.value = `@${username} `;
+    commentInput.focus();
+}
+
+function editCommentAction(commentId) {
+    console.log('Edit comment:', commentId);
+    toggleCommentOptions(commentId);
+}
+
+function deleteCommentAction(commentId) {
+    if (confirm('Delete this comment?')) {
+        document.querySelector(`[data-comment-id="${commentId}"]`).remove();
+    }
+    toggleCommentOptions(commentId);
+}
+
+function reportCommentAction(commentId) {
+    if (confirm('Report this comment?')) {
+        console.log('Report comment:', commentId);
+    }
+    toggleCommentOptions(commentId);
+}
+
+// Close comment dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.comment-options-menu')) {
+        document.querySelectorAll('.comment-options-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+    }
+});
+
+// Enhanced Comment System
+function autoResizeComment(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+function handleCommentKeydown(event, postId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        submitComment(postId);
+    }
+}
+
+// Enhanced Comment Submission
+async function submitComment(postId) {
+    const commentInput = document.getElementById(`commentInput-${postId}`);
+    const commentText = commentInput.value.trim();
+    const mediaPreview = document.getElementById(`commentMediaPreview-${postId}`);
+    
+    // Check if we have content or media
+    const hasMedia = mediaPreview.children.length > 0;
+    
+    if (!commentText && !hasMedia) {
+        showNotification('Please add some text or media to your comment', 'error');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('post_id', postId);
+        formData.append('content', commentText);
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+        // Add media files if any
+        const mediaFiles = window.commentMediaFiles?.[postId] || [];
+        mediaFiles.forEach((file, index) => {
+            formData.append(`comment_media_${index}`, file);
+        });
+
+        const response = await fetch('/api/add_comment/', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const comment = await response.json();
+            addCommentToDOM(postId, comment);
+            
+            // Reset form
+            commentInput.value = '';
+            commentInput.style.height = 'auto';
+            mediaPreview.innerHTML = '';
+            
+            // Clear stored media files
+            if (window.commentMediaFiles) {
+                window.commentMediaFiles[postId] = [];
+            }
+            
+            // Update comment count
+            const commentCount = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
+            commentCount.textContent = parseInt(commentCount.textContent) + 1;
+            
+            showNotification('Comment added successfully');
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        showNotification('Error adding comment', 'error');
+    }
+}
+
+// Utility function
+function getCSRFToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfToken ? csrfToken.value : '';
+}
+</script>

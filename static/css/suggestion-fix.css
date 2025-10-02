@@ -1,0 +1,318 @@
+/* Fix for suggestion avatar sizes */
+.suggestion-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.default-avatar.suggestion-avatar {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    margin-bottom: 8px;
+}
+
+.suggestion-item:hover {
+    background: #f8f9fa;
+}
+
+.suggestion-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1c1e21;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-name:hover {
+    color: #ff6b35;
+}
+
+.user-mutual {
+    color: #65676b;
+    font-size: 12px;
+}
+
+.follow-btn {
+    padding: 6px 16px;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    background: white;
+    color: #1877f2;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.follow-btn:hover {
+    background: #f0f2f5;
+}
+
+.follow-btn.following {
+    background: #e3f2fd;
+    color: #1877f2;
+    border-color: #1877f2;
+}
+
+.follow-btn i {
+    margin-right: 4px;
+}
+
+/* Fix for story section */
+.story-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.story-item:hover {
+    background: #f0f2f5;
+}
+
+.story-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.story-avatar.unviewed {
+    border: 3px solid #ff6b35;
+    padding: 2px;
+}
+
+.story-avatar.viewed {
+    border: 3px solid #e4e6ea;
+    padding: 2px;
+}
+
+.story-avatar img,
+.story-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.story-user {
+    font-size: 12px;
+    color: #1c1e21;
+    font-weight: 500;
+    text-align: center;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.create-story .add-story-icon {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    background: #ff6b35;
+    border: 3px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+/* Navigation search fixes */
+.nav-search {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+    margin: 0 20px;
+}
+
+.nav-search .search-input {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    background: #f0f2f5;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.nav-search .search-input:focus {
+    outline: none;
+    border-color: #ff6b35;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.nav-search .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #65676b;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.nav-search .search-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    border: 1px solid #e1e5e9;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.nav-search .search-results.show {
+    display: block;
+}
+
+.search-result-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.search-result-item:hover {
+    background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.search-result-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-result-name {
+    font-weight: 600;
+    color: #1c1e21;
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.search-result-username {
+    color: #65676b;
+    font-size: 13px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-loading, .search-empty {
+    padding: 20px;
+    text-align: center;
+    color: #65676b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.search-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-sm {
+    padding: 6px 8px;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    background: white;
+    color: #1877f2;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+    background: #f0f2f5;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+    .nav-search {
+        max-width: 200px;
+        margin: 0 10px;
+    }
+    
+    .suggestion-avatar {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .default-avatar.suggestion-avatar {
+        font-size: 16px;
+    }
+    
+    .story-avatar {
+        width: 56px;
+        height: 56px;
+    }
+}

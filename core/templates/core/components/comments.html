@@ -1,0 +1,308 @@
+<div class="comments-container" data-post-id="{{ post.id }}">
+    <!-- Add Comment Form -->
+    <form class="add-comment-form comment-form" data-post-id="{{ post.id }}">
+        {% csrf_token %}
+        <div class="comment-input-container">
+            {% if request.user.profile.profile_pic %}
+                <img src="{{ request.user.profile.profile_pic.url }}" alt="{{ request.user.username }}" class="comment-avatar">
+            {% else %}
+                <div class="default-avatar small">
+                    {{ request.user.username|first|upper }}
+                </div>
+            {% endif %}
+            <input type="text" class="comment-input" placeholder="Write a comment..." required>
+            <div class="comment-actions">
+                <button type="submit" class="comment-action-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Comments List -->
+    <div class="comments-list">
+        {% for comment in post.comments.all %}
+        <div class="comment-item" data-comment-id="{{ comment.id }}">
+            <div class="comment-avatar">
+                {% if comment.user.profile.profile_pic %}
+                    <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}">
+                {% else %}
+                    <div class="default-avatar">
+                        {{ comment.user.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="comment-content">
+                <div class="comment-bubble">
+                    <div class="comment-header">
+                        <span class="comment-username">
+                            {% if comment.user.get_full_name %}
+                                {{ comment.user.get_full_name }}
+                            {% else %}
+                                {{ comment.user.username }}
+                            {% endif %}
+                        </span>
+                        <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                        
+                        <div class="comment-menu">
+                            <button class="menu-btn" onclick="toggleCommentMenu({{ comment.id }})">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <div class="comment-dropdown" id="menu-{{ comment.id }}">
+                                {% if comment.user == request.user %}
+                                    <button onclick="editComment({{ comment.id }})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button onclick="deleteComment({{ comment.id }})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                {% else %}
+                                    <button onclick="reportComment({{ comment.id }})">
+                                        <i class="fas fa-flag"></i> Report
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment-text">{{ comment.content }}</div>
+                    
+                    <div class="comment-actions">
+                        <button class="action-btn like-btn" onclick="likeComment({{ comment.id }}, this)">
+                            <i class="fas fa-heart"></i>
+                            <span>Like</span>
+                        </button>
+                        
+                        <button class="action-btn reply-btn" onclick="replyToComment({{ comment.id }}, '{{ comment.user.username }}')">
+                            <i class="fas fa-reply"></i>
+                            <span>Reply</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if post.comments.count > 2 %}
+    <button class="load-more-comments">Load more comments</button>
+    {% endif %}
+</div>
+
+<style>
+/* Override existing comment styles */
+.comments-list .comment-item {
+    display: flex !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    position: relative !important;
+}
+
+.comments-list .comment-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    flex-shrink: 0 !important;
+}
+
+.comments-list .comment-avatar img,
+.comments-list .comment-avatar .default-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    background: #f0f2f5 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    color: #65676b !important;
+    font-size: 14px !important;
+}
+
+.comments-list .comment-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.comments-list .comment-bubble {
+    background: #f0f2f5 !important;
+    border-radius: 16px !important;
+    padding: 8px 12px !important;
+    position: relative !important;
+}
+
+.comments-list .comment-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 4px !important;
+    position: relative !important;
+}
+
+.comments-list .comment-username {
+    font-weight: 600 !important;
+    color: #1c1e21 !important;
+    font-size: 13px !important;
+}
+
+.comments-list .comment-time {
+    color: #65676b !important;
+    font-size: 12px !important;
+}
+
+.comments-list .comment-menu {
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+}
+
+.comments-list .menu-btn {
+    background: none !important;
+    border: none !important;
+    color: #65676b !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.2s !important;
+}
+
+.comments-list .menu-btn:hover {
+    background: rgba(0,0,0,0.1) !important;
+}
+
+.comments-list .comment-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    background: white !important;
+    border: 1px solid #e1e5e9 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    min-width: 120px !important;
+    z-index: 1000 !important;
+    display: none !important;
+}
+
+.comments-list .comment-dropdown button {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    border: none !important;
+    background: none !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+    color: #1c1e21 !important;
+    transition: background 0.2s !important;
+}
+
+.comments-list .comment-dropdown button:hover {
+    background: #f8f9fa !important;
+}
+
+.comments-list .comment-text {
+    color: #1c1e21 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 8px !important;
+}
+
+.comments-list .comment-actions {
+    display: flex !important;
+    gap: 16px !important;
+    padding-top: 4px !important;
+    margin-top: 0 !important;
+}
+
+.comments-list .action-btn {
+    background: none !important;
+    border: none !important;
+    color: #65676b !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s !important;
+}
+
+.comments-list .action-btn:hover {
+    background: rgba(0,0,0,0.05) !important;
+    color: #1c1e21 !important;
+}
+
+.comments-list .action-btn.liked {
+    color: #e91e63 !important;
+}
+
+.comments-list .action-btn i {
+    font-size: 11px !important;
+}
+</style>
+
+<script>
+function toggleCommentMenu(commentId) {
+    const menu = document.getElementById(`menu-${commentId}`);
+    const isVisible = menu.style.display === 'block';
+    
+    // Hide all other menus
+    document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+        dropdown.style.display = 'none';
+    });
+    
+    menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function likeComment(commentId, button) {
+    button.classList.toggle('liked');
+    const span = button.querySelector('span');
+    span.textContent = button.classList.contains('liked') ? 'Liked' : 'Like';
+}
+
+function replyToComment(commentId, username) {
+    const postId = document.querySelector(`[data-comment-id="${commentId}"]`).closest('[data-post-id]').dataset.postId;
+    const commentInput = document.querySelector(`[data-post-id="${postId}"] .comment-input`);
+    commentInput.value = `@${username} `;
+    commentInput.focus();
+}
+
+function editComment(commentId) {
+    console.log('Edit comment:', commentId);
+    toggleCommentMenu(commentId);
+}
+
+function deleteComment(commentId) {
+    if (confirm('Delete this comment?')) {
+        document.querySelector(`[data-comment-id="${commentId}"]`).remove();
+    }
+    toggleCommentMenu(commentId);
+}
+
+function reportComment(commentId) {
+    if (confirm('Report this comment?')) {
+        console.log('Report comment:', commentId);
+    }
+    toggleCommentMenu(commentId);
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.comment-menu')) {
+        document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+    }
+});
+</script>

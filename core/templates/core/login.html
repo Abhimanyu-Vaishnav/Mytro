@@ -1,91 +1,142 @@
-{% extends "core/base.html" %}
-{% block title %}Login - Mytro{% endblock %}
-
-{% block extra_head %}
-<style>
-  .login-form {
-    max-width: 400px;
-    margin: 80px auto 40px;
-    background: white;
-    padding: 40px 35px;
-    border-radius: 12px;
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
-  }
-  .login-form h2 {
-    color: #ff7f50;
-    font-weight: 600;
-    margin-bottom: 30px;
-    text-align: center;
-    font-size: 2rem;
-  }
-  label {
-    font-weight: 600;
-  }
-  .form-control {
-    border-radius: 8px;
-    border: 1.5px solid #ccc;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .form-control:focus {
-    border-color: #ff7f50;
-    box-shadow: 0 0 6px #ff7f50;
-    outline: none;
-  }
-  .btn-kesri {
-    background-color: #ff7f50;
-    color: white;
-    border: none;
-    width: 100%;
-    padding: 14px;
-    font-weight: 700;
-    font-size: 1.2rem;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-  }
-  .btn-kesri:hover {
-    background-color: #e6733d;
-  }
-  a {
-    color: #ff7f50;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  .text-danger {
-    font-size: 0.875rem;
-  }
-</style>
-{% endblock %}
+{% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="login-form">
-  <h2>Login to Your Account</h2>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    <div class="mb-3">
-      <label for="{{ form.username.id_for_label }}">Username</label>
-      <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default_if_none:'' }}" class="form-control" />
-      {% if form.username.errors %}
-        <small class="text-danger">{{ form.username.errors }}</small>
-      {% endif %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your Mytro account</p>
+        </div>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid username or password. Please try again.</span>
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" required 
+                       placeholder="Enter your username" class="form-input">
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" required 
+                       placeholder="Enter your password" class="form-input">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">
+                Sign In
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+        </div>
     </div>
-
-    <div class="mb-3">
-      <label for="{{ form.password.id_for_label }}">Password</label>
-      <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="form-control" />
-      {% if form.password.errors %}
-        <small class="text-danger">{{ form.password.errors }}</small>
-      {% endif %}
-    </div>
-
-    <button type="submit" class="btn btn-kesri">Login</button>
-  </form>
-
-  <p class="mt-4 text-center">
-    Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
-  </p>
 </div>
+
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.auth-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e1e5e9;
+}
+
+.auth-footer a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-error {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+</style>
 {% endblock %}

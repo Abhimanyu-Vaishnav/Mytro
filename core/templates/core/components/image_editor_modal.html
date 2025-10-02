@@ -1,0 +1,43 @@
+<!-- IMAGE EDITOR MODAL -->
+<div class="modal fade image-editor-modal" id="imageEditorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Image</h5>
+                <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-editor-container">
+                    <div class="editor-preview-container">
+                        <img id="editor-preview" class="editor-preview" src="" alt="Image to edit" />
+                    </div>
+                    
+                    <div class="editor-controls">
+                        <div class="control-group">
+                            <label class="control-label">
+                                Brightness
+                                <span class="control-value" id="brightnessValue">100%</span>
+                            </label>
+                            <input type="range" class="control-slider" id="brightnessSlider" min="0" max="200" value="100" oninput="imageEditor.updateBrightness(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">
+                                Contrast
+                                <span class="control-value" id="contrastValue">100%</span>
+                            </label>
+                            <input type="range" class="control-slider" id="contrastSlider" min="0" max="200" value="100" oninput="imageEditor.updateContrast(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="imageEditor.resetImageEditor()">Reset</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="imageEditor.saveImageEdit()">
+                    <span class="save-text">Save Changes</span>
+                    <span class="loading-spinner d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

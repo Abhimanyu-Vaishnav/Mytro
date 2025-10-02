@@ -1,0 +1,584 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - Mytro{% endblock %}
+
+{% block content %}
+<div class="edit-profile-modern">
+    <div class="container">
+        <div class="profile-header">
+            <h1><i class="fas fa-user-edit"></i> Edit Profile</h1>
+            <p>Complete your profile to connect better with others</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
+            
+            <!-- Photo Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-camera"></i> Profile Photos</h3>
+                <div class="photos-grid">
+                    <!-- Cover Photo -->
+                    <div class="photo-upload cover-upload">
+                        <div class="photo-preview">
+                            {% if user.profile.cover_pic %}
+                                <img src="{{ user.profile.cover_pic.url }}" alt="Cover" id="coverPreview">
+                            {% else %}
+                                <div class="placeholder">
+                                    <i class="fas fa-image"></i>
+                                    <span>Add Cover Photo</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="photo-actions">
+                            <input type="file" id="coverInput" name="cover_pic" accept="image/*" style="display: none;">
+                            <button type="button" onclick="document.getElementById('coverInput').click()" class="btn-upload">
+                                <i class="fas fa-camera"></i> Change Cover
+                            </button>
+                            {% if user.profile.cover_pic %}
+                                <button type="button" onclick="removeCover()" class="btn-remove">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Profile Photo -->
+                    <div class="photo-upload avatar-upload">
+                        <div class="photo-preview avatar-preview">
+                            {% if user.profile.profile_pic %}
+                                <img src="{{ user.profile.profile_pic.url }}" alt="Profile" id="avatarPreview">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    {{ user.profile.full_name|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="photo-actions">
+                            <input type="file" id="avatarInput" name="profile_pic" accept="image/*" style="display: none;">
+                            <button type="button" onclick="document.getElementById('avatarInput').click()" class="btn-upload">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Basic Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Enter last name">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-venus-mars"></i> Gender</label>
+                        <select name="gender">
+                            <option value="">Select Gender</option>
+                            <option value="M" {% if user.profile.gender == 'M' %}selected{% endif %}>Male</option>
+                            <option value="F" {% if user.profile.gender == 'F' %}selected{% endif %}>Female</option>
+                            <option value="O" {% if user.profile.gender == 'O' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-birthday-cake"></i> Date of Birth</label>
+                        <input type="date" name="dob" value="{{ user.profile.dob|date:'Y-m-d' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-info-circle"></i> About You</h3>
+                <div class="form-group full-width">
+                    <label><i class="fas fa-quote-left"></i> Bio</label>
+                    <textarea name="bio" placeholder="Tell everyone about yourself..." rows="4" maxlength="500">{{ user.profile.bio }}</textarea>
+                    <div class="char-count"><span id="bioCount">{{ user.profile.bio|length }}</span>/500</div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-briefcase"></i> Work</label>
+                        <input type="text" name="work" value="{{ user.profile.work }}" placeholder="What do you do?">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-graduation-cap"></i> Education</label>
+                        <input type="text" name="education" value="{{ user.profile.education }}" placeholder="Where did you study?">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-heart"></i> Relationship Status</label>
+                        <select name="relationship_status">
+                            <option value="">Select Status</option>
+                            <option value="Single" {% if user.profile.relationship_status == 'Single' %}selected{% endif %}>Single</option>
+                            <option value="In a relationship" {% if user.profile.relationship_status == 'In a relationship' %}selected{% endif %}>In a relationship</option>
+                            <option value="Married" {% if user.profile.relationship_status == 'Married' %}selected{% endif %}>Married</option>
+                            <option value="It's complicated" {% if user.profile.relationship_status == "It's complicated" %}selected{% endif %}>It's complicated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-home"></i> Hometown</label>
+                        <input type="text" name="hometown" value="{{ user.profile.hometown }}" placeholder="Where are you from?">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Current City</label>
+                        <input type="text" name="current_city" value="{{ user.profile.current_city }}" placeholder="Where do you live now?">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact & Languages -->
+            <div class="form-section">
+                <h3><i class="fas fa-globe"></i> Contact & Languages</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-link"></i> Website</label>
+                        <input type="url" name="website" value="{{ user.profile.website }}" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" name="phone_number" value="{{ user.profile.phone_number }}" placeholder="+1 234 567 8900">
+                    </div>
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-language"></i> Languages Known</label>
+                        <input type="text" name="languages_known" value="{{ user.profile.languages_known }}" placeholder="English, Hindi, Spanish (comma separated)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interests Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-heart"></i> Interests</h3>
+                <div class="interests-grid">
+                    <div class="interest-item">
+                        <input type="checkbox" id="tech" name="interests" value="Technology">
+                        <label for="tech"><i class="fas fa-laptop"></i> Technology</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="music" name="interests" value="Music">
+                        <label for="music"><i class="fas fa-music"></i> Music</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="sports" name="interests" value="Sports">
+                        <label for="sports"><i class="fas fa-futbol"></i> Sports</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="travel" name="interests" value="Travel">
+                        <label for="travel"><i class="fas fa-plane"></i> Travel</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="food" name="interests" value="Food">
+                        <label for="food"><i class="fas fa-utensils"></i> Food</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="books" name="interests" value="Books">
+                        <label for="books"><i class="fas fa-book"></i> Books</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="movies" name="interests" value="Movies">
+                        <label for="movies"><i class="fas fa-film"></i> Movies</label>
+                    </div>
+                    <div class="interest-item">
+                        <input type="checkbox" id="fitness" name="interests" value="Fitness">
+                        <label for="fitness"><i class="fas fa-dumbbell"></i> Fitness</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{% url 'profile' user.username %}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.edit-profile-modern {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.profile-header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.profile-header p {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.profile-form {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.form-section h3 {
+    color: #ff6b35;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.photo-upload {
+    position: relative;
+}
+
+.photo-preview {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    transition: all 0.3s ease;
+}
+
+.cover-upload .photo-preview {
+    height: 200px;
+}
+
+.avatar-upload .photo-preview {
+    height: 200px;
+    border-radius: 50%;
+    aspect-ratio: 1;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder, .avatar-placeholder {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.avatar-placeholder {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ff6b35;
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+}
+
+.photo-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    justify-content: center;
+}
+
+.btn-upload, .btn-remove {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-upload {
+    background: #ff6b35;
+    color: white;
+}
+
+.btn-upload:hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+}
+
+.btn-remove {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-remove:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: #ff6b35;
+    width: 16px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 14px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #ff6b35;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.interest-item {
+    position: relative;
+}
+
+.interest-item input[type="checkbox"] {
+    display: none;
+}
+
+.interest-item label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    font-weight: 500;
+}
+
+.interest-item input[type="checkbox"]:checked + label {
+    background: #fff5f2;
+    border-color: #ff6b35;
+    color: #ff6b35;
+}
+
+.interest-item label:hover {
+    border-color: #ff6b35;
+    transform: translateY(-2px);
+}
+
+.form-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding-top: 30px;
+    margin-top: 30px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-cancel, .btn-save {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 16px;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.btn-cancel:hover {
+    background: #e9ecef;
+    color: #333;
+    transform: translateY(-2px);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,107,53,0.3);
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+}
+
+@media (max-width: 768px) {
+    .photos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-form {
+        padding: 24px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .interests-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Bio character counter
+document.querySelector('textarea[name="bio"]').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('bioCount').textContent = count;
+    
+    if (count > 500) {
+        this.value = this.value.substring(0, 500);
+        document.getElementById('bioCount').textContent = 500;
+    }
+});
+
+// Image preview
+document.getElementById('coverInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('coverPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Remove cover
+function removeCover() {
+    if (confirm('Remove cover photo?')) {
+        const form = new FormData();
+        form.append('remove_cover', 'true');
+        form.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('/edit_profile/', {
+            method: 'POST',
+            body: form
+        }).then(() => location.reload());
+    }
+}
+</script>
+
+{% endblock content %}

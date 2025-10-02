@@ -1,0 +1,62 @@
+/* Like Button Fix */
+.post-action-btn.like-btn.liked {
+    color: #e74c3c !important;
+}
+
+.post-action-btn.like-btn.liked i {
+    color: #e74c3c !important;
+}
+
+.post-action-btn.like-btn.liked .action-text {
+    color: #e74c3c !important;
+}
+
+.post-action-btn.like-btn:not(.liked) {
+    color: #666;
+}
+
+.post-action-btn.like-btn:not(.liked) i {
+    color: #666;
+}
+
+.post-action-btn.like-btn:not(.liked):hover {
+    color: #e74c3c;
+}
+
+.post-action-btn.like-btn:not(.liked):hover i {
+    color: #e74c3c;
+}
+
+/* Ensure liked posts show red heart on page load */
+.post-actions .like-btn.liked {
+    color: #e74c3c !important;
+}
+
+.post-actions .like-btn.liked i {
+    color: #e74c3c !important;
+}
+
+.post-actions .like-btn.liked .action-text {
+    color: #e74c3c !important;
+}
+
+/* Additional specificity for liked state */
+.post-card .post-actions .post-action-btn.like-btn.liked {
+    color: #e74c3c !important;
+}
+
+.post-card .post-actions .post-action-btn.like-btn.liked i.fas.fa-heart {
+    color: #e74c3c !important;
+}
+
+/* Force solid heart icon for liked posts */
+.post-action-btn.like-btn.liked i {
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 900 !important;
+}
+
+/* Force outline heart icon for unliked posts */
+.post-action-btn.like-btn:not(.liked) i {
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 400 !important;
+}

@@ -1,0 +1,577 @@
+<!-- Enhanced Comment System with @tagging -->
+<div class="enhanced-comments-section" id="comments-{{ post.id }}">
+    <div class="comments-header">
+        <h4 class="comments-title">
+            <i class="fas fa-comments"></i>
+            Comments ({{ post.comments_count }})
+        </h4>
+        <div class="comments-sort">
+            <select class="sort-select" onchange="sortComments(this.value, {{ post.id }})">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="popular">Most liked</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Comment Input -->
+    <div class="comment-input-section">
+        <div class="comment-input-container">
+            <div class="comment-user-avatar">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <div class="default-avatar">{{ user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="comment-input-wrapper">
+                <div class="comment-input-field" 
+                     contenteditable="true" 
+                     placeholder="Write a comment..." 
+                     id="comment-input-{{ post.id }}"
+                     oninput="handleCommentInput(this, {{ post.id }})"
+                     onkeydown="handleCommentKeydown(event, {{ post.id }})"
+                     data-post-id="{{ post.id }}"></div>
+                
+                <!-- @mention suggestions -->
+                <div class="mention-suggestions" id="mention-suggestions-{{ post.id }}" style="display: none;"></div>
+                
+                <div class="comment-input-actions">
+                    <div class="input-tools">
+                        <button class="tool-btn" onclick="insertEmoji({{ post.id }})" title="Add emoji">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <button class="tool-btn" onclick="attachImage({{ post.id }})" title="Attach image">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button class="tool-btn" onclick="addGif({{ post.id }})" title="Add GIF">
+                            <i class="fas fa-film"></i>
+                        </button>
+                        <button class="tool-btn" onclick="tagPeople({{ post.id }})" title="Tag people">
+                            <i class="fas fa-at"></i>
+                        </button>
+                    </div>
+                    <div class="input-actions">
+                        <span class="char-count" id="char-count-{{ post.id }}">0/500</span>
+                        <button class="comment-submit-btn" onclick="submitComment({{ post.id }})" id="submit-btn-{{ post.id }}" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                            Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comments List -->
+    <div class="comments-list" id="comments-list-{{ post.id }}">
+        {% for comment in post.comments.all %}
+            {% include 'core/components/comment_item.html' with comment=comment post_id=post.id %}
+        {% empty %}
+            <div class="no-comments">
+                <i class="fas fa-comment-slash"></i>
+                <p>No comments yet. Be the first to comment!</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Load More Comments -->
+    <div class="load-more-comments" id="load-more-{{ post.id }}" style="display: none;">
+        <button class="load-more-btn" onclick="loadMoreComments({{ post.id }})">
+            <i class="fas fa-chevron-down"></i>
+            Load more comments
+        </button>
+    </div>
+</div>
+
+<style>
+.enhanced-comments-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    border: 1px solid #e1e5e9;
+}
+
+.comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.comments-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1c1e21;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comments-title i {
+    color: #ff6b35;
+}
+
+.sort-select {
+    padding: 8px 12px;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.comment-input-section {
+    margin-bottom: 24px;
+}
+
+.comment-input-container {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.comment-user-avatar {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.comment-user-avatar img,
+.comment-user-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.comment-input-field {
+    min-height: 50px;
+    max-height: 150px;
+    padding: 16px 20px;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    background: #f8f9fa;
+    font-size: 15px;
+    line-height: 1.4;
+    overflow-y: auto;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.comment-input-field:focus {
+    border-color: #ff6b35;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.comment-input-field:empty:before {
+    content: attr(placeholder);
+    color: #65676b;
+    pointer-events: none;
+}
+
+.mention-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.mention-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.mention-item:hover {
+    background: #f8f9fa;
+}
+
+.mention-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mention-info h5 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1c1e21;
+}
+
+.mention-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #65676b;
+}
+
+.comment-input-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding: 0 20px;
+}
+
+.input-tools {
+    display: flex;
+    gap: 8px;
+}
+
+.tool-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f0f2f5;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #65676b;
+    transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+    background: #e4e6ea;
+    color: #ff6b35;
+    transform: scale(1.1);
+}
+
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.char-count {
+    font-size: 12px;
+    color: #65676b;
+}
+
+.comment-submit-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background: #ff6b35;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.comment-submit-btn:disabled {
+    background: #e4e6ea;
+    color: #65676b;
+    cursor: not-allowed;
+}
+
+.comment-submit-btn:not(:disabled):hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.comments-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 40px 20px;
+    color: #65676b;
+}
+
+.no-comments i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #ddd;
+}
+
+.load-more-comments {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.load-more-btn {
+    padding: 12px 24px;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    color: #65676b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+    transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+    background: #f8f9fa;
+    border-color: #ff6b35;
+    color: #ff6b35;
+}
+
+/* Mention highlighting */
+.mention {
+    background: #e3f2fd;
+    color: #1877f2;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.mention:hover {
+    background: #bbdefb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .enhanced-comments-section {
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .comments-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .comment-user-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .comment-input-actions {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .input-tools {
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+let mentionUsers = [];
+let currentMentionQuery = '';
+let currentPostId = null;
+
+// Handle comment input with @mention detection
+function handleCommentInput(element, postId) {
+    const text = element.textContent;
+    const charCount = document.getElementById(`char-count-${postId}`);
+    const submitBtn = document.getElementById(`submit-btn-${postId}`);
+    
+    // Update character count
+    charCount.textContent = `${text.length}/500`;
+    
+    // Enable/disable submit button
+    submitBtn.disabled = text.trim().length === 0 || text.length > 500;
+    
+    // Check for @mentions
+    const cursorPos = getCaretPosition(element);
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (mentionMatch) {
+        currentMentionQuery = mentionMatch[1];
+        currentPostId = postId;
+        showMentionSuggestions(postId, currentMentionQuery);
+    } else {
+        hideMentionSuggestions(postId);
+    }
+}
+
+// Handle keydown events
+function handleCommentKeydown(event, postId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        submitComment(postId);
+    }
+}
+
+// Show mention suggestions
+async function showMentionSuggestions(postId, query) {
+    try {
+        const response = await fetch(`/api/search-users/?q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+            const data = await response.json();
+            displayMentionSuggestions(postId, data.users);
+        }
+    } catch (error) {
+        console.error('Error fetching mention suggestions:', error);
+    }
+}
+
+// Display mention suggestions
+function displayMentionSuggestions(postId, users) {
+    const container = document.getElementById(`mention-suggestions-${postId}`);
+    
+    if (!users || users.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.innerHTML = users.slice(0, 5).map(user => `
+        <div class="mention-item" onclick="selectMention('${user.username}', '${user.name}', ${postId})">
+            <div class="mention-avatar">
+                ${user.avatar ? 
+                    `<img src="${user.avatar}" alt="${user.name}">` :
+                    `<div class="default-avatar" style="width: 32px; height: 32px; background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; border-radius: 50%;">${user.name.charAt(0)}</div>`
+                }
+            </div>
+            <div class="mention-info">
+                <h5>${user.name}</h5>
+                <p>@${user.username}</p>
+            </div>
+        </div>
+    `).join('');
+    
+    container.style.display = 'block';
+}
+
+// Select mention
+function selectMention(username, name, postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const text = input.textContent;
+    const cursorPos = getCaretPosition(input);
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const textAfterCursor = text.substring(cursorPos);
+    
+    // Replace the @query with @username
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    if (mentionMatch) {
+        const beforeMention = textBeforeCursor.substring(0, mentionMatch.index);
+        const newText = beforeMention + `@${username} ` + textAfterCursor;
+        
+        input.innerHTML = newText.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+        
+        // Set cursor position after mention
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(input.childNodes[0] || input, beforeMention.length + username.length + 2);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+    
+    hideMentionSuggestions(postId);
+    handleCommentInput(input, postId);
+}
+
+// Hide mention suggestions
+function hideMentionSuggestions(postId) {
+    const container = document.getElementById(`mention-suggestions-${postId}`);
+    container.style.display = 'none';
+}
+
+// Get caret position
+function getCaretPosition(element) {
+    let caretOffset = 0;
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(element);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        caretOffset = preCaretRange.toString().length;
+    }
+    return caretOffset;
+}
+
+// Submit comment
+async function submitComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const content = input.textContent.trim();
+    
+    if (!content) return;
+    
+    const submitBtn = document.getElementById(`submit-btn-${postId}`);
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+    
+    try {
+        const success = await addComment(postId, content);
+        if (success) {
+            input.textContent = '';
+            input.innerHTML = '';
+            handleCommentInput(input, postId);
+        }
+    } catch (error) {
+        console.error('Error submitting comment:', error);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+    }
+}
+
+// Tool functions
+function insertEmoji(postId) {
+    window.showGlobalNotification('Emoji picker coming soon!', 'info');
+}
+
+function attachImage(postId) {
+    window.showGlobalNotification('Image attachment coming soon!', 'info');
+}
+
+function addGif(postId) {
+    window.showGlobalNotification('GIF picker coming soon!', 'info');
+}
+
+function tagPeople(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const currentText = input.textContent;
+    input.textContent = currentText + '@';
+    
+    // Focus and set cursor at end
+    input.focus();
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    handleCommentInput(input, postId);
+}
+
+function sortComments(sortBy, postId) {
+    window.showGlobalNotification(`Sorting by ${sortBy}`, 'info');
+}
+
+function loadMoreComments(postId) {
+    window.showGlobalNotification('Loading more comments...', 'info');
+}
+</script>

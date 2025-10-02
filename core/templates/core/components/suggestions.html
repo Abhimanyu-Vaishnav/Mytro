@@ -1,0 +1,202 @@
+<!-- SUGGESTIONS COMPONENT -->
+<div class="suggestions-card">
+    <div class="suggestions-header">
+        <h3 class="suggestions-title">People to Follow</h3>
+        <button class="refresh-suggestions" onclick="refreshSuggestions()" title="Refresh suggestions">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+    
+    <div class="suggestions-list" id="suggestionsList">
+        {% for suggested_user in suggestions %}
+        <div class="suggestion-item" data-user-id="{{ suggested_user.id }}">
+            <div class="suggestion-user-info">
+                <a href="{% url 'profile' suggested_user.username %}" class="suggestion-avatar-link">
+                    {% if suggested_user.profile.profile_pic %}
+                        <img src="{{ suggested_user.profile.profile_pic.url }}" alt="{{ suggested_user.username }}" class="suggestion-avatar" />
+                    {% else %}
+                        <div class="avatar-fallback">{{ suggested_user.username|first|upper }}</div>
+                    {% endif %}
+                </a>
+                
+                <div class="suggestion-details">
+                    <a href="{% url 'profile' suggested_user.username %}" class="suggestion-name">
+                        {% if suggested_user.get_full_name %}
+                            {{ suggested_user.get_full_name }}
+                        {% else %}
+                            {{ suggested_user.username }}
+                        {% endif %}
+                    </a>
+                    <span class="suggestion-username">@{{ suggested_user.username }}</span>
+                    <span class="suggestion-mutual">5 mutual friends</span>
+                </div>
+            </div>
+            
+            <button class="follow-btn {% if suggested_user in user.profile.following.all %}following{% endif %}" 
+                    onclick="followUser({{ suggested_user.id }}, this)">
+                {% if suggested_user in user.profile.following.all %}
+                    Following
+                {% else %}
+                    Follow
+                {% endif %}
+            </button>
+        </div>
+        {% empty %}
+        <div class="empty-suggestions">
+            <i class="fas fa-users"></i>
+            <p>No suggestions available</p>
+            <button class="btn-secondary" onclick="refreshSuggestions()">Refresh</button>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="suggestions-footer">
+        <a href="#" class="see-more-link">See More Suggestions</a>
+    </div>
+</div>
+
+<!-- TRENDING HASHTAGS -->
+<div class="suggestions-card">
+    <div class="suggestions-header">
+        <h3 class="suggestions-title">Trending Topics</h3>
+    </div>
+    <div class="suggestions-list">
+        <div class="trending-item">
+            <span class="hashtag-icon">#</span>
+            <div class="trend-info">
+                <strong class="trend-name">QuickTrust</strong>
+                <span class="trend-stats">245 posts</span>
+            </div>
+        </div>
+        <div class="trending-item">
+            <span class="hashtag-icon">#</span>
+            <div class="trend-info">
+                <strong class="trend-name">StartingSmart</strong>
+                <span class="trend-stats">189 posts</span>
+            </div>
+        </div>
+        <div class="trending-item">
+            <span class="hashtag-icon">#</span>
+            <div class="trend-info">
+                <strong class="trend-name">Mytro</strong>
+                <span class="trend-stats">156 posts</span>
+            </div>
+        </div>
+    </div>
+    <div class="suggestions-footer">
+        <a href="#" class="see-more-link">Show More</a>
+    </div>
+</div>
+
+<script>
+// Enhanced follow functionality
+async function followUser(userId, button) {
+    try {
+        button.disabled = true;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        const response = await fetch(`/api/follow/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.following) {
+                button.textContent = 'Following';
+                button.classList.add('following');
+                showNotification(`You started following @${data.username}`);
+                
+                // Remove from suggestions after following
+                const suggestionItem = button.closest('.suggestion-item');
+                suggestionItem.style.opacity = '0.5';
+                setTimeout(() => {
+                    suggestionItem.remove();
+                    
+                    // Check if no suggestions left
+                    const suggestions = document.querySelectorAll('.suggestion-item');
+                    if (suggestions.length === 0) {
+                        document.getElementById('suggestionsList').innerHTML = `
+                            <div class="empty-suggestions">
+                                <i class="fas fa-check-circle"></i>
+                                <p>You're following all suggestions!</p>
+                                <button class="btn-secondary" onclick="refreshSuggestions()">Find More</button>
+                            </div>
+                        `;
+                    }
+                }, 1000);
+            } else {
+                button.textContent = 'Follow';
+                button.classList.remove('following');
+                showNotification(`You unfollowed @${data.username}`);
+            }
+        }
+    } catch (error) {
+        console.error('Error following user:', error);
+        showNotification('Error following user', 'error');
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function refreshSuggestions() {
+    const refreshBtn = document.querySelector('.refresh-suggestions');
+    const suggestionsList = document.getElementById('suggestionsList');
+    
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    refreshBtn.disabled = true;
+    
+    // Show loading state
+    suggestionsList.innerHTML = `
+        <div class="loading-suggestions">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Finding new suggestions...</p>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        location.reload();
+    }, 1500);
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `global-notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Hover effects for suggestions
+document.addEventListener('DOMContentLoaded', function() {
+    const suggestionItems = document.querySelectorAll('.suggestion-item');
+    
+    suggestionItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+});
+</script>

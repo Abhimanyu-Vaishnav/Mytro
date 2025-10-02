@@ -1,0 +1,59 @@
+<!-- CREATE POST MODAL -->
+<div class="modal fade create-post-modal" id="createPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Post</h5>
+                <button type="button" class="close-btn" data-bs-dismiss="modal">×</button>
+            </div>
+            <form method="post" enctype="multipart/form-data" id="create-post-form" action="{% url 'create_post' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="create-post-header">
+                        {% if user.profile.profile_pic %}
+                            <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="profile-photo" />
+                        {% else %}
+                            <div class="avatar-fallback">{{ user.get_full_name|default:user.username|first }}</div>
+                        {% endif %}
+                        <div class="user-info">
+                            <div class="full-name">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="username">@{{ user.username }}</div>
+                        </div>
+                    </div>
+                    
+                    <textarea class="create-post-textarea" placeholder="What's happening?" name="content" id="create-post-content"></textarea>
+                    
+                    <!-- Media Previews -->
+                    <div id="media-previews" class="media-previews">
+                        <img id="image-preview" class="media-preview image-preview" src="" alt="Image preview" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="media-options">
+                        <input type="file" id="create-post-image" name="image" accept="image/*" class="d-none" onchange="postManager.handleCreatePostImage(event)" />
+                        
+                        <button type="button" class="icon-btn" onclick="document.getElementById('create-post-image').click()" title="Add Photo">
+                            📷
+                        </button>
+                        <button type="button" class="icon-btn" onclick="emojiPicker.toggleEmojiPicker('create-post-content')" title="Add Emoji">
+                            😊
+                        </button>
+                        <button type="button" class="icon-btn" onclick="postManager.addLocationToPost()" title="Add Location">
+                            📍
+                        </button>
+                        <button type="button" class="icon-btn" onclick="postManager.addHashtagToPost()" title="Add Hashtag">
+                            #
+                        </button>
+                    </div>
+                    <div class="post-actions">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submit-create-post-btn">
+                            <span class="submit-text">Post</span>
+                            <span class="loading-spinner d-none"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

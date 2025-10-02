@@ -1,0 +1,133 @@
+/* Mobile First Responsive Design */
+
+/* Large screens (1200px and up) */
+@media (min-width: 1200px) {
+    .feed-container {
+        grid-template-columns: 320px 1fr 320px;
+    }
+}
+
+/* Medium screens (768px to 1199px) */
+@media (max-width: 1199px) {
+    .feed-container {
+        grid-template-columns: 280px 1fr;
+    }
+    
+    .right-sidebar {
+        display: none;
+    }
+    
+    .nav-search {
+        flex: 0 1 400px;
+    }
+}
+
+/* Small screens (576px to 767px) */
+@media (max-width: 767px) {
+    .feed-container {
+        grid-template-columns: 1fr;
+        padding: 0 var(--space-md);
+    }
+    
+    .sidebar {
+        position: static;
+    }
+    
+    .left-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+    }
+    
+    .profile-card {
+        grid-column: 1 / -1;
+    }
+    
+    .nav-search {
+        display: none;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+    
+    .mobile-menu-btn {
+        display: flex;
+    }
+    
+    .user-info .user-name {
+        display: none;
+    }
+    
+    .create-post-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modal-container {
+        margin: var(--space-md);
+    }
+}
+
+/* Extra small screens (575px and down) */
+@media (max-width: 575px) {
+    .feed-container {
+        padding: 0 var(--space-sm);
+    }
+    
+    .left-sidebar {
+        grid-template-columns: 1fr;
+    }
+    
+    .create-post-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .empty-feed-actions {
+        flex-direction: column;
+    }
+    
+    .modal-container {
+        margin: var(--space-sm);
+        max-height: calc(100vh - var(--space-xl));
+    }
+    
+    .side-panel {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .mobile-menu {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .nav-container {
+        padding: 0 var(--space-md);
+    }
+}
+
+/* Print styles */
+@media print {
+    .main-nav,
+    .sidebar,
+    .create-post-card,
+    .stories-section,
+    .post-actions {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0;
+    }
+    
+    .feed-container {
+        grid-template-columns: 1fr;
+        padding: 0;
+    }
+    
+    .post-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

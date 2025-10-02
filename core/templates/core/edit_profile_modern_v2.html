@@ -1,0 +1,496 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - Mytro{% endblock %}
+
+{% block content %}
+<div class="modern-edit-profile">
+    <div class="profile-edit-container">
+        <!-- Header -->
+        <div class="edit-header">
+            <div class="header-content">
+                <button class="back-btn" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="header-info">
+                    <h1>Edit Profile</h1>
+                    <p>Customize your profile to show your personality</p>
+                </div>
+            </div>
+            <button class="save-btn" onclick="saveProfile()" id="saveProfileBtn">
+                <i class="fas fa-check"></i>
+                Save Changes
+            </button>
+        </div>
+
+        <!-- Cover Photo Section -->
+        <div class="cover-section">
+            <div class="cover-photo-container">
+                <div class="cover-photo" id="coverPhotoPreview">
+                    {% if user.profile.cover_pic %}
+                        <img src="{{ user.profile.cover_pic.url }}" alt="Cover Photo" id="coverImage">
+                    {% else %}
+                        <div class="default-cover">
+                            <i class="fas fa-camera"></i>
+                            <p>Add Cover Photo</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="cover-actions">
+                    <button class="cover-btn" onclick="document.getElementById('coverInput').click()">
+                        <i class="fas fa-camera"></i>
+                        Change Cover
+                    </button>
+                    {% if user.profile.cover_pic %}
+                    <button class="cover-btn remove" onclick="removeCover()">
+                        <i class="fas fa-trash"></i>
+                        Remove
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <input type="file" id="coverInput" accept="image/*" style="display: none;" onchange="handleCoverUpload(this)">
+            </div>
+            
+            <!-- Profile Photo -->
+            <div class="profile-photo-container">
+                <div class="profile-photo" id="profilePhotoPreview">
+                    {% if user.profile.profile_pic %}
+                        <img src="{{ user.profile.profile_pic.url }}" alt="Profile Photo" id="profileImage">
+                    {% else %}
+                        <div class="default-profile">
+                            {{ user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="photo-actions">
+                    <button class="photo-btn" onclick="document.getElementById('profileInput').click()">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    {% if user.profile.profile_pic %}
+                    <button class="photo-btn remove" onclick="removeProfile()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <input type="file" id="profileInput" accept="image/*" style="display: none;" onchange="handleProfileUpload(this)">
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="profile-form">
+            <form id="profileForm" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Basic Information
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="first_name" value="{{ user.first_name }}" placeholder="Enter your first name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="last_name" value="{{ user.last_name }}" placeholder="Enter your last name">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="bio">Bio</label>
+                            <textarea id="bio" name="bio" placeholder="Tell us about yourself..." maxlength="500">{{ profile.bio }}</textarea>
+                            <div class="char-counter">
+                                <span id="bioCounter">{{ profile.bio|length }}</span>/500
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-envelope"></i>
+                        Contact Information
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}" readonly>
+                            <small>Email cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone_number" value="{{ profile.phone_number }}" placeholder="+1 (555) 123-4567">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="website">Website</label>
+                            <input type="url" id="website" name="website" value="{{ profile.website }}" placeholder="https://yourwebsite.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" value="{{ profile.location }}" placeholder="City, Country">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Personal Information
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender">
+                                <option value="">Select Gender</option>
+                                <option value="M" {% if profile.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if profile.gender == 'F' %}selected{% endif %}>Female</option>
+                                <option value="O" {% if profile.gender == 'O' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dob">Date of Birth</label>
+                            <input type="date" id="dob" name="dob" value="{{ profile.dob|date:'Y-m-d' }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="relationship">Relationship Status</label>
+                            <select id="relationship" name="relationship_status">
+                                <option value="">Select Status</option>
+                                <option value="Single" {% if profile.relationship_status == 'Single' %}selected{% endif %}>Single</option>
+                                <option value="In a relationship" {% if profile.relationship_status == 'In a relationship' %}selected{% endif %}>In a relationship</option>
+                                <option value="Married" {% if profile.relationship_status == 'Married' %}selected{% endif %}>Married</option>
+                                <option value="It's complicated" {% if profile.relationship_status == "It's complicated" %}selected{% endif %}>It's complicated</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="languages">Languages</label>
+                            <input type="text" id="languages" name="languages_known" value="{{ profile.languages_known }}" placeholder="English, Spanish, French">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work & Education -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-briefcase"></i>
+                        Work & Education
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="work">Work</label>
+                            <input type="text" id="work" name="work" value="{{ profile.work }}" placeholder="Software Engineer at Tech Company">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="education">Education</label>
+                            <input type="text" id="education" name="education" value="{{ profile.education }}" placeholder="Computer Science at University">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="hometown">Hometown</label>
+                            <input type="text" id="hometown" name="hometown" value="{{ profile.hometown }}" placeholder="Where you grew up">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="currentCity">Current City</label>
+                            <input type="text" id="currentCity" name="current_city" value="{{ profile.current_city }}" placeholder="Where you live now">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'css/edit-profile-modern.css' %}">
+
+<script>
+let currentCropType = null;
+let cropper = null;
+
+// Handle cover photo upload
+function handleCoverUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            window.showGlobalNotification('Image too large. Max 5MB allowed.', 'error');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentCropType = 'cover';
+            showCropModal(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Handle profile photo upload
+function handleProfileUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            window.showGlobalNotification('Image too large. Max 5MB allowed.', 'error');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentCropType = 'profile';
+            showCropModal(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Show crop modal
+function showCropModal(imageSrc) {
+    const modal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    
+    cropImage.src = imageSrc;
+    modal.style.display = 'flex';
+    
+    // Initialize cropper (you would need to include Cropper.js library)
+    setTimeout(() => {
+        if (window.Cropper) {
+            cropper = new Cropper(cropImage, {
+                aspectRatio: currentCropType === 'cover' ? 16/9 : 1,
+                viewMode: 1,
+                autoCropArea: 0.8,
+                responsive: true,
+                background: false
+            });
+        }
+    }, 100);
+}
+
+// Close crop modal
+function closeCropModal() {
+    const modal = document.getElementById('cropModal');
+    modal.style.display = 'none';
+    
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    
+    // Reset file inputs
+    document.getElementById('coverInput').value = '';
+    document.getElementById('profileInput').value = '';
+}
+
+// Reset crop
+function resetCrop() {
+    if (cropper) {
+        cropper.reset();
+    }
+}
+
+// Apply crop
+function applyCrop() {
+    if (!cropper) {
+        // If no cropper library, just use the original image
+        const cropImage = document.getElementById('cropImage');
+        updateImagePreview(cropImage.src);
+        closeCropModal();
+        return;
+    }
+    
+    const canvas = cropper.getCroppedCanvas({
+        width: currentCropType === 'cover' ? 1200 : 400,
+        height: currentCropType === 'cover' ? 675 : 400,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+    });
+    
+    const croppedImage = canvas.toDataURL('image/jpeg', 0.9);
+    updateImagePreview(croppedImage);
+    closeCropModal();
+}
+
+// Update image preview
+function updateImagePreview(imageSrc) {
+    if (currentCropType === 'cover') {
+        const coverPreview = document.getElementById('coverPhotoPreview');
+        coverPreview.innerHTML = `<img src="${imageSrc}" alt="Cover Photo" id="coverImage">`;
+    } else {
+        const profilePreview = document.getElementById('profilePhotoPreview');
+        profilePreview.innerHTML = `<img src="${imageSrc}" alt="Profile Photo" id="profileImage">`;
+    }
+}
+
+// Remove cover photo
+async function removeCover() {
+    if (!confirm('Remove cover photo?')) return;
+    
+    try {
+        const response = await fetch('/api/profile/remove-cover/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            const coverPreview = document.getElementById('coverPhotoPreview');
+            coverPreview.innerHTML = `
+                <div class="default-cover">
+                    <i class="fas fa-camera"></i>
+                    <p>Add Cover Photo</p>
+                </div>
+            `;
+            window.showGlobalNotification('Cover photo removed', 'success');
+        }
+    } catch (error) {
+        console.error('Error removing cover:', error);
+        window.showGlobalNotification('Error removing cover photo', 'error');
+    }
+}
+
+// Remove profile photo
+async function removeProfile() {
+    if (!confirm('Remove profile photo?')) return;
+    
+    try {
+        const response = await fetch('/api/profile/remove-pic/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            const profilePreview = document.getElementById('profilePhotoPreview');
+            const username = '{{ user.username }}';
+            profilePreview.innerHTML = `
+                <div class="default-profile">
+                    ${username.charAt(0).toUpperCase()}
+                </div>
+            `;
+            window.showGlobalNotification('Profile photo removed', 'success');
+        }
+    } catch (error) {
+        console.error('Error removing profile photo:', error);
+        window.showGlobalNotification('Error removing profile photo', 'error');
+    }
+}
+
+// Save profile
+async function saveProfile() {
+    const btn = document.getElementById('saveProfileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
+    try {
+        const formData = new FormData();
+        
+        // Add form fields
+        const form = document.getElementById('profileForm');
+        const formDataObj = new FormData(form);
+        
+        for (let [key, value] of formDataObj.entries()) {
+            formData.append(key, value);
+        }
+        
+        // Add cropped images if any
+        const coverImg = document.getElementById('coverImage');
+        const profileImg = document.getElementById('profileImage');
+        
+        if (coverImg && coverImg.src.startsWith('data:')) {
+            formData.append('cover_pic_data', coverImg.src);
+        }
+        
+        if (profileImg && profileImg.src.startsWith('data:')) {
+            formData.append('profile_pic_data', profileImg.src);
+        }
+        
+        const response = await fetch('/edit_profile/', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            window.showGlobalNotification('Profile updated successfully! 🎉', 'success');
+            setTimeout(() => {
+                window.location.href = '/profile/';
+            }, 1500);
+        } else {
+            window.showGlobalNotification('Error updating profile', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        window.showGlobalNotification('Network error. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+    }
+}
+
+// Bio character counter
+document.addEventListener('DOMContentLoaded', function() {
+    const bioTextarea = document.getElementById('bio');
+    const bioCounter = document.getElementById('bioCounter');
+    
+    if (bioTextarea && bioCounter) {
+        bioTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            bioCounter.textContent = length;
+            
+            if (length > 450) {
+                bioCounter.style.color = '#dc3545';
+            } else if (length > 400) {
+                bioCounter.style.color = '#ffc107';
+            } else {
+                bioCounter.style.color = '#65676b';
+            }
+        });
+    }
+});
+
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+</script>
+
+<!-- Image Crop Modal -->
+<div class="modal-overlay" id="cropModal">
+    <div class="modal-container crop-modal">
+        <div class="modal-header">
+            <h3>Crop Image</h3>
+            <button class="modal-close" onclick="closeCropModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="crop-container">
+                <img id="cropImage" style="max-width: 100%;">
+            </div>
+            <div class="crop-controls">
+                <button class="btn btn-secondary" onclick="resetCrop()">Reset</button>
+                <button class="btn btn-primary" onclick="applyCrop()">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

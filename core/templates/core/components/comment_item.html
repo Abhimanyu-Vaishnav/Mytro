@@ -1,0 +1,325 @@
+<div class="comment-item" data-comment-id="{{ comment.id }}">
+    <div class="comment-avatar">
+        {% if comment.user.profile.profile_pic %}
+            <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}">
+        {% else %}
+            <div class="default-avatar">{{ comment.user.username|first|upper }}</div>
+        {% endif %}
+    </div>
+    
+    <div class="comment-content">
+        <div class="comment-bubble">
+            <div class="comment-header">
+                <a href="{% url 'profile' comment.user.username %}" class="comment-author">
+                    {{ comment.user.profile.full_name }}
+                </a>
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            
+            <div class="comment-text">{{ comment.content|safe }}</div>
+            
+            <div class="comment-actions">
+                <button class="comment-btn like-btn {% if comment.is_liked %}liked{% endif %}" 
+                        onclick="likeComment({{ comment.id }}, this)">
+                    <i class="fas fa-heart"></i>
+                    <span>{{ comment.likes_count|default:0 }}</span>
+                </button>
+                
+                <button class="comment-btn reply-btn" 
+                        onclick="replyToComment({{ comment.id }}, '{{ comment.user.username }}')">
+                    <i class="fas fa-reply"></i>
+                    <span>Reply</span>
+                </button>
+                
+                <div class="comment-menu">
+                    <button class="comment-btn menu-btn" onclick="toggleCommentMenu({{ comment.id }})">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div class="comment-dropdown" id="comment-menu-{{ comment.id }}">
+                        {% if comment.user == user %}
+                            <button onclick="editComment({{ comment.id }})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="deleteComment({{ comment.id }})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        {% else %}
+                            <button onclick="reportComment({{ comment.id }})">
+                                <i class="fas fa-flag"></i> Report
+                            </button>
+                        {% endif %}
+                        <button onclick="copyCommentLink({{ comment.id }})">
+                            <i class="fas fa-link"></i> Copy link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.comment-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.comment-avatar img,
+.comment-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #65676b;
+}
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-bubble {
+    background: #f0f2f5;
+    border-radius: 16px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #1c1e21;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.comment-author:hover {
+    color: #ff6b35;
+}
+
+.comment-time {
+    color: #65676b;
+    font-size: 12px;
+}
+
+.comment-text {
+    color: #1c1e21;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 4px;
+}
+
+.comment-btn {
+    background: none;
+    border: none;
+    color: #65676b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.comment-btn:hover {
+    background: rgba(0,0,0,0.05);
+    color: #1c1e21;
+}
+
+.comment-btn.liked {
+    color: #e91e63;
+}
+
+.comment-btn i {
+    font-size: 11px;
+}
+
+.comment-menu {
+    position: relative;
+    margin-left: auto;
+}
+
+.comment-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    min-width: 140px;
+    z-index: 1000;
+    display: none;
+}
+
+.comment-dropdown button {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #1c1e21;
+    transition: background 0.2s;
+}
+
+.comment-dropdown button:hover {
+    background: #f8f9fa;
+}
+
+.comment-dropdown button:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.comment-dropdown button:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+@media (max-width: 768px) {
+    .comment-item {
+        gap: 8px;
+        padding: 6px;
+    }
+    
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .comment-actions {
+        gap: 12px;
+    }
+    
+    .comment-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+}
+</style>
+
+<script>
+function toggleCommentMenu(commentId) {
+    const menu = document.getElementById(`comment-menu-${commentId}`);
+    const isVisible = menu.style.display === 'block';
+    
+    // Hide all other comment menus
+    document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+        dropdown.style.display = 'none';
+    });
+    
+    menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function likeComment(commentId, button) {
+    fetch(`/api/like_comment/${commentId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.classList.toggle('liked');
+            button.querySelector('span').textContent = data.likes_count;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function replyToComment(commentId, username) {
+    const postId = document.querySelector(`[data-comment-id="${commentId}"]`).closest('[data-post-id]').dataset.postId;
+    const commentInput = document.getElementById(`commentInput-${postId}`);
+    commentInput.value = `@${username} `;
+    commentInput.focus();
+}
+
+function editComment(commentId) {
+    console.log('Edit comment:', commentId);
+    toggleCommentMenu(commentId);
+}
+
+function deleteComment(commentId) {
+    if (confirm('Delete this comment?')) {
+        fetch(`/api/delete_comment/${commentId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector(`[data-comment-id="${commentId}"]`).remove();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    toggleCommentMenu(commentId);
+}
+
+function reportComment(commentId) {
+    if (confirm('Report this comment?')) {
+        console.log('Report comment:', commentId);
+    }
+    toggleCommentMenu(commentId);
+}
+
+function copyCommentLink(commentId) {
+    const url = `${window.location.origin}${window.location.pathname}#comment-${commentId}`;
+    navigator.clipboard.writeText(url).then(() => {
+        if (window.showGlobalNotification) {
+            window.showGlobalNotification('Comment link copied!', 'success');
+        }
+    });
+    toggleCommentMenu(commentId);
+}
+
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+// Close comment menus when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.comment-menu')) {
+        document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+    }
+});
+</script>

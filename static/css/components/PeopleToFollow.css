@@ -1,0 +1,438 @@
+/* People to Follow Component */
+.suggestions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.suggestions-card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.suggestions-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.suggestions-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.refresh-suggestions {
+    background: var(--bg-secondary);
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.refresh-suggestions:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(180deg);
+}
+
+.refresh-suggestions:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Suggestions List */
+.suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-radius: 12px;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.suggestion-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-light);
+    transform: translateX(4px);
+}
+
+.suggestion-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.suggestion-avatar-link {
+    text-decoration: none;
+    display: flex;
+}
+
+.suggestion-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-light);
+    transition: var(--transition);
+}
+
+.suggestion-avatar:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.avatar-fallback {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    border: 3px solid var(--primary-light);
+    transition: var(--transition);
+}
+
+.avatar-fallback:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.suggestion-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.suggestion-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: var(--transition);
+}
+
+.suggestion-name:hover {
+    color: var(--primary-color);
+}
+
+.suggestion-username {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.suggestion-mutual {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* Follow Button */
+.follow-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+    min-width: 90px;
+    box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+}
+
+.follow-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 153, 51, 0.4);
+}
+
+.follow-btn.following {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+    box-shadow: none;
+}
+
+.follow-btn.following:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.follow-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Trending Items */
+.trending-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.trending-item:hover {
+    background: var(--bg-secondary);
+}
+
+.hashtag-icon {
+    font-size: 20px;
+    color: var(--primary-color);
+    font-weight: 700;
+    width: 24px;
+    text-align: center;
+}
+
+.trend-info {
+    flex: 1;
+}
+
+.trend-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.trend-stats {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* Empty States */
+.empty-suggestions {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-suggestions i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+    display: block;
+}
+
+.empty-suggestions p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+}
+
+.loading-suggestions {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-secondary);
+}
+
+.loading-suggestions i {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.loading-suggestions p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Suggestions Footer */
+.suggestions-footer {
+    border-top: 1px solid var(--border-light);
+    padding-top: 16px;
+    margin-top: 8px;
+}
+
+.see-more-link {
+    display: block;
+    text-align: center;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.see-more-link:hover {
+    background: var(--bg-secondary);
+}
+
+/* Global Notifications */
+.global-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid #4CAF50;
+    z-index: 10000;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.global-notification.error {
+    border-left-color: #ff4444;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.notification-content i {
+    font-size: 20px;
+}
+
+.global-notification.success .notification-content i {
+    color: #4CAF50;
+}
+
+.global-notification.error .notification-content i {
+    color: #ff4444;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.notification-close:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .suggestions-card {
+        padding: 16px;
+    }
+    
+    .suggestion-item {
+        padding: 10px;
+    }
+    
+    .suggestion-avatar,
+    .avatar-fallback {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+    
+    .suggestion-name {
+        font-size: 14px;
+    }
+    
+    .suggestion-username,
+    .suggestion-mutual {
+        font-size: 12px;
+    }
+    
+    .follow-btn {
+        padding: 6px 16px;
+        font-size: 13px;
+        min-width: 80px;
+    }
+    
+    .global-notification {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .suggestions-container {
+        gap: 16px;
+    }
+    
+    .suggestions-card {
+        padding: 12px;
+    }
+    
+    .suggestions-header {
+        margin-bottom: 12px;
+    }
+    
+    .suggestions-title {
+        font-size: 16px;
+    }
+    
+    .suggestion-user-info {
+        gap: 8px;
+    }
+    
+    .suggestion-avatar,
+    .avatar-fallback {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+}
