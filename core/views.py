@@ -1370,6 +1370,100 @@ def get_posts_like_status(request):
             'success': False,
             'error': str(e)
         }, status=500)
+    
+
+
+@login_required
+@require_POST
+def create_group(request):
+    """Create a new group conversation"""
+    try:
+        group_name = request.POST.get('group_name', '').strip()
+        description = request.POST.get('description', '').strip()
+        members_json = request.POST.get('members', '[]')
+        
+        if not group_name:
+            return JsonResponse({'success': False, 'error': 'Group name is required'}, status=400)
+        
+        # Parse member IDs
+        try:
+            member_ids = json.loads(members_json)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid members data'}, status=400)
+        
+        if len(member_ids) < 1:
+            return JsonResponse({'success': False, 'error': 'Add at least one member'}, status=400)
+        
+        # Create group conversation
+        conversation = Conversation.objects.create(
+            is_group=True,
+            group_name=group_name
+        )
+        
+        # Add creator and members
+        conversation.participants.add(request.user)
+        for member_id in member_ids:
+            try:
+                user = User.objects.get(id=member_id)
+                conversation.participants.add(user)
+            except User.DoesNotExist:
+                continue
+        
+        # Handle group photo
+        if 'group_photo' in request.FILES:
+            conversation.group_photo = request.FILES['group_photo']
+            conversation.save()
+        
+        return JsonResponse({
+            'success': True,
+            'conversation_id': conversation.id,
+            'message': 'Group created successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def get_unread_message_count(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Not authenticated'})
+    
+    try:
+        # Total unread messages count
+        total_unread = Message.objects.filter(
+            conversation__participants=request.user,
+            read=False
+        ).exclude(sender=request.user).count()
+        
+        # Unique senders with unread messages
+        unique_senders = Message.objects.filter(
+            conversation__participants=request.user,
+            read=False
+        ).exclude(sender=request.user).values('sender').distinct().count()
+        
+        return JsonResponse({
+            'success': True,
+            'total_unread': total_unread,
+            'unique_senders': unique_senders
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+def mark_conversation_read(request, conversation_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Not authenticated'})
+    
+    try:
+        # Mark all messages in conversation as read
+        Message.objects.filter(
+            conversation_id=conversation_id
+        ).exclude(sender=request.user).update(read=True)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 # ==================== LEGACY COMPATIBILITY ====================
 

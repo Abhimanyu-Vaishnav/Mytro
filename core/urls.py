@@ -80,6 +80,9 @@ urlpatterns = [
     path("api/messages/send/", views.send_message, name="send_message"),
     path("api/search-users/", views.search_users, name="search_users"),
     path("api/start-conversation/", views.start_conversation, name="start_conversation"),
+    path("api/groups/create/", views.create_group, name="create_group"),
+    path('api/messages/unread-count/', views.get_unread_message_count, name='unread_message_count'),
+    path('api/conversations/<int:conversation_id>/mark-read/', views.mark_conversation_read, name='mark_conversation_read'),
     
     # Stories
     path("api/stories/", views.get_stories, name="get_stories"),

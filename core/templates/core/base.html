@@ -1,514 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
     <title>{% block title %}Mytro - Modern Social Network{% endblock %}</title>
-    
+
     {% load static %}
-    
+
     <!-- CSS Files -->
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/nav-fix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile-fixes.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile-about.css' %}">
-    <link rel="stylesheet" href="{% static 'css/like-button-fix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/media-styles.css' %}">
-    <link rel="stylesheet" href="{% static 'css/suggestion-fix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/comments.css' %}">
-    <link rel="stylesheet" href="{% static 'css/utils/variables.css' %}">
-    <link rel="stylesheet" href="{% static 'css/utils/responsive.css' %}">
-    <link rel="stylesheet" href="{% static 'css/utils/animations.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dark-mode-fix.css' %}">
-    
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/nav-fix.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/profile-fixes.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/profile-about.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/like-button-fix.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/media-styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/suggestion-fix.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/comments.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/utils/variables.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/utils/responsive.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/utils/animations.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dark-mode-fix.css' %}" />
+
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <!-- Enhanced Navigation -->
     <nav class="main-nav">
-        <div class="nav-container">
-            <!-- Brand -->
-            <div class="nav-brand">
-                <a href="{% url 'feed' %}" class="logo">
-                    <i class="fas fa-rocket"></i>
-                    <span class="logo-text">Mytro</span>
-                </a>
-            </div>
-
-            <!-- Search -->
-            <div class="nav-search">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" placeholder="Search Mytro..." id="searchInput" class="search-input" oninput="performLiveSearch(this.value)" onfocus="showSearchResults()" onblur="hideSearchResults()">
-                <div class="search-results" id="searchResults">
-                    <div class="search-loading" id="searchLoading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>Searching...</span>
-                    </div>
-                    <div class="search-empty" id="searchEmpty" style="display: none;">
-                        <i class="fas fa-search"></i>
-                        <span>No results found</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation Links -->
-            <div class="nav-links">
-                <a href="{% url 'feed' %}" class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}" data-tooltip="Home">
-                    <i class="fas fa-home"></i>
-                </a>
-                
-                {% if user.is_authenticated %}
-                <a href="{% url 'profile' user.username %}" class="nav-link" data-tooltip="Profile">
-                    <i class="fas fa-user"></i>
-                </a>
-                <a href="#" class="nav-link notifications-link" id="notificationsBtn" data-tooltip="Notifications">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
-                </a>
-                <a href="{% url 'messages' %}" class="nav-link messages-link {% if request.resolver_match.url_name == 'messages' %}active{% endif %}" data-tooltip="Messages">
-                    <i class="fas fa-envelope"></i>
-                    <span class="notification-badge" id="messageCount" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-link theme-toggle-nav" onclick="toggleTheme()" data-tooltip="Toggle Theme">
-                    <i class="fas fa-moon" id="themeIcon"></i>
-                </a>
-                {% else %}
-                {% if request.resolver_match.url_name != 'login' %}
-                <a href="{% url 'login' %}" class="nav-link" data-tooltip="Login">
-                    <i class="fas fa-sign-in-alt"></i>
-                </a>
-                {% endif %}
-                {% if request.resolver_match.url_name != 'signup' %}
-                <a href="{% url 'signup' %}" class="nav-link" data-tooltip="Sign Up">
-                    <i class="fas fa-user-plus"></i>
-                </a>
-                {% endif %}
-                {% endif %}
-            </div>
-
-            <!-- User Menu -->
-            {% if user.is_authenticated %}
-            <div class="nav-user">
-                <div class="user-menu" id="userMenu">
-                    <div class="user-avatar-container">
-                        {% if user.profile.profile_pic %}
-                            <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="user-avatar">
-                        {% else %}
-                            <div class="default-avatar">
-                                {{ user.username|first|upper }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">
-                            {{ user.profile.full_name }}
-                        </span>
-                        <i class="fas fa-chevron-down dropdown-arrow"></i>
-                    </div>
-                    
-                    <!-- Dropdown Menu -->
-                    <div class="user-dropdown-menu">
-                        <a href="{% url 'profile' user.username %}" class="dropdown-item">
-                            <i class="fas fa-user"></i>
-                            <span>My Profile</span>
-                        </a>
-                        <a href="{% url 'edit_profile' %}" class="dropdown-item">
-                            <i class="fas fa-edit"></i>
-                            <span>Edit Profile</span>
-                        </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                            {% csrf_token %}
-                            <button type="submit" class="dropdown-item logout-item" style="background: none; border: none; width: 100%; text-align: left; padding: 12px 16px; cursor: pointer;">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Logout</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="nav-auth-buttons">
-                {% if request.resolver_match.url_name == 'login' %}
-                    <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
-                {% elif request.resolver_match.url_name == 'signup' %}
-                    <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
-                    <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-bars"></i>
-            </button>
+      <div class="nav-container">
+        <!-- Brand -->
+        <div class="nav-brand">
+          <a href="{% url 'feed' %}" class="logo">
+            <i class="fas fa-rocket"></i>
+            <span class="logo-text">Mytro</span>
+          </a>
         </div>
+
+        <!-- Search -->
+        <div class="nav-search">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            placeholder="Search Mytro..."
+            id="searchInput"
+            class="search-input"
+            oninput="performLiveSearch(this.value)"
+            onfocus="showSearchResults()"
+            onblur="hideSearchResults()"
+          />
+          <div class="search-results" id="searchResults">
+            <div
+              class="search-loading"
+              id="searchLoading"
+              style="display: none"
+            >
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Searching...</span>
+            </div>
+            <div class="search-empty" id="searchEmpty" style="display: none">
+              <i class="fas fa-search"></i>
+              <span>No results found</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="nav-links">
+          <a
+            href="{% url 'feed' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}"
+            data-tooltip="Home"
+          >
+            <i class="fas fa-home"></i>
+          </a>
+
+          {% if user.is_authenticated %}
+          <a
+            href="{% url 'profile' user.username %}"
+            class="nav-link"
+            data-tooltip="Profile"
+          >
+            <i class="fas fa-user"></i>
+          </a>
+          <a
+            href="#"
+            class="nav-link notifications-link"
+            id="notificationsBtn"
+            data-tooltip="Notifications"
+          >
+            <i class="fas fa-bell"></i>
+            <span
+              class="notification-badge"
+              id="notificationCount"
+              style="display: none"
+              >0</span
+            >
+          </a>
+          <a
+            href="{% url 'messages' %}"
+            class="nav-link messages-link {% if request.resolver_match.url_name == 'messages' %}active{% endif %}"
+            data-tooltip="Messages"
+          >
+            <i class="fas fa-envelope"></i>
+            <span
+              class="notification-badge"
+              id="messageCount"
+              style="display: none"
+              >0</span
+            >
+          </a>
+          <a
+            href="#"
+            class="nav-link theme-toggle-nav"
+            onclick="toggleTheme()"
+            data-tooltip="Toggle Theme"
+          >
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </a>
+          {% else %} {% if request.resolver_match.url_name != 'login' %}
+          <a href="{% url 'login' %}" class="nav-link" data-tooltip="Login">
+            <i class="fas fa-sign-in-alt"></i>
+          </a>
+          {% endif %} {% if request.resolver_match.url_name != 'signup' %}
+          <a href="{% url 'signup' %}" class="nav-link" data-tooltip="Sign Up">
+            <i class="fas fa-user-plus"></i>
+          </a>
+          {% endif %} {% endif %}
+        </div>
+
+        <!-- User Menu -->
+        {% if user.is_authenticated %}
+        <div class="nav-user">
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+              {% if user.profile.profile_pic %}
+              <img
+                src="{{ user.profile.profile_pic.url }}"
+                alt="Profile"
+                class="user-avatar"
+              />
+              {% else %}
+              <div class="default-avatar">{{ user.username|first|upper }}</div>
+              {% endif %}
+            </div>
+            <div class="user-info">
+              <span class="user-name"> {{ user.profile.full_name }} </span>
+              <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown-menu">
+              <a href="{% url 'profile' user.username %}" class="dropdown-item">
+                <i class="fas fa-user"></i>
+                <span>My Profile</span>
+              </a>
+              <a href="{% url 'edit_profile' %}" class="dropdown-item">
+                <i class="fas fa-edit"></i>
+                <span>Edit Profile</span>
+              </a>
+              <a href="#" class="dropdown-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <form method="post" action="{% url 'logout' %}" style="margin: 0">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="dropdown-item logout-item"
+                  style="
+                    background: none;
+                    border: none;
+                    width: 100%;
+                    text-align: left;
+                    padding: 12px 16px;
+                    cursor: pointer;
+                  "
+                >
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="nav-auth-buttons">
+          {% if request.resolver_match.url_name == 'login' %}
+          <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+          {% elif request.resolver_match.url_name == 'signup' %}
+          <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+          {% else %}
+          <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+          <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
     </nav>
 
     <!-- Mobile Menu -->
     {% if user.is_authenticated %}
     <div class="mobile-menu-overlay" id="mobileMenuOverlay">
-        <div class="mobile-menu">
-            <div class="mobile-menu-header">
-                <div class="mobile-user-info">
-                    {% if user.profile.profile_pic %}
-                        <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="mobile-user-avatar">
-                    {% else %}
-                        <div class="default-avatar">
-                            {{ user.username|first|upper }}
-                        </div>
-                    {% endif %}
-                    <div class="mobile-user-details">
-                        <span class="mobile-user-name">
-                            {{ user.profile.full_name }}
-                        </span>
-                        <span class="mobile-user-username">@{{ user.username }}</span>
-                    </div>
-                </div>
-                <button class="mobile-menu-close" id="mobileMenuClose">
-                    <i class="fas fa-times"></i>
-                </button>
+      <div class="mobile-menu">
+        <div class="mobile-menu-header">
+          <div class="mobile-user-info">
+            {% if user.profile.profile_pic %}
+            <img
+              src="{{ user.profile.profile_pic.url }}"
+              alt="Profile"
+              class="mobile-user-avatar"
+            />
+            {% else %}
+            <div class="default-avatar">{{ user.username|first|upper }}</div>
+            {% endif %}
+            <div class="mobile-user-details">
+              <span class="mobile-user-name">
+                {{ user.profile.full_name }}
+              </span>
+              <span class="mobile-user-username">@{{ user.username }}</span>
             </div>
-            
-            <div class="mobile-nav-links">
-                <a href="{% url 'feed' %}" class="mobile-nav-link">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="{% url 'profile' user.username %}" class="mobile-nav-link">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
-                </a>
-                <a href="#" class="mobile-nav-link" id="mobileNotificationsBtn">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
-                    <span class="mobile-notification-badge">0</span>
-                </a>
-                <a href="{% url 'messages' %}" class="mobile-nav-link">
-                    <i class="fas fa-envelope"></i>
-                    <span>Messages</span>
-                    <span class="mobile-notification-badge">0</span>
-                </a>
-                <a href="{% url 'edit_profile' %}" class="mobile-nav-link">
-                    <i class="fas fa-edit"></i>
-                    <span>Edit Profile</span>
-                </a>
-                <div class="mobile-nav-divider"></div>
-                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" class="mobile-nav-link logout-link" style="background: none; border: none; width: 100%; text-align: left; display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
+          </div>
+          <button class="mobile-menu-close" id="mobileMenuClose">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+
+        <div class="mobile-nav-links">
+          <a href="{% url 'feed' %}" class="mobile-nav-link">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+          <a href="{% url 'profile' user.username %}" class="mobile-nav-link">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </a>
+          <a href="#" class="mobile-nav-link" id="mobileNotificationsBtn">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span class="mobile-notification-badge">0</span>
+          </a>
+          <a href="{% url 'messages' %}" class="mobile-nav-link">
+            <i class="fas fa-envelope"></i>
+            <span>Messages</span>
+            <span
+              class="mobile-notification-badge"
+              id="mobileMessageCount"
+              style="display: none"
+              >0</span
+            >
+          </a>
+          <a href="{% url 'edit_profile' %}" class="mobile-nav-link">
+            <i class="fas fa-edit"></i>
+            <span>Edit Profile</span>
+          </a>
+          <div class="mobile-nav-divider"></div>
+          <form method="post" action="{% url 'logout' %}" style="margin: 0">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="mobile-nav-link logout-link"
+              style="
+                background: none;
+                border: none;
+                width: 100%;
+                text-align: left;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 16px 20px;
+                cursor: pointer;
+              "
+            >
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
     {% endif %}
 
     <!-- Main Content -->
-    <main class="main-content" {% if user.is_authenticated %}data-user-id="{{ user.id }}"{% endif %}>
-        {% block content %}
-        <!-- Content will be injected here -->
-        {% endblock %}
+    <main
+      class="main-content"
+      {%
+      if
+      user.is_authenticated
+      %}data-user-id="{{ user.id }}"
+      {%
+      endif
+      %}
+    >
+      {% block content %}
+      <!-- Content will be injected here -->
+      {% endblock %}
     </main>
 
     <!-- Notifications Panel -->
     {% if user.is_authenticated %}
     <div class="side-panel notifications-panel" id="notificationsPanel">
-        <div class="panel-header">
-            <h3 class="panel-title">Notifications</h3>
-            <button class="panel-close" id="closeNotifications">
-                <i class="fas fa-times"></i>
-            </button>
+      <div class="panel-header">
+        <h3 class="panel-title">Notifications</h3>
+        <button class="panel-close" id="closeNotifications">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="panel-content" id="notificationsContent">
+        <div class="loading-notifications">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Loading notifications...</span>
         </div>
-        <div class="panel-content" id="notificationsContent">
-            <div class="loading-notifications">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading notifications...</span>
-            </div>
-        </div>
+      </div>
     </div>
 
     <!-- Messages Panel -->
     <div class="side-panel messages-panel" id="messagesPanel">
-        <div class="panel-header">
-            <h3 class="panel-title">Messages</h3>
-            <button class="panel-close" id="closeMessages">
-                <i class="fas fa-times"></i>
-            </button>
+      <div class="panel-header">
+        <h3 class="panel-title">Messages</h3>
+        <button class="panel-close" id="closeMessages">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="panel-content">
+        <div class="empty-messages">
+          <i class="fas fa-comments"></i>
+          <p>No messages yet</p>
+          <button class="btn-primary">Start a Conversation</button>
         </div>
-        <div class="panel-content">
-            <div class="empty-messages">
-                <i class="fas fa-comments"></i>
-                <p>No messages yet</p>
-                <button class="btn-primary">Start a Conversation</button>
-            </div>
-        </div>
+      </div>
     </div>
 
     <!-- Create Post Modal -->
     <div class="modal-overlay" id="createPostModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 class="modal-title">Create Post</h3>
-                <button class="modal-close" id="closeCreatePostModal" onclick="window.closeCreatePostModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="post-author-info">
-                    {% if user.profile.profile_pic %}
-                        <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="author-avatar">
-                    {% else %}
-                        <div class="default-avatar">
-                            {{ user.username|first|upper }}
-                        </div>
-                    {% endif %}
-                    <div class="author-details">
-                        <span class="author-name">
-                            {{ user.profile.full_name }}
-                        </span>
-                        <div class="privacy-selector">
-                            <select class="privacy-select">
-                                <option value="public">🌍 Public</option>
-                                <option value="friends">👥 Friends Only</option>
-                                <option value="private">🔒 Only Me</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <form id="createPostForm" class="post-form">
-                    {% csrf_token %}
-                    <div class="post-content-container">
-                        <!-- Rich Text Toolbar -->
-                        <div class="rich-text-toolbar" id="richTextToolbar">
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="formatText('bold')" title="Bold">
-                                    <i class="fas fa-bold"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="formatText('italic')" title="Italic">
-                                    <i class="fas fa-italic"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="formatText('underline')" title="Underline">
-                                    <i class="fas fa-underline"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="formatText('strikethrough')" title="Strikethrough">
-                                    <i class="fas fa-strikethrough"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="insertList('ul')" title="Bullet List">
-                                    <i class="fas fa-list-ul"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="insertList('ol')" title="Numbered List">
-                                    <i class="fas fa-list-ol"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="insertQuote()" title="Quote">
-                                    <i class="fas fa-quote-left"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="toolbar-group">
-                                <div class="color-picker-container">
-                                    <button type="button" class="toolbar-btn color-btn" onclick="toggleColorPicker()" title="Text Color">
-                                        <i class="fas fa-palette"></i>
-                                    </button>
-                                    <div class="color-picker" id="colorPicker">
-                                        <div class="color-option" data-color="#FF9933" style="background: #FF9933;"></div>
-                                        <div class="color-option" data-color="#FF6B35" style="background: #FF6B35;"></div>
-                                        <div class="color-option" data-color="#E74C3C" style="background: #E74C3C;"></div>
-                                        <div class="color-option" data-color="#3498DB" style="background: #3498DB;"></div>
-                                        <div class="color-option" data-color="#2ECC71" style="background: #2ECC71;"></div>
-                                        <div class="color-option" data-color="#9B59B6" style="background: #9B59B6;"></div>
-                                        <div class="color-option" data-color="#F39C12" style="background: #F39C12;"></div>
-                                        <div class="color-option" data-color="#1C1E21" style="background: #1C1E21;"></div>
-                                    </div>
-                                </div>
-                                <button type="button" class="toolbar-btn" onclick="insertEmoji()" title="Emoji">
-                                    <i class="fas fa-smile"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="insertMention()" title="Mention">
-                                    <i class="fas fa-at"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="insertHashtag()" title="Hashtag">
-                                    <i class="fas fa-hashtag"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="clearFormatting()" title="Clear Formatting">
-                                    <i class="fas fa-remove-format"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div 
-                            contenteditable="true" 
-                            class="rich-text-editor" 
-                            id="postContent"
-                            data-placeholder="What's on your mind, {{ user.profile.full_name }}?"
-                            oninput="handleRichTextInput()"
-                            onpaste="handlePaste(event)"
-                        ></div>
-                        
-                        <!-- Hidden textarea for form submission -->
-                        <textarea name="content" id="hiddenContent" style="display: none;"></textarea>
-                        
-                        <!-- Media Preview -->
-                        <div class="media-preview-container" id="mediaPreview">
-                            <!-- Media items will be added here -->
-                        </div>
-                    </div>
-
-                    <!-- Post Options -->
-                    <div class="post-options-container">
-                        <div class="option-buttons">
-                            <button type="button" class="option-btn media-btn" onclick="document.getElementById('mediaUpload').click()">
-                                <i class="fas fa-image"></i>
-                                <span>Photo/Video</span>
-                            </button>
-                            <button type="button" class="option-btn gif-btn" onclick="openGifPicker()">
-                                <i class="fas fa-gif"></i>
-                                <span>GIF</span>
-                            </button>
-                            <button type="button" class="option-btn poll-btn" onclick="addPoll()">
-                                <i class="fas fa-poll"></i>
-                                <span>Poll</span>
-                            </button>
-                            <button type="button" class="option-btn location-btn" onclick="window.addLocation()">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>Location</span>
-                            </button>
-                        </div>
-                        
-                        <input type="file" id="mediaUpload" name="image" accept="image/*,video/*" multiple style="display: none;">
-                    </div>
-
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="window.closeCreatePostModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="postSubmitBtn" disabled>
-                            <span class="btn-text">Post</span>
-                            <div class="btn-loading" style="display: none;">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </div>
-                        </button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 class="modal-title">Create Post</h3>
+          <button
+            class="modal-close"
+            id="closeCreatePostModal"
+            onclick="window.closeCreatePostModal()"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+
+        <div class="modal-body">
+          <div class="post-author-info">
+            {% if user.profile.profile_pic %}
+            <img
+              src="{{ user.profile.profile_pic.url }}"
+              alt="Profile"
+              class="author-avatar"
+            />
+            {% else %}
+            <div class="default-avatar">{{ user.username|first|upper }}</div>
+            {% endif %}
+            <div class="author-details">
+              <span class="author-name"> {{ user.profile.full_name }} </span>
+              <div class="privacy-selector">
+                <select class="privacy-select">
+                  <option value="public">🌍 Public</option>
+                  <option value="friends">👥 Friends Only</option>
+                  <option value="private">🔒 Only Me</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <form id="createPostForm" class="post-form">
+            {% csrf_token %}
+            <div class="post-content-container">
+              <textarea
+                name="content"
+                placeholder="What's on your mind, {{ user.profile.full_name }}?"
+                class="post-textarea"
+                id="postContent"
+                rows="4"
+              ></textarea>
+
+              <!-- Media Preview -->
+              <div class="media-preview-container" id="mediaPreview">
+                <!-- Media items will be added here -->
+              </div>
+            </div>
+
+            <!-- Post Options -->
+            <div class="post-options-container">
+              <div class="option-buttons">
+                <button
+                  type="button"
+                  class="option-btn media-btn"
+                  onclick="document.getElementById('mediaUpload').click()"
+                >
+                  <i class="fas fa-image"></i>
+                  <span>Photo/Video</span>
+                </button>
+                <button
+                  type="button"
+                  class="option-btn feeling-btn"
+                  onclick="openEmojiPicker()"
+                >
+                  <i class="fas fa-smile"></i>
+                  <span>Feeling/Activity</span>
+                </button>
+                <button
+                  type="button"
+                  class="option-btn location-btn"
+                  onclick="window.addLocation()"
+                >
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>Check In</span>
+                </button>
+                <button
+                  type="button"
+                  class="option-btn audio-btn"
+                  onclick="addAudio()"
+                >
+                  <i class="fas fa-microphone"></i>
+                  <span>Audio</span>
+                </button>
+              </div>
+
+              <input
+                type="file"
+                id="mediaUpload"
+                name="image"
+                accept="image/*,video/*"
+                multiple
+                style="display: none"
+              />
+            </div>
+
+            <div class="modal-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="window.closeCreatePostModal()"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                id="postSubmitBtn"
+                disabled
+              >
+                <span class="btn-text">Post</span>
+                <div class="btn-loading" style="display: none">
+                  <i class="fas fa-spinner fa-spin"></i>
+                </div>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Image Editor Modal -->
     <div class="modal-overlay" id="imageEditorModal">
-        <div class="modal-container large-modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Image</h3>
-                <button class="modal-close" onclick="closeImageEditor()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="image-editor-container">
-                    <div class="image-preview-container">
-                        <canvas id="imageCanvas" width="800" height="600"></canvas>
-                    </div>
-                    
-                    <div class="editor-controls">
-                        <div class="filter-section">
-                            <h4 class="section-title">Filters</h4>
-                            <div class="filter-grid">
-                                <button class="filter-option active" data-filter="normal">
-                                    <div class="filter-preview normal"></div>
-                                    <span>Normal</span>
-                                </button>
-                                <button class="filter-option" data-filter="grayscale">
-                                    <div class="filter-preview grayscale"></div>
-                                    <span>B&W</span>
-                                </button>
-                                <button class="filter-option" data-filter="sepia">
-                                    <div class="filter-preview sepia"></div>
-                                    <span>Sepia</span>
-                                </button>
-                                <button class="filter-option" data-filter="vintage">
-                                    <div class="filter-preview vintage"></div>
-                                    <span>Vintage</span>
-                                </button>
-                                <button class="filter-option" data-filter="clarendon">
-                                    <div class="filter-preview clarendon"></div>
-                                    <span>Clarendon</span>
-                                </button>
-                                <button class="filter-option" data-filter="moon">
-                                    <div class="filter-preview moon"></div>
-                                    <span>Moon</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="adjustment-section">
-                            <h4 class="section-title">Adjustments</h4>
-                            <div class="adjustment-control">
-                                <label>Brightness</label>
-                                <input type="range" id="brightnessSlider" min="-100" max="100" value="0" class="slider">
-                                <span id="brightnessValue">0</span>
-                            </div>
-                            <div class="adjustment-control">
-                                <label>Contrast</label>
-                                <input type="range" id="contrastSlider" min="-100" max="100" value="0" class="slider">
-                                <span id="contrastValue">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="editor-actions">
-                    <button class="btn btn-secondary" onclick="resetImageEditor()">Reset</button>
-                    <button class="btn btn-secondary" onclick="closeImageEditor()">Cancel</button>
-                    <button class="btn btn-primary" onclick="applyImageEdit()">Apply Changes</button>
-                </div>
-            </div>
+      <div class="modal-container large-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Image</h3>
+          <button class="modal-close" onclick="closeImageEditor()">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+
+        <div class="modal-body">
+          <div class="image-editor-container">
+            <div class="image-preview-container">
+              <canvas id="imageCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <div class="editor-controls">
+              <div class="filter-section">
+                <h4 class="section-title">Filters</h4>
+                <div class="filter-grid">
+                  <button class="filter-option active" data-filter="normal">
+                    <div class="filter-preview normal"></div>
+                    <span>Normal</span>
+                  </button>
+                  <button class="filter-option" data-filter="grayscale">
+                    <div class="filter-preview grayscale"></div>
+                    <span>B&W</span>
+                  </button>
+                  <button class="filter-option" data-filter="sepia">
+                    <div class="filter-preview sepia"></div>
+                    <span>Sepia</span>
+                  </button>
+                  <button class="filter-option" data-filter="vintage">
+                    <div class="filter-preview vintage"></div>
+                    <span>Vintage</span>
+                  </button>
+                  <button class="filter-option" data-filter="clarendon">
+                    <div class="filter-preview clarendon"></div>
+                    <span>Clarendon</span>
+                  </button>
+                  <button class="filter-option" data-filter="moon">
+                    <div class="filter-preview moon"></div>
+                    <span>Moon</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="adjustment-section">
+                <h4 class="section-title">Adjustments</h4>
+                <div class="adjustment-control">
+                  <label>Brightness</label>
+                  <input
+                    type="range"
+                    id="brightnessSlider"
+                    min="-100"
+                    max="100"
+                    value="0"
+                    class="slider"
+                  />
+                  <span id="brightnessValue">0</span>
+                </div>
+                <div class="adjustment-control">
+                  <label>Contrast</label>
+                  <input
+                    type="range"
+                    id="contrastSlider"
+                    min="-100"
+                    max="100"
+                    value="0"
+                    class="slider"
+                  />
+                  <span id="contrastValue">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-actions">
+            <button class="btn btn-secondary" onclick="resetImageEditor()">
+              Reset
+            </button>
+            <button class="btn btn-secondary" onclick="closeImageEditor()">
+              Cancel
+            </button>
+            <button class="btn btn-primary" onclick="applyImageEdit()">
+              Apply Changes
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Emoji Picker Modal -->
     <div class="modal-overlay" id="emojiPickerModal">
-        <div class="modal-container small-modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Select Emoji</h3>
-                <button class="modal-close" onclick="closeEmojiPicker()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="emoji-categories">
-                    <button class="emoji-category active" data-category="smileys">😊</button>
-                    <button class="emoji-category" data-category="people">👋</button>
-                    <button class="emoji-category" data-category="nature">🐶</button>
-                    <button class="emoji-category" data-category="food">🍕</button>
-                    <button class="emoji-category" data-category="activities">⚽</button>
-                </div>
-                
-                <div class="emoji-grid" id="emojiGrid">
-                    <!-- Emojis will be populated by JavaScript -->
-                </div>
-            </div>
+      <div class="modal-container small-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Select Emoji</h3>
+          <button class="modal-close" onclick="closeEmojiPicker()">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+
+        <div class="modal-body">
+          <div class="emoji-categories">
+            <button class="emoji-category active" data-category="smileys">
+              😊
+            </button>
+            <button class="emoji-category" data-category="people">👋</button>
+            <button class="emoji-category" data-category="nature">🐶</button>
+            <button class="emoji-category" data-category="food">🍕</button>
+            <button class="emoji-category" data-category="activities">
+              ⚽
+            </button>
+          </div>
+
+          <div class="emoji-grid" id="emojiGrid">
+            <!-- Emojis will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
     </div>
     {% endif %}
 
@@ -523,94 +606,93 @@
     <script src="{% static 'js/comments.js' %}"></script>
     <script src="{% static 'js/image-cropper.js' %}"></script>
     <script src="{% static 'js/name-fix.js' %}"></script>
-    
+
     <!-- Profile specific CSS and JS -->
     {% if 'profile' in request.resolver_match.url_name %}
-        <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-        <script src="{% static 'js/profile.js' %}"></script>
-    {% endif %}
-    
-    {% block scripts %}
-    {% endblock %}
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}" />
+    <script src="{% static 'js/profile.js' %}"></script>
+    {% endif %} {% block scripts %} {% endblock %}
 
     <script>
-    // Simple initialization bridge
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, main.js should handle initialization');
-        
+      // Simple initialization bridge
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM loaded, main.js should handle initialization");
+
         // Initialize live search
         initializeLiveSearch();
-    });
-    
-    // Live search functionality
-    let searchTimeout = null;
-    
-    function initializeLiveSearch() {
-        const searchInput = document.getElementById('searchInput');
+      });
+
+      // Live search functionality
+      let searchTimeout = null;
+
+      function initializeLiveSearch() {
+        const searchInput = document.getElementById("searchInput");
         if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                performLiveSearch(e.target.value);
-            });
-            
-            searchInput.addEventListener('focus', function() {
-                if (this.value.length >= 2) {
-                    showSearchResults();
-                }
-            });
-            
-            searchInput.addEventListener('blur', function() {
-                setTimeout(() => {
-                    hideSearchResults();
-                }, 300);
-            });
+          searchInput.addEventListener("input", function (e) {
+            performLiveSearch(e.target.value);
+          });
+
+          searchInput.addEventListener("focus", function () {
+            if (this.value.length >= 2) {
+              showSearchResults();
+            }
+          });
+
+          searchInput.addEventListener("blur", function () {
+            setTimeout(() => {
+              hideSearchResults();
+            }, 300);
+          });
         }
-    }
-    
-    function performLiveSearch(query) {
-        const searchResults = document.getElementById('searchResults');
-        const searchLoading = document.getElementById('searchLoading');
-        const searchEmpty = document.getElementById('searchEmpty');
-        
+      }
+
+      function performLiveSearch(query) {
+        const searchResults = document.getElementById("searchResults");
+        const searchLoading = document.getElementById("searchLoading");
+        const searchEmpty = document.getElementById("searchEmpty");
+
         if (!query || query.length < 2) {
-            searchResults.classList.remove('show');
-            return;
+          searchResults.classList.remove("show");
+          return;
         }
-        
-        searchResults.classList.add('show');
-        if (searchLoading) searchLoading.style.display = 'flex';
-        if (searchEmpty) searchEmpty.style.display = 'none';
-        
+
+        searchResults.classList.add("show");
+        if (searchLoading) searchLoading.style.display = "flex";
+        if (searchEmpty) searchEmpty.style.display = "none";
+
         // Clear previous timeout
         if (searchTimeout) {
-            clearTimeout(searchTimeout);
+          clearTimeout(searchTimeout);
         }
-        
+
         // Debounce search
         searchTimeout = setTimeout(async () => {
-            try {
-                const response = await fetch(`/api/search-users/?q=${encodeURIComponent(query)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    displayNavSearchResults(data.users);
-                } else {
-                    displayNavSearchResults([]);
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                displayNavSearchResults([]);
-            } finally {
-                if (searchLoading) searchLoading.style.display = 'none';
+          try {
+            const response = await fetch(
+              `/api/search-users/?q=${encodeURIComponent(query)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              displayNavSearchResults(data.users);
+            } else {
+              displayNavSearchResults([]);
             }
+          } catch (error) {
+            console.error("Search error:", error);
+            displayNavSearchResults([]);
+          } finally {
+            if (searchLoading) searchLoading.style.display = "none";
+          }
         }, 300);
-    }
-    
-    function displayNavSearchResults(users) {
-        const searchResults = document.getElementById('searchResults');
-        const searchEmpty = document.getElementById('searchEmpty');
-        
+      }
+
+      function displayNavSearchResults(users) {
+        const searchResults = document.getElementById("searchResults");
+        const searchEmpty = document.getElementById("searchEmpty");
+
         if (!users || users.length === 0) {
-            if (searchEmpty) searchEmpty.style.display = 'flex';
-            searchResults.innerHTML = `
+          if (searchEmpty) searchEmpty.style.display = "flex";
+          searchResults.innerHTML = `
                 <div class="search-loading" id="searchLoading" style="display: none; padding: 20px; text-align: center; color: #65676b; gap: 8px;">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Searching...</span>
@@ -620,108 +702,141 @@
                     <span>No results found</span>
                 </div>
             `;
-            return;
+          return;
         }
-        
-        if (searchEmpty) searchEmpty.style.display = 'none';
-        
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        const resultsHTML = users.slice(0, 8).map(user => `
-            <div class="search-result-item" data-username="${user.username}" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid ${isDark ? '#333' : '#f0f2f5'}; background: ${isDark ? '#1a1a1a' : 'white'};" onmouseover="this.style.background='${isDark ? '#333' : '#f8f9fa'}'" onmouseout="this.style.background='${isDark ? '#1a1a1a' : 'white'}'">
+
+        if (searchEmpty) searchEmpty.style.display = "none";
+
+        const isDark =
+          document.documentElement.getAttribute("data-theme") === "dark";
+
+        const resultsHTML = users
+          .slice(0, 8)
+          .map(
+            (user) => `
+            <div class="search-result-item" data-username="${
+              user.username
+            }" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid ${
+              isDark ? "#333" : "#f0f2f5"
+            }; background: ${
+              isDark ? "#1a1a1a" : "white"
+            };" onmouseover="this.style.background='${
+              isDark ? "#333" : "#f8f9fa"
+            }'" onmouseout="this.style.background='${
+              isDark ? "#1a1a1a" : "white"
+            }'">
                 <div class="search-result-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                    ${user.avatar ? 
-                        `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                        `<div class="default-avatar" style="width: 100%; height: 100%; background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">${user.name.charAt(0)}</div>`
+                    ${
+                      user.avatar
+                        ? `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+                        : `<div class="default-avatar" style="width: 100%; height: 100%; background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">${user.name.charAt(
+                            0
+                          )}</div>`
                     }
                 </div>
                 <div class="search-result-info" style="flex: 1; min-width: 0;">
-                    <h4 class="search-result-name" style="margin: 0 0 2px 0; font-size: 14px; font-weight: 600; color: ${isDark ? 'white' : '#1c1e21'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</h4>
-                    <p class="search-result-username" style="margin: 0; color: #65676b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${user.username}</p>
+                    <h4 class="search-result-name" style="margin: 0 0 2px 0; font-size: 14px; font-weight: 600; color: ${
+                      isDark ? "white" : "#1c1e21"
+                    }; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${
+              user.name
+            }</h4>
+                    <p class="search-result-username" style="margin: 0; color: #65676b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${
+                      user.username
+                    }</p>
                 </div>
                 <div class="search-actions" style="display: flex; gap: 4px;">
-                    <button class="btn-sm message-btn" data-user-id="${user.id}" style="padding: 6px 8px; border: 1px solid ${isDark ? '#333' : '#e1e5e9'}; border-radius: 6px; background: ${isDark ? '#333' : 'white'}; color: #FF9933; cursor: pointer; font-size: 12px;" title="Message">
+                    <button class="btn-sm message-btn" data-user-id="${
+                      user.id
+                    }" style="padding: 6px 8px; border: 1px solid ${
+              isDark ? "#333" : "#e1e5e9"
+            }; border-radius: 6px; background: ${
+              isDark ? "#333" : "white"
+            }; color: #FF9933; cursor: pointer; font-size: 12px;" title="Message">
                         <i class="fas fa-comment"></i>
                     </button>
                 </div>
             </div>
-        `).join('');
-        
+        `
+          )
+          .join("");
+
         searchResults.innerHTML = `
             <div class="search-loading" id="searchLoading" style="display: none;"></div>
             <div class="search-empty" id="searchEmpty" style="display: none;"></div>
             ${resultsHTML}
         `;
-        
+
         // Apply dark theme to search results container
         if (isDark) {
-            searchResults.style.background = '#1a1a1a';
-            searchResults.style.borderColor = '#333';
+          searchResults.style.background = "#1a1a1a";
+          searchResults.style.borderColor = "#333";
         } else {
-            searchResults.style.background = 'white';
-            searchResults.style.borderColor = '#e9ecef';
+          searchResults.style.background = "white";
+          searchResults.style.borderColor = "#e9ecef";
         }
-        
+
         // Add click event listeners after inserting HTML
-        searchResults.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                if (!e.target.closest('.message-btn')) {
-                    const username = this.dataset.username;
-                    goToProfile(username);
-                }
+        searchResults
+          .querySelectorAll(".search-result-item")
+          .forEach((item) => {
+            item.addEventListener("mousedown", function (e) {
+              e.preventDefault();
+              if (!e.target.closest(".message-btn")) {
+                const username = this.dataset.username;
+                goToProfile(username);
+              }
             });
+          });
+
+        searchResults.querySelectorAll(".message-btn").forEach((btn) => {
+          btn.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+            const userId = this.dataset.userId;
+            hideSearchResults();
+            quickMessage(userId);
+          });
         });
-        
-        searchResults.querySelectorAll('.message-btn').forEach(btn => {
-            btn.addEventListener('mousedown', function(e) {
-                e.stopPropagation();
-                const userId = this.dataset.userId;
-                hideSearchResults();
-                quickMessage(userId);
-            });
-        });
-    }
-    
-    function showSearchResults() {
-        const searchResults = document.getElementById('searchResults');
-        const query = document.getElementById('searchInput').value;
+      }
+
+      function showSearchResults() {
+        const searchResults = document.getElementById("searchResults");
+        const query = document.getElementById("searchInput").value;
         if (query && query.length >= 2) {
-            searchResults.classList.add('show');
+          searchResults.classList.add("show");
         }
-    }
-    
-    function hideSearchResults() {
-        const searchResults = document.getElementById('searchResults');
-        searchResults.classList.remove('show');
-    }
-    
-    function goToProfile(username) {
+      }
+
+      function hideSearchResults() {
+        const searchResults = document.getElementById("searchResults");
+        searchResults.classList.remove("show");
+      }
+
+      function goToProfile(username) {
         // Clear search input and hide results
-        const searchInput = document.getElementById('searchInput');
+        const searchInput = document.getElementById("searchInput");
         if (searchInput) {
-            searchInput.value = '';
+          searchInput.value = "";
         }
         hideSearchResults();
-        
+
         // Navigate to profile
         window.location.href = `/profile/${username}/`;
-    }
-    
-    function quickMessage(userId) {
+      }
+
+      function quickMessage(userId) {
         // Open messages page with user
         window.location.href = `/messages/?user=${userId}`;
-    }
+      }
 
-    // Enhanced profile image fallback
-    function ensureProfileImageFallback() {
-        document.querySelectorAll('img[src*="profile"]').forEach(img => {
-            img.onerror = function() {
-                const username = this.alt || 'U';
-                const fallback = document.createElement('div');
-                fallback.className = 'default-avatar';
-                fallback.textContent = username.charAt(0).toUpperCase();
-                fallback.style.cssText = `
+      // Enhanced profile image fallback
+      function ensureProfileImageFallback() {
+        document.querySelectorAll('img[src*="profile"]').forEach((img) => {
+          img.onerror = function () {
+            const username = this.alt || "U";
+            const fallback = document.createElement("div");
+            fallback.className = "default-avatar";
+            fallback.textContent = username.charAt(0).toUpperCase();
+            fallback.style.cssText = `
                     width: ${this.offsetWidth}px;
                     height: ${this.offsetHeight}px;
                     border-radius: 50%;
@@ -733,103 +848,175 @@
                     font-weight: 700;
                     font-size: ${Math.max(12, this.offsetWidth * 0.4)}px;
                 `;
-                this.parentNode.replaceChild(fallback, this);
-            };
+            this.parentNode.replaceChild(fallback, this);
+          };
         });
-    }
-    
-    // Run on page load and when new content is added
-    document.addEventListener('DOMContentLoaded', ensureProfileImageFallback);
-    
-    // Placeholder functions for modal features
-    function openEmojiPicker() {
-        if (window.showGlobalNotification) {
-            window.showGlobalNotification('Emoji picker coming soon', 'info');
-        }
-    }
+      }
 
-    function closeEmojiPicker() {
+      // Run on page load and when new content is added
+      document.addEventListener("DOMContentLoaded", ensureProfileImageFallback);
+
+      // Placeholder functions for modal features
+      function openEmojiPicker() {
+        if (window.showGlobalNotification) {
+          window.showGlobalNotification("Emoji picker coming soon", "info");
+        }
+      }
+
+      function closeEmojiPicker() {
         // Close emoji picker modal
-        const modal = document.getElementById('emojiPickerModal');
-        if (modal) modal.style.display = 'none';
-    }
+        const modal = document.getElementById("emojiPickerModal");
+        if (modal) modal.style.display = "none";
+      }
 
-    function addLocation() {
+      function addLocation() {
         if (window.addLocation) {
-            window.addLocation();
+          window.addLocation();
         } else if (window.showGlobalNotification) {
-            window.showGlobalNotification('Location feature coming soon', 'info');
+          window.showGlobalNotification("Location feature coming soon", "info");
         }
-    }
+      }
 
-    function addAudio() {
+      function addAudio() {
         if (window.showGlobalNotification) {
-            window.showGlobalNotification('Audio feature coming soon', 'info');
+          window.showGlobalNotification("Audio feature coming soon", "info");
         }
-    }
+      }
 
-    function openImageEditor() {
+      function openImageEditor() {
         if (window.showGlobalNotification) {
-            window.showGlobalNotification('Image editor coming soon', 'info');
+          window.showGlobalNotification("Image editor coming soon", "info");
         }
-    }
+      }
 
-    function closeImageEditor() {
-        const modal = document.getElementById('imageEditorModal');
-        if (modal) modal.style.display = 'none';
-    }
+      function closeImageEditor() {
+        const modal = document.getElementById("imageEditorModal");
+        if (modal) modal.style.display = "none";
+      }
 
-    function resetImageEditor() {
+      function resetImageEditor() {
         if (window.showGlobalNotification) {
-            window.showGlobalNotification('Reset image editor', 'info');
+          window.showGlobalNotification("Reset image editor", "info");
         }
-    }
+      }
 
-    function applyImageEdit() {
+      function applyImageEdit() {
         if (window.showGlobalNotification) {
-            window.showGlobalNotification('Apply image edits', 'info');
+          window.showGlobalNotification("Apply image edits", "info");
         }
-    }
+      }
 
-    // Global Theme Management
-    function toggleTheme() {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      // Global Theme Management
+      function toggleTheme() {
+        const currentTheme = localStorage.getItem("theme") || "light";
+        const newTheme = currentTheme === "light" ? "dark" : "light";
         setGlobalTheme(newTheme);
-    }
+      }
 
-    function setGlobalTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        
-        const themeIcon = document.getElementById('themeIcon');
-        
-        if (theme === 'dark') {
-            themeIcon.className = 'fas fa-sun';
+      function setGlobalTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+
+        const themeIcon = document.getElementById("themeIcon");
+
+        if (theme === "dark") {
+          themeIcon.className = "fas fa-sun";
         } else {
-            themeIcon.className = 'fas fa-moon';
+          themeIcon.className = "fas fa-moon";
         }
-    }
+      }
 
-    // Load saved theme on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
+      // Load saved theme on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        const savedTheme = localStorage.getItem("theme") || "light";
         setGlobalTheme(savedTheme);
-    });
+      });
+
+      // Message count functionality
+      let unreadMessageCount = 0;
+      let uniqueSendersCount = 0;
+
+      // Function to fetch and update message counts
+      async function updateMessageCounts() {
+        try {
+          const response = await fetch("/api/messages/unread-count/");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              unreadMessageCount = data.total_unread || 0;
+              uniqueSendersCount = data.unique_senders || 0;
+
+              updateMessageBadges();
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching message counts:", error);
+        }
+      }
+
+      // Function to update message badges in navigation
+      function updateMessageBadges() {
+        const messageBadge = document.getElementById("messageCount");
+        const mobileMessageBadge = document.querySelector(
+          '.mobile-nav-link[href*="messages"] .mobile-notification-badge'
+        );
+
+        // Update total unread count badge
+        if (messageBadge) {
+          if (unreadMessageCount > 0) {
+            messageBadge.textContent =
+              unreadMessageCount > 99 ? "99+" : unreadMessageCount;
+            messageBadge.style.display = "flex";
+          } else {
+            messageBadge.style.display = "none";
+          }
+        }
+
+        // Update mobile badge with unique senders count
+        if (mobileMessageBadge) {
+          if (uniqueSendersCount > 0) {
+            mobileMessageBadge.textContent =
+              uniqueSendersCount > 99 ? "99+" : uniqueSendersCount;
+            mobileMessageBadge.style.display = "flex";
+          } else {
+            mobileMessageBadge.style.display = "none";
+          }
+        }
+      }
+
+      // Poll for new messages every 30 seconds
+      function startMessagePolling() {
+        updateMessageCounts(); // Initial load
+        setInterval(updateMessageCounts, 30000); // Update every 30 seconds
+      }
+
+      // Initialize when DOM is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        if ("{{ user.is_authenticated }}" === "True") {
+          startMessagePolling();
+        }
+      });
+
+      // Also update counts when coming back to the page
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && "{{ user.is_authenticated }}" === "True") {
+          updateMessageCounts();
+        }
+      });
     </script>
 
     <style>
-    /* Global Theme Variables */
-    :root {
-        --kesari-primary: #FF9933;
-        --kesari-secondary: #FF6B35;
-        --kesari-accent: #FFB366;
-        --kesari-dark: #E8751A;
-        --kesari-light: #FFF4E6;
-    }
+      /* Global Theme Variables */
+      :root {
+        --kesari-primary: #ff9933;
+        --kesari-secondary: #ff6b35;
+        --kesari-accent: #ffb366;
+        --kesari-dark: #e8751a;
+        --kesari-light: #fff4e6;
+      }
 
-    /* Light Theme */
-    [data-theme="light"] {
+      /* Light Theme */
+      [data-theme="light"] {
         --bg-primary: #ffffff;
         --bg-secondary: #f8f9fa;
         --bg-tertiary: #e9ecef;
@@ -838,10 +1025,10 @@
         --text-secondary: #6c757d;
         --border-color: #e9ecef;
         --shadow-color: rgba(0, 0, 0, 0.1);
-    }
+      }
 
-    /* Dark Theme */
-    [data-theme="dark"] {
+      /* Dark Theme */
+      [data-theme="dark"] {
         --bg-primary: #0a0a0a;
         --bg-secondary: #1a1a1a;
         --bg-tertiary: #2a2a2a;
@@ -850,433 +1037,451 @@
         --text-secondary: #cccccc;
         --border-color: rgba(255, 153, 51, 0.3);
         --shadow-color: rgba(255, 153, 51, 0.1);
-    }
+      }
 
-    /* Apply theme to body and all elements */
-    body {
+      /* Apply theme to body and all elements */
+      body {
         background-color: var(--bg-primary);
         color: var(--text-primary);
         transition: all 0.3s ease;
-    }
+      }
 
-    /* Dark theme global overrides */
-    [data-theme="dark"] {
+      /* Dark theme global overrides */
+      [data-theme="dark"] {
         color-scheme: dark;
-    }
+      }
 
-    [data-theme="dark"] * {
+      [data-theme="dark"] * {
         color: var(--text-primary);
-    }
+      }
 
-    [data-theme="dark"] .nav-link i,
-    [data-theme="dark"] .nav-brand i,
-    [data-theme="dark"] .main-nav,
-    [data-theme="dark"] .sidebar,
-    [data-theme="dark"] .suggestions-section,
-    [data-theme="dark"] .suggestion-card,
-    [data-theme="dark"] .feed-container,
-    [data-theme="dark"] .post-card {
+      [data-theme="dark"] .nav-link i,
+      [data-theme="dark"] .nav-brand i,
+      [data-theme="dark"] .main-nav,
+      [data-theme="dark"] .sidebar,
+      [data-theme="dark"] .suggestions-section,
+      [data-theme="dark"] .suggestion-card,
+      [data-theme="dark"] .feed-container,
+      [data-theme="dark"] .post-card {
         background-color: var(--card-bg) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
-    [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
-    [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div {
+      [data-theme="dark"] h1,
+      [data-theme="dark"] h2,
+      [data-theme="dark"] h3,
+      [data-theme="dark"] h4,
+      [data-theme="dark"] h5,
+      [data-theme="dark"] h6,
+      [data-theme="dark"] p,
+      [data-theme="dark"] span,
+      [data-theme="dark"] div {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .nav-link {
+      [data-theme="dark"] .nav-link {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-name,
-    [data-theme="dark"] .suggestion-username {
+      [data-theme="dark"] .suggestion-name,
+      [data-theme="dark"] .suggestion-username {
         color: var(--text-primary) !important;
-    }
+      }
 
-    /* FIXED: Selected/Active Icons - Kesari Color with Dark Background */
-    .nav-link.active {
+      /* FIXED: Selected/Active Icons - Kesari Color with Dark Background */
+      .nav-link.active {
         background: rgba(255, 153, 51, 0.15) !important;
         color: var(--kesari-primary) !important;
         border-radius: 8px !important;
-    }
+      }
 
-    .nav-link.active i {
+      .nav-link.active i {
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .nav-link.active {
+      [data-theme="dark"] .nav-link.active {
         background: rgba(255, 153, 51, 0.2) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .nav-link.active i {
+      [data-theme="dark"] .nav-link.active i {
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    /* Navigation Hover Effects */
-    .nav-link:hover {
+      /* Navigation Hover Effects */
+      .nav-link:hover {
         background: rgba(255, 153, 51, 0.1) !important;
         color: var(--kesari-primary) !important;
         border-radius: 8px !important;
-    }
+      }
 
-    .nav-link:hover i {
+      .nav-link:hover i {
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .nav-link:hover {
+      [data-theme="dark"] .nav-link:hover {
         background: rgba(255, 153, 51, 0.15) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .nav-link:hover i {
+      [data-theme="dark"] .nav-link:hover i {
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    /* FIXED: People You May Know Section Dark Mode */
-    [data-theme="dark"] .suggestions-section {
+      /* FIXED: People You May Know Section Dark Mode */
+      [data-theme="dark"] .suggestions-section {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestions-section h3,
-    [data-theme="dark"] .suggestions-section .section-title {
+      [data-theme="dark"] .suggestions-section h3,
+      [data-theme="dark"] .suggestions-section .section-title {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-card {
+      [data-theme="dark"] .suggestion-card {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-card:hover {
+      [data-theme="dark"] .suggestion-card:hover {
         background: var(--bg-secondary) !important;
         border-color: rgba(255, 153, 51, 0.3) !important;
         transform: translateY(-2px) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-name {
+      [data-theme="dark"] .suggestion-name {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-username {
+      [data-theme="dark"] .suggestion-username {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-follow-btn,
-    [data-theme="dark"] .follow-btn {
-        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+      [data-theme="dark"] .suggestion-follow-btn,
+      [data-theme="dark"] .follow-btn {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-primary),
+          var(--kesari-secondary)
+        ) !important;
         color: white !important;
         border: none !important;
-    }
+      }
 
-    [data-theme="dark"] .suggestion-follow-btn:hover,
-    [data-theme="dark"] .follow-btn:hover {
-        background: linear-gradient(135deg, var(--kesari-dark), var(--kesari-primary)) !important;
+      [data-theme="dark"] .suggestion-follow-btn:hover,
+      [data-theme="dark"] .follow-btn:hover {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-dark),
+          var(--kesari-primary)
+        ) !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3) !important;
-    }
+      }
 
-    /* FIXED: Comment System Dark Mode Hover */
-    [data-theme="dark"] .comment-wrapper {
+      /* FIXED: Comment System Dark Mode Hover */
+      [data-theme="dark"] .comment-wrapper {
         background: transparent !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-wrapper:hover {
+      [data-theme="dark"] .comment-wrapper:hover {
         background: rgba(255, 153, 51, 0.05) !important;
         border-radius: 12px !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-bubble {
+      [data-theme="dark"] .comment-bubble {
         background: var(--bg-secondary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-wrapper:hover .comment-bubble {
+      [data-theme="dark"] .comment-wrapper:hover .comment-bubble {
         background: var(--bg-tertiary) !important;
         border-color: rgba(255, 153, 51, 0.3) !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-name,
-    [data-theme="dark"] .comment-content {
+      [data-theme="dark"] .comment-name,
+      [data-theme="dark"] .comment-content {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-timestamp {
+      [data-theme="dark"] .comment-timestamp {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-action-btn {
+      [data-theme="dark"] .comment-action-btn {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .comment-action-btn:hover {
+      [data-theme="dark"] .comment-action-btn:hover {
         background: rgba(255, 153, 51, 0.15) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    /* Dropdown Menu Dark Theme Fix */
-    [data-theme="dark"] .user-dropdown-menu {
+      /* Dropdown Menu Dark Theme Fix */
+      [data-theme="dark"] .user-dropdown-menu {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .dropdown-item {
+      [data-theme="dark"] .dropdown-item {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .dropdown-item:hover {
+      [data-theme="dark"] .dropdown-item:hover {
         background: var(--bg-secondary) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    /* Modal Dark Theme Fixes */
-    [data-theme="dark"] .modal-overlay {
+      /* Modal Dark Theme Fixes */
+      [data-theme="dark"] .modal-overlay {
         background: rgba(0, 0, 0, 0.8) !important;
-    }
+      }
 
-    [data-theme="dark"] .modal-container {
+      [data-theme="dark"] .modal-container {
         background: var(--card-bg) !important;
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .modal-header,
-    [data-theme="dark"] .modal-body,
-    [data-theme="dark"] .modal-title {
+      [data-theme="dark"] .modal-header,
+      [data-theme="dark"] .modal-body,
+      [data-theme="dark"] .modal-title {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .post-textarea,
-    [data-theme="dark"] .comment-input,
-    [data-theme="dark"] input,
-    [data-theme="dark"] textarea {
+      [data-theme="dark"] .post-textarea,
+      [data-theme="dark"] .comment-input,
+      [data-theme="dark"] input,
+      [data-theme="dark"] textarea {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .post-textarea::placeholder,
-    [data-theme="dark"] .comment-input::placeholder,
-    [data-theme="dark"] input::placeholder,
-    [data-theme="dark"] textarea::placeholder {
+      [data-theme="dark"] .post-textarea::placeholder,
+      [data-theme="dark"] .comment-input::placeholder,
+      [data-theme="dark"] input::placeholder,
+      [data-theme="dark"] textarea::placeholder {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .option-btn {
+      [data-theme="dark"] .option-btn {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .option-btn:hover {
+      [data-theme="dark"] .option-btn:hover {
         background: var(--bg-tertiary) !important;
-    }
+      }
 
-    [data-theme="dark"] .btn-secondary {
+      [data-theme="dark"] .btn-secondary {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .btn-secondary:hover {
+      [data-theme="dark"] .btn-secondary:hover {
         background: var(--bg-tertiary) !important;
-    }
+      }
 
-    [data-theme="dark"] .btn-primary {
-        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+      [data-theme="dark"] .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-primary),
+          var(--kesari-secondary)
+        ) !important;
         color: white !important;
-    }
+      }
 
-    /* Select dropdown dark theme fix */
-    [data-theme="dark"] select {
+      /* Select dropdown dark theme fix */
+      [data-theme="dark"] select {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] select option {
+      [data-theme="dark"] select option {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
-    }
+      }
 
-    /* Theme toggle item styling */
-    .theme-toggle-item {
+      /* Theme toggle item styling */
+      .theme-toggle-item {
         cursor: pointer !important;
         transition: all 0.3s ease;
-    }
+      }
 
-    .theme-toggle-item:hover {
+      .theme-toggle-item:hover {
         background-color: var(--kesari-light) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    /* Search Results Dark Theme */
-    [data-theme="dark"] .search-results {
+      /* Search Results Dark Theme */
+      [data-theme="dark"] .search-results {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
         box-shadow: 0 4px 20px rgba(255, 153, 51, 0.1) !important;
-    }
+      }
 
-    [data-theme="dark"] .search-result-item {
+      [data-theme="dark"] .search-result-item {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .search-result-item:hover {
+      [data-theme="dark"] .search-result-item:hover {
         background: var(--bg-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .search-result-name {
+      [data-theme="dark"] .search-result-name {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .search-result-username {
+      [data-theme="dark"] .search-result-username {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .search-loading,
-    [data-theme="dark"] .search-empty {
+      [data-theme="dark"] .search-loading,
+      [data-theme="dark"] .search-empty {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .message-btn {
+      [data-theme="dark"] .message-btn {
         background: var(--bg-secondary) !important;
         border-color: var(--border-color) !important;
         color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .message-btn:hover {
+      [data-theme="dark"] .message-btn:hover {
         background: var(--bg-tertiary) !important;
-    }
+      }
 
-    /* Create Post Modal Dark Theme */
-    [data-theme="dark"] .post-author-info,
-    [data-theme="dark"] .author-details,
-    [data-theme="dark"] .author-name {
+      /* Create Post Modal Dark Theme */
+      [data-theme="dark"] .post-author-info,
+      [data-theme="dark"] .author-details,
+      [data-theme="dark"] .author-name {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .privacy-select {
+      [data-theme="dark"] .privacy-select {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .post-content-container,
-    [data-theme="dark"] .media-preview-container,
-    [data-theme="dark"] .post-options-container {
+      [data-theme="dark"] .post-content-container,
+      [data-theme="dark"] .media-preview-container,
+      [data-theme="dark"] .post-options-container {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .option-buttons .option-btn span {
+      [data-theme="dark"] .option-buttons .option-btn span {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .modal-actions {
+      [data-theme="dark"] .modal-actions {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    /* Story Creator Dark Theme */
-    [data-theme="dark"] .story-creator-modal .modal-container,
-    [data-theme="dark"] .story-creator-header,
-    [data-theme="dark"] .story-creator-body,
-    [data-theme="dark"] .story-creator-footer {
+      /* Story Creator Dark Theme */
+      [data-theme="dark"] .story-creator-modal .modal-container,
+      [data-theme="dark"] .story-creator-header,
+      [data-theme="dark"] .story-creator-body,
+      [data-theme="dark"] .story-creator-footer {
         background: var(--card-bg) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .story-text-input,
-    [data-theme="dark"] .story-background-selector,
-    [data-theme="dark"] .story-tools {
+      [data-theme="dark"] .story-text-input,
+      [data-theme="dark"] .story-background-selector,
+      [data-theme="dark"] .story-tools {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .story-text-input::placeholder {
+      [data-theme="dark"] .story-text-input::placeholder {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .background-option {
+      [data-theme="dark"] .background-option {
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .background-option.active {
+      [data-theme="dark"] .background-option.active {
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .story-tool-btn {
+      [data-theme="dark"] .story-tool-btn {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .story-tool-btn:hover {
+      [data-theme="dark"] .story-tool-btn:hover {
         background: var(--bg-tertiary) !important;
-    }
+      }
 
-    /* Image Editor Modal Dark Theme */
-    [data-theme="dark"] .image-editor-container,
-    [data-theme="dark"] .editor-controls,
-    [data-theme="dark"] .filter-section,
-    [data-theme="dark"] .adjustment-section {
+      /* Image Editor Modal Dark Theme */
+      [data-theme="dark"] .image-editor-container,
+      [data-theme="dark"] .editor-controls,
+      [data-theme="dark"] .filter-section,
+      [data-theme="dark"] .adjustment-section {
         background: var(--card-bg) !important;
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .section-title {
+      [data-theme="dark"] .section-title {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .filter-option {
+      [data-theme="dark"] .filter-option {
         background: var(--bg-secondary) !important;
         border-color: var(--border-color) !important;
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .filter-option:hover,
-    [data-theme="dark"] .filter-option.active {
+      [data-theme="dark"] .filter-option:hover,
+      [data-theme="dark"] .filter-option.active {
         background: var(--bg-tertiary) !important;
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .adjustment-control label {
+      [data-theme="dark"] .adjustment-control label {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .slider {
+      [data-theme="dark"] .slider {
         background: var(--bg-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .editor-actions {
+      [data-theme="dark"] .editor-actions {
         background: var(--card-bg) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    /* Emoji Picker Modal Dark Theme */
-    [data-theme="dark"] .emoji-categories,
-    [data-theme="dark"] .emoji-grid {
+      /* Emoji Picker Modal Dark Theme */
+      [data-theme="dark"] .emoji-categories,
+      [data-theme="dark"] .emoji-grid {
         background: var(--card-bg) !important;
-    }
+      }
 
-    [data-theme="dark"] .emoji-category {
+      [data-theme="dark"] .emoji-category {
         background: var(--bg-secondary) !important;
         border-color: var(--border-color) !important;
-    }
+      }
 
-    [data-theme="dark"] .emoji-category:hover,
-    [data-theme="dark"] .emoji-category.active {
+      [data-theme="dark"] .emoji-category:hover,
+      [data-theme="dark"] .emoji-category.active {
         background: var(--kesari-primary) !important;
-    }
+      }
 
-    /* Auth Buttons - Kesari Theme */
-    .btn {
+      /* Auth Buttons - Kesari Theme */
+      .btn {
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 600;
@@ -1285,83 +1490,95 @@
         transition: all 0.3s ease;
         border: 2px solid transparent;
         font-size: 14px;
-    }
+      }
 
-    .btn-primary {
-        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+      .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-primary),
+          var(--kesari-secondary)
+        ) !important;
         color: white !important;
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    .btn-primary:hover {
-        background: linear-gradient(135deg, var(--kesari-dark), var(--kesari-primary)) !important;
+      .btn-primary:hover {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-dark),
+          var(--kesari-primary)
+        ) !important;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
-    }
+      }
 
-    .btn-outline {
+      .btn-outline {
         background: transparent !important;
         color: var(--kesari-primary) !important;
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    .btn-outline:hover {
+      .btn-outline:hover {
         background: var(--kesari-primary) !important;
         color: white !important;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
-    }
+      }
 
-    /* Dark theme auth buttons */
-    [data-theme="dark"] .btn-primary {
-        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+      /* Dark theme auth buttons */
+      [data-theme="dark"] .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--kesari-primary),
+          var(--kesari-secondary)
+        ) !important;
         color: white !important;
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .btn-outline {
+      [data-theme="dark"] .btn-outline {
         background: transparent !important;
         color: var(--kesari-primary) !important;
         border-color: var(--kesari-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .btn-outline:hover {
+      [data-theme="dark"] .btn-outline:hover {
         background: var(--kesari-primary) !important;
         color: white !important;
-    }
+      }
 
-    /* Nav auth buttons container */
-    .nav-auth-buttons {
+      /* Nav auth buttons container */
+      .nav-auth-buttons {
         display: flex;
         gap: 8px;
         align-items: center;
-    }
+      }
 
-    /* General Modal Elements */
-    [data-theme="dark"] .modal-close {
+      /* General Modal Elements */
+      [data-theme="dark"] .modal-close {
         color: var(--text-primary) !important;
-    }
+      }
 
-    [data-theme="dark"] .modal-close:hover {
+      [data-theme="dark"] .modal-close:hover {
         background: var(--bg-secondary) !important;
-    }
+      }
 
-    /* Form Elements in Modals */
-    [data-theme="dark"] input[type="file"],
-    [data-theme="dark"] input[type="range"] {
+      /* Form Elements in Modals */
+      [data-theme="dark"] input[type="file"],
+      [data-theme="dark"] input[type="range"] {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
-    }
+      }
 
-    /* Loading and Empty States */
-    [data-theme="dark"] .loading-notifications,
-    [data-theme="dark"] .empty-messages {
+      /* Loading and Empty States */
+      [data-theme="dark"] .loading-notifications,
+      [data-theme="dark"] .empty-messages {
         color: var(--text-secondary) !important;
-    }
+      }
 
-    [data-theme="dark"] .empty-messages p {
+      [data-theme="dark"] .empty-messages p {
         color: var(--text-secondary) !important;
-    }
+      }
     </style>
-</body>
+  </body>
 </html>
