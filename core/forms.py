@@ -6,23 +6,66 @@ from django_select2.forms import Select2TagWidget
 from django.utils.safestring import mark_safe
 
 class CustomSignupForm(UserCreationForm):
+    # Basic Info
+    first_name = forms.CharField(max_length=30, required=True, label="First Name")
+    last_name = forms.CharField(max_length=30, required=True, label="Last Name")
     email = forms.EmailField(required=True)
-    name = forms.CharField(required=True, max_length=150)
-    photo = forms.ImageField(required=False)
+    
+    # Profile Info
+    profile_pic = forms.ImageField(required=False, label="Profile Picture")
+    bio = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False, max_length=500, label="Bio")
+    gender = forms.ChoiceField(choices=[('', 'Select Gender'), ('M', 'Male'), ('F', 'Female'), ('O', 'Other')], required=False)
+    dob = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=False, label="Date of Birth")
+    phone_number = forms.CharField(max_length=15, required=False, label="Phone Number")
+    location = forms.CharField(max_length=100, required=False, label="Location")
+    website = forms.URLField(required=False, label="Website")
+    
+    # Interests
+    interests = forms.CharField(required=False, label="Interests (comma separated)", 
+                               help_text="e.g., Technology, Music, Sports")
 
     class Meta:
         model = User
-        fields = ['username', 'name', 'email', 'password1', 'password2', 'photo']
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add CSS classes
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            if field_name == 'password1':
+                field.help_text = 'Password must be at least 8 characters long'
+            elif field_name == 'username':
+                field.help_text = 'Username must be unique and can contain letters, numbers, and @/./+/-/_ only'
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
-        user.first_name = self.cleaned_data['name']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
 
         if commit:
             user.save()
-            # Agar photo ko User model me save karna ho to User model extend karna hoga.
-            # Yahan photo handling ke liye aapko extra code chahiye.
+            
+            # Create or update profile
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.profile_pic = self.cleaned_data.get('profile_pic')
+            profile.bio = self.cleaned_data.get('bio', '')
+            profile.gender = self.cleaned_data.get('gender', '')
+            profile.dob = self.cleaned_data.get('dob')
+            profile.phone_number = self.cleaned_data.get('phone_number', '')
+            profile.location = self.cleaned_data.get('location', '')
+            profile.website = self.cleaned_data.get('website', '')
+            profile.save()
+            
+            # Handle interests
+            interests_text = self.cleaned_data.get('interests', '')
+            if interests_text:
+                interest_names = [name.strip() for name in interests_text.split(',') if name.strip()]
+                for interest_name in interest_names:
+                    interest, created = Interest.objects.get_or_create(name=interest_name)
+                    profile.interests.add(interest)
+                    
         return user
 
 

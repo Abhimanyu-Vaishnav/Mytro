@@ -1,0 +1,52 @@
+<div class="post-card" data-post-id="{{ post.id }}">
+  <div class="post-header">
+    <div class="post-author">
+      <div class="author-avatar">
+        {% if post.author.profile.profile_pic %}
+          <img src="{{ post.author.profile.profile_pic.url }}" alt="{{ post.author.profile.full_name }}">
+        {% else %}
+          <div class="avatar-fallback">{{ post.author.profile.full_name|first }}</div>
+        {% endif %}
+      </div>
+      <div class="author-info">
+        <h4 class="author-name">{{ post.author.profile.full_name }}</h4>
+        <p class="author-username">@{{ post.author.username }}</p>
+        <span class="post-time">{{ post.created_at|timesince }} ago</span>
+      </div>
+    </div>
+    <div class="post-menu">
+      <button class="menu-btn">
+        <i class="fas fa-ellipsis-h"></i>
+      </button>
+    </div>
+  </div>
+
+  {% if post.content %}
+  <div class="post-content">
+    <p class="post-text">{{ post.content }}</p>
+  </div>
+  {% endif %}
+
+  {% if post.image %}
+  <div class="post-media">
+    <img src="{{ post.image.url }}" alt="Post image" class="post-image">
+  </div>
+  {% endif %}
+
+  <div class="post-actions">
+    <button class="action-btn like-btn" data-post-id="{{ post.id }}">
+      <i class="fas fa-heart"></i>
+      <span class="like-count">{{ post.likes.count }}</span>
+    </button>
+    <button class="action-btn comment-btn">
+      <i class="fas fa-comment"></i>
+      <span class="comment-count">{{ post.comments.count }}</span>
+    </button>
+    <button class="action-btn share-btn">
+      <i class="fas fa-share"></i>
+    </button>
+    <button class="action-btn save-btn">
+      <i class="fas fa-bookmark"></i>
+    </button>
+  </div>
+</div>

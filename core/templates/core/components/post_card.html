@@ -269,34 +269,36 @@
         <!-- Comments List -->
         <div class="comments-list" id="commentsList-{{ post.id }}">
             {% for comment in post.comments.all|slice:":5" %}
-            <div class="individual-comment" data-comment-id="{{ comment.id }}">
-                <div class="comment-avatar-wrapper">
+            <div class="comment-wrapper" data-comment-id="{{ comment.id }}">
+                <div class="comment-avatar">
                     {% if comment.user.profile.profile_pic %}
-                        <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}" class="comment-user-avatar">
+                        <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}">
                     {% else %}
-                        <div class="comment-default-avatar">
+                        <div class="comment-avatar-default">
                             {{ comment.user.username|first|upper }}
                         </div>
                     {% endif %}
                 </div>
                 
-                <div class="comment-main-content">
-                    <div class="comment-bubble-wrapper">
-                        <div class="comment-info-header">
-                            <span class="commenter-name">
-                                {% if comment.user.get_full_name %}
-                                    {{ comment.user.get_full_name }}
-                                {% else %}
-                                    {{ comment.user.username }}
-                                {% endif %}
-                            </span>
-                            <span class="comment-timestamp">{{ comment.created_at|timesince }} ago</span>
+                <div class="comment-main">
+                    <div class="comment-bubble">
+                        <div class="comment-header">
+                            <div class="comment-user-info">
+                                <span class="comment-name">
+                                    {% if comment.user.get_full_name %}
+                                        {{ comment.user.get_full_name }}
+                                    {% else %}
+                                        {{ comment.user.username }}
+                                    {% endif %}
+                                </span>
+                                <span class="comment-timestamp">{{ comment.created_at|timesince }} ago</span>
+                            </div>
                             
-                            <div class="comment-options-menu">
-                                <button class="comment-menu-trigger" onclick="toggleCommentOptions({{ comment.id }})">
+                            <div class="comment-options">
+                                <button class="comment-options-btn" onclick="toggleCommentOptions({{ comment.id }})">
                                     <i class="fas fa-ellipsis-h"></i>
                                 </button>
-                                <div class="comment-options-dropdown" id="commentOptions-{{ comment.id }}">
+                                <div class="comment-options-menu" id="commentOptions-{{ comment.id }}">
                                     {% if comment.user == request.user %}
                                         <button onclick="editCommentAction({{ comment.id }})">
                                             <i class="fas fa-edit"></i> Edit
@@ -313,19 +315,19 @@
                             </div>
                         </div>
                         
-                        <div class="comment-message">{{ comment.content }}</div>
+                        <div class="comment-content">{{ comment.content }}</div>
+                    </div>
+                    
+                    <div class="comment-actions">
+                        <button class="comment-action-btn like-btn" onclick="likeCommentAction({{ comment.id }}, this)">
+                            <i class="fas fa-heart"></i>
+                            <span>Like</span>
+                        </button>
                         
-                        <div class="comment-interaction-buttons">
-                            <button class="comment-like-btn" onclick="likeCommentAction({{ comment.id }}, this)">
-                                <i class="fas fa-heart"></i>
-                                <span>Like</span>
-                            </button>
-                            
-                            <button class="comment-reply-btn" onclick="replyToCommentAction({{ comment.id }}, '{{ comment.user.username }}', '{{ post.id }}')">
-                                <i class="fas fa-reply"></i>
-                                <span>Reply</span>
-                            </button>
-                        </div>
+                        <button class="comment-action-btn reply-btn" onclick="replyToCommentAction({{ comment.id }}, '{{ comment.user.username }}', '{{ post.id }}')">
+                            <i class="fas fa-reply"></i>
+                            <span>Reply</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -343,166 +345,424 @@
 <link rel="stylesheet" href="{% static 'css/comment-fix.css' %}">
 
 <style>
-/* Comment Styles - Override all existing styles */
-.comments-section .individual-comment {
-    display: flex !important;
-    gap: 10px !important;
-    margin-bottom: 12px !important;
-    padding: 8px 0 !important;
-    position: relative !important;
-    z-index: 1 !important;
+/* Ultra Modern Comment System - Kesari Theme */
+:root {
+    --kesari-primary: #FF9933;
+    --kesari-hover: #e6851a;
+    --kesari-light: #ffad5c;
+    --comment-bg-light: #f8f9fa;
+    --comment-bg-dark: #2d2d30;
+    --comment-border: #e1e5e9;
+    --comment-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --comment-shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
 }
 
-.comment-avatar-wrapper {
-    width: 32px;
-    height: 32px;
+.comment-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+    position: relative;
+    padding: 8px 0;
+    transition: all 0.3s ease;
+}
+
+body:not([data-theme="dark"]) .comment-wrapper:hover {
+    background: rgba(255, 153, 51, 0.02);
+    border-radius: 12px;
+    padding: 12px 8px;
+    margin: 4px -8px 12px -8px;
+}
+
+body[data-theme="dark"] .comment-wrapper:hover {
+    background: rgba(255, 153, 51, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 12px 8px !important;
+    margin: 4px -8px 12px -8px !important;
+}
+
+.comment-avatar {
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
+    position: relative;
 }
 
-.comment-user-avatar,
-.comment-default-avatar {
+.comment-avatar img,
+.comment-avatar-default {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
 }
 
-.comment-default-avatar {
-    background: #f0f2f5;
+.comment-wrapper:hover .comment-avatar img,
+.comment-wrapper:hover .comment-avatar-default {
+    border-color: var(--kesari-primary);
+    transform: scale(1.05);
+}
+
+.comment-avatar-default {
+    background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-light));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    color: #65676b;
-    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    font-size: 14px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-.comment-main-content {
+.comment-main {
     flex: 1;
     min-width: 0;
 }
 
-.comment-bubble-wrapper {
-    background: #f0f2f5;
-    border-radius: 16px;
-    padding: 8px 12px;
+.comment-bubble {
+    background: var(--comment-bg-light);
+    border-radius: 18px;
+    padding: 12px 16px;
     position: relative;
+    box-shadow: var(--comment-shadow);
+    border: 1px solid var(--comment-border);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
-.comment-info-header {
+body:not([data-theme="dark"]) .comment-wrapper:hover .comment-bubble {
+    box-shadow: var(--comment-shadow-hover);
+    transform: translateY(-1px);
+    border-color: rgba(255, 153, 51, 0.2);
+}
+
+body[data-theme="dark"] .comment-wrapper:hover .comment-bubble {
+    background: #353538 !important;
+    border-color: rgba(255, 153, 51, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    transform: translateY(-1px) !important;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.comment-user-info {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-    position: relative;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.commenter-name {
-    font-weight: 600;
-    color: #1c1e21;
-    font-size: 13px;
+.comment-name {
+    font-weight: 700;
+    color: var(--text-primary, #1a1a1a);
+    font-size: 14px;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.comment-name:hover {
+    color: var(--kesari-primary);
+    cursor: pointer;
 }
 
 .comment-timestamp {
-    color: #65676b;
-    font-size: 11px;
+    color: var(--text-secondary, #8e8e93);
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.comment-options {
+    position: relative;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.comment-wrapper:hover .comment-options {
+    opacity: 1;
+}
+
+.comment-options-btn {
+    background: rgba(255, 153, 51, 0.1);
+    border: none;
+    color: var(--kesari-primary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.comment-options-btn:hover {
+    background: var(--kesari-primary);
+    color: white;
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
 }
 
 .comment-options-menu {
     position: absolute;
-    right: 0;
-    top: 0;
-}
-
-.comment-menu-trigger {
-    background: none;
-    border: none;
-    color: #65676b;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-size: 12px;
-    transition: background 0.2s;
-}
-
-.comment-menu-trigger:hover {
-    background: rgba(0,0,0,0.1);
-}
-
-.comment-options-dropdown {
-    position: absolute;
     top: 100%;
     right: 0;
     background: white;
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    min-width: 100px;
+    border: 1px solid var(--comment-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    min-width: 140px;
     z-index: 1000;
     display: none;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    animation: slideDown 0.2s ease;
 }
 
-.comment-options-dropdown button {
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.comment-options-menu button {
     width: 100%;
-    padding: 6px 10px;
+    padding: 12px 16px;
     border: none;
     background: none;
     text-align: left;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #1c1e21;
-    transition: background 0.2s;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary, #1a1a1a);
+    transition: all 0.2s ease;
 }
 
-.comment-options-dropdown button:hover {
-    background: #f8f9fa;
+.comment-options-menu button:hover {
+    background: linear-gradient(90deg, rgba(255, 153, 51, 0.1), rgba(255, 153, 51, 0.05));
+    color: var(--kesari-primary);
+    transform: translateX(4px);
 }
 
-.comment-message {
-    color: #1c1e21;
+.comment-options-menu button i {
+    width: 16px;
+    text-align: center;
+}
+
+.comment-content {
+    color: var(--text-primary, #1a1a1a);
     font-size: 14px;
-    line-height: 1.3;
-    margin-bottom: 6px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    margin-bottom: 2px;
+    font-weight: 400;
 }
 
-.comment-interaction-buttons {
+.comment-actions {
     display: flex;
-    gap: 12px;
-    padding-top: 2px;
+    gap: 20px;
+    margin-top: 10px;
+    padding-left: 4px;
+    align-items: center;
 }
 
-.comment-like-btn,
-.comment-reply-btn {
+.comment-action-btn {
     background: none;
     border: none;
-    color: #65676b;
-    font-size: 11px;
+    color: var(--text-secondary, #8e8e93);
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 3px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    text-transform: capitalize;
+    position: relative;
+    overflow: hidden;
 }
 
-.comment-like-btn:hover,
-.comment-reply-btn:hover {
-    background: rgba(0,0,0,0.05);
-    color: #1c1e21;
+.comment-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 153, 51, 0.1), transparent);
+    transition: left 0.5s ease;
 }
 
-.comment-like-btn.liked {
-    color: #e91e63;
+.comment-action-btn:hover::before {
+    left: 100%;
 }
 
-.comment-like-btn i,
-.comment-reply-btn i {
-    font-size: 10px;
+.comment-action-btn:hover {
+    background: rgba(255, 153, 51, 0.08);
+    color: var(--kesari-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 153, 51, 0.15);
+}
+
+.comment-action-btn.like-btn.liked {
+    background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-light));
+    color: white;
+    box-shadow: 0 4px 16px rgba(255, 153, 51, 0.3);
+}
+
+.comment-action-btn.like-btn.liked:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
+}
+
+.comment-action-btn i {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.comment-action-btn:hover i {
+    transform: scale(1.2);
+}
+
+.comment-action-btn.like-btn.liked i {
+    animation: heartBeat 0.6s ease;
+}
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .comment-wrapper {
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .comment-bubble {
+        padding: 10px 12px;
+        border-radius: 16px;
+    }
+    
+    .comment-actions {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .comment-action-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .comment-user-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .comment-wrapper:hover {
+        margin: 4px -4px 12px -4px;
+        padding: 8px 4px;
+    }
+    
+    .comment-actions {
+        gap: 12px;
+    }
+    
+    .comment-action-btn {
+        padding: 4px 8px;
+        gap: 4px;
+    }
+    
+    .comment-options-menu {
+        min-width: 120px;
+        right: -10px;
+    }
+}
+
+/* Dark Mode - Maximum Specificity */
+body[data-theme="dark"] .comment-bubble {
+    background: #2d2d30 !important;
+    border-color: #404040 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+body[data-theme="dark"] .comment-name {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .comment-name:hover {
+    color: #FF9933 !important;
+}
+
+body[data-theme="dark"] .comment-timestamp {
+    color: #b0b3b8 !important;
+}
+
+body[data-theme="dark"] .comment-content {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .comment-options-btn {
+    background: rgba(255, 153, 51, 0.15) !important;
+    color: #FF9933 !important;
+}
+
+body[data-theme="dark"] .comment-options-btn:hover {
+    background: #FF9933 !important;
+    color: white !important;
+}
+
+body[data-theme="dark"] .comment-options-menu {
+    background: #242526 !important;
+    border-color: #404040 !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+}
+
+body[data-theme="dark"] .comment-options-menu button {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .comment-options-menu button:hover {
+    background: rgba(255, 153, 51, 0.2) !important;
+    color: #ffad5c !important;
+}
+
+body[data-theme="dark"] .comment-action-btn {
+    color: #b0b3b8 !important;
+}
+
+body[data-theme="dark"] .comment-action-btn:hover {
+    background: rgba(255, 153, 51, 0.15) !important;
+    color: #ffad5c !important;
+}
+
+body[data-theme="dark"] .comment-action-btn.like-btn.liked {
+    background: linear-gradient(135deg, #FF9933, #ffad5c) !important;
+    color: white !important;
 }
 </style>
 
@@ -513,7 +773,7 @@ function toggleCommentOptions(commentId) {
     const isVisible = dropdown.style.display === 'block';
     
     // Hide all other comment dropdowns
-    document.querySelectorAll('.comment-options-dropdown').forEach(dd => {
+    document.querySelectorAll('.comment-options-menu').forEach(dd => {
         dd.style.display = 'none';
     });
     
@@ -553,8 +813,8 @@ function reportCommentAction(commentId) {
 
 // Close comment dropdowns when clicking outside
 document.addEventListener('click', function(event) {
-    if (!event.target.closest('.comment-options-menu')) {
-        document.querySelectorAll('.comment-options-dropdown').forEach(dropdown => {
+    if (!event.target.closest('.comment-options')) {
+        document.querySelectorAll('.comment-options-menu').forEach(dropdown => {
             dropdown.style.display = 'none';
         });
     }

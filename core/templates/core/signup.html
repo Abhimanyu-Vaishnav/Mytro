@@ -1,130 +1,351 @@
-{% extends "core/base.html" %}
-{% block title %}Sign Up - Mytro{% endblock %}
-
-{% block extra_head %}
-<style>
-  .signup-form {
-    max-width: 480px;
-    margin: 60px auto;
-    background: white;
-    padding: 40px 35px;
-    border-radius: 12px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
-  }
-  .signup-form h2 {
-    color: #ff7f50;
-    font-weight: 700;
-    margin-bottom: 30px;
-    text-align: center;
-    font-size: 2.2rem;
-  }
-  label {
-    font-weight: 600;
-  }
-  .form-control {
-    border-radius: 8px;
-    border: 1.5px solid #ccc;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .form-control:focus {
-    border-color: #ff7f50;
-    box-shadow: 0 0 6px #ff7f50;
-    outline: none;
-  }
-  .btn-kesri {
-    background-color: #ff7f50;
-    color: white;
-    border: none;
-    width: 100%;
-    padding: 14px;
-    font-weight: 700;
-    font-size: 1.2rem;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-  }
-  .btn-kesri:hover {
-    background-color: #e6733d;
-  }
-  .text-danger {
-    font-size: 0.875rem;
-  }
-  .form-text {
-    margin-top: -10px;
-    margin-bottom: 15px;
-    font-size: 0.85rem;
-    color: #666;
-  }
-  a {
-    color: #ff7f50;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
-{% endblock %}
+{% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="signup-form">
-  <h2>Create an Account</h2>
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    <div class="mb-3">
-  <label for="{{ form.name.id_for_label }}">Name</label>
-  <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default_if_none:'' }}" class="form-control" />
-  {% if form.name.errors %}
-    <small class="text-danger">{{ form.name.errors }}</small>
-  {% endif %}
+<!-- Theme Toggle Button -->
+<div class="auth-theme-toggle" onclick="toggleAuthTheme()">
+    <i class="fas fa-moon" id="authThemeIcon"></i>
 </div>
 
-    <div class="mb-3">
-      <label for="{{ form.username.id_for_label }}">Username</label>
-      <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default_if_none:'' }}" class="form-control" />
-      {% if form.username.errors %}
-        <small class="text-danger">{{ form.username.errors }}</small>
-      {% endif %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Join Mytro</h1>
+            <p>Create your account and connect with amazing people</p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="auth-form">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Please fix the errors below.</span>
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="id_first_name">First Name</label>
+                <input type="text" name="first_name" id="id_first_name" required 
+                       placeholder="Enter your first name" class="form-input">
+                {% if form.first_name.errors %}
+                    <div class="error-text">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_last_name">Last Name</label>
+                <input type="text" name="last_name" id="id_last_name" required 
+                       placeholder="Enter your last name" class="form-input">
+                {% if form.last_name.errors %}
+                    <div class="error-text">{{ form.last_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_email">Email</label>
+                <input type="email" name="email" id="id_email" required 
+                       placeholder="Enter your email" class="form-input">
+                {% if form.email.errors %}
+                    <div class="error-text">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" required 
+                       placeholder="Choose a username" class="form-input">
+                {% if form.username.errors %}
+                    <div class="error-text">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password1">Password</label>
+                <input type="password" name="password1" id="id_password1" required 
+                       placeholder="Create a password" class="form-input">
+                {% if form.password1.errors %}
+                    <div class="error-text">{{ form.password1.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password2">Confirm Password</label>
+                <input type="password" name="password2" id="id_password2" required 
+                       placeholder="Confirm your password" class="form-input">
+                {% if form.password2.errors %}
+                    <div class="error-text">{{ form.password2.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-user-plus" style="margin-right: 8px;"></i>
+                Create Account
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+        </div>
     </div>
-
-    <div class="mb-3">
-  <label for="{{ form.email.id_for_label }}">Email</label>
-  <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" value="{{ form.email.value|default_if_none:'' }}" class="form-control" />
-  {% if form.email.errors %}
-    <small class="text-danger">{{ form.email.errors }}</small>
-  {% endif %}
 </div>
 
-    <div class="mb-3">
-      <label for="{{ form.photo.id_for_label }}">Photo</label>
-      <input type="file" name="{{ form.photo.name }}" id="{{ form.photo.id_for_label }}" class="form-control" />
-      {% if form.photo.errors %}
-        <small class="text-danger">{{ form.photo.errors }}</small>
-      {% endif %}
-    </div>
+<script>
+// Theme management for auth pages
+function toggleAuthTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setAuthTheme(newTheme);
+}
 
-    <div class="mb-3">
-      <label for="{{ form.password1.id_for_label }}">Password</label>
-      <input type="password" name="{{ form.password1.name }}" id="{{ form.password1.id_for_label }}" class="form-control" />
-      {% if form.password1.errors %}
-        <small class="text-danger">{{ form.password1.errors }}</small>
-      {% endif %}
-    </div>
+function setAuthTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    
+    const themeIcon = document.getElementById('authThemeIcon');
+    
+    if (theme === 'dark') {
+        themeIcon.className = 'fas fa-sun';
+    } else {
+        themeIcon.className = 'fas fa-moon';
+    }
+}
 
-    <div class="mb-3">
-      <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-      <input type="password" name="{{ form.password2.name }}" id="{{ form.password2.id_for_label }}" class="form-control" />
-      {% if form.password2.errors %}
-        <small class="text-danger">{{ form.password2.errors }}</small>
-      {% endif %}
-    </div>
+// Load saved theme on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setAuthTheme(savedTheme);
+});
+</script>
 
-    <button type="submit" class="btn btn-kesri">Sign Up</button>
-  </form>
+<style>
+/* Theme Variables */
+:root {
+    --kesari-primary: #FF9933;
+    --kesari-secondary: #FF6B35;
+    --kesari-accent: #FFB366;
+    --kesari-dark: #E8751A;
+    --kesari-light: #FFF4E6;
+}
 
-  <p class="mt-4 text-center">
-    Already have an account?
-    <a href="{% url 'login' %}">Login here</a>
-  </p>
-</div>
+/* Light Theme */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --card-bg: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #6c757d;
+    --border-color: #e9ecef;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #2a2a2a;
+    --card-bg: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --border-color: rgba(255, 153, 51, 0.3);
+    --shadow-color: rgba(255, 153, 51, 0.1);
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+    background: var(--bg-primary);
+}
+
+.auth-card {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--shadow-color);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--kesari-primary);
+    box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.btn-full {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-full:hover {
+    background: linear-gradient(135deg, var(--kesari-dark), var(--kesari-primary)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-footer p {
+    color: var(--text-secondary);
+}
+
+.auth-footer a {
+    color: var(--kesari-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+    color: var(--kesari-dark);
+    text-decoration: underline;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-error {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+[data-theme="dark"] .alert-error {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #ff6b6b;
+    border-color: rgba(220, 38, 38, 0.4);
+}
+
+.error-text {
+    color: #dc2626;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+[data-theme="dark"] .error-text {
+    color: #ff6b6b;
+}
+
+/* Theme Toggle for Auth Pages */
+.auth-theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.auth-theme-toggle:hover {
+    background: var(--bg-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.auth-theme-toggle i {
+    color: var(--kesari-primary);
+    font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 10px;
+    }
+    
+    .auth-card {
+        padding: 30px 20px;
+    }
+    
+    .auth-theme-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .auth-theme-toggle i {
+        font-size: 14px;
+    }
+}
+</style>
 {% endblock %}

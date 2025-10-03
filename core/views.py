@@ -8,6 +8,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import update_session_auth_hash
 import json
 
 from .forms import ProfileForm, PostForm, CommentForm, UserForm, CustomSignupForm
@@ -41,6 +43,9 @@ def profile_view(request, username=None):
     
     profile_user = get_object_or_404(User, username=username)
     is_own_profile = (request.user == profile_user)
+    
+    # Ensure profile exists
+    profile, created = Profile.objects.get_or_create(user=profile_user)
     
     # Get user's posts
     user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
@@ -79,11 +84,19 @@ def edit_profile_view(request):
     """Edit profile page and handle form submissions"""
     if request.method == 'POST':
         user = request.user
-        profile = user.profile
+        # Ensure profile exists
+        profile, created = Profile.objects.get_or_create(user=user)
         
         # Handle basic user data
         user.first_name = request.POST.get('first_name', '')
         user.last_name = request.POST.get('last_name', '')
+        
+        # Handle username change
+        new_username = request.POST.get('username', '').strip().lower()
+        if new_username and new_username != user.username:
+            if not User.objects.filter(username__iexact=new_username).exclude(id=user.id).exists():
+                user.username = new_username
+        
         user.save()
         
         # Handle profile data
@@ -110,6 +123,7 @@ def edit_profile_view(request):
         # Handle file uploads
         if 'profile_pic' in request.FILES:
             profile.profile_pic = request.FILES['profile_pic']
+                
         if 'cover_pic' in request.FILES:
             profile.cover_pic = request.FILES['cover_pic']
             
@@ -156,9 +170,11 @@ def edit_profile_view(request):
             return JsonResponse({'success': True, 'message': 'Profile updated successfully'})
         return redirect('profile', username=user.username)
     
+    # Ensure profile exists for GET request too
+    profile, created = Profile.objects.get_or_create(user=request.user)
     return render(request, 'core/edit_profile_modern.html', {
         'user': request.user,
-        'profile': request.user.profile
+        'profile': profile
     })
 
 # ==================== FEED & POST VIEWS ====================
@@ -166,28 +182,36 @@ def edit_profile_view(request):
 @login_required
 def feed_view(request):
     """Main feed with posts from followed users"""
-    # Get users that current user follows
-    following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
-    
-    # Posts from followed users + own posts
-    posts = Post.objects.filter(
-        Q(author__in=following_users) | Q(author=request.user)
-    ).select_related('author').prefetch_related('likes', 'comments').order_by('-created_at')
-    
-    # User suggestions
-    suggestions = User.objects.exclude(
-        Q(id=request.user.id) | Q(id__in=following_users)
-    ).order_by('?')[:5]
-    
-    form = PostForm()
-    
-    context = {
-        'posts': posts,
-        'form': form,
-        'suggestions': suggestions,
-    }
-    
-    return render(request, 'core/feed.html', context)
+    try:
+        # Ensure user has a profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        
+        # Get users that current user follows
+        following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
+        
+        # Posts from followed users + own posts
+        posts = Post.objects.filter(
+            Q(author__in=following_users) | Q(author=request.user)
+        ).select_related('author').prefetch_related('likes', 'comments').order_by('-created_at')
+        
+        # User suggestions
+        suggestions = User.objects.exclude(
+            Q(id=request.user.id) | Q(id__in=following_users)
+        ).order_by('?')[:5]
+        
+        form = PostForm()
+        
+        context = {
+            'posts': posts,
+            'form': form,
+            'suggestions': suggestions,
+        }
+        
+        return render(request, 'core/feed.html', context)
+    except Exception as e:
+        # Debug: Return error details
+        from django.http import HttpResponse
+        return HttpResponse(f"Feed Error: {str(e)}<br>User: {request.user}<br>Authenticated: {request.user.is_authenticated}")
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -650,7 +674,7 @@ def get_following(request, username):
 def update_profile_pic(request):
     """Update profile picture"""
     try:
-        profile = request.user.profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
         
         if 'profile_pic' in request.FILES:
             profile.profile_pic = request.FILES['profile_pic']
@@ -677,7 +701,7 @@ def update_profile_pic(request):
 def remove_profile_pic(request):
     """Remove profile picture"""
     try:
-        profile = request.user.profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
         
         if profile.profile_pic:
             profile.profile_pic.delete(save=False)
@@ -704,7 +728,7 @@ def remove_profile_pic(request):
 def update_cover_pic(request):
     """Update cover photo"""
     try:
-        profile = request.user.profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
         
         if 'cover_pic' in request.FILES:
             profile.cover_pic = request.FILES['cover_pic']
@@ -731,7 +755,7 @@ def update_cover_pic(request):
 def remove_cover_pic(request):
     """Remove cover photo"""
     try:
-        profile = request.user.profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
         
         if profile.cover_pic:
             profile.cover_pic.delete(save=False)
@@ -759,7 +783,7 @@ def update_profile_info(request):
     """Update profile information"""
     try:
         user = request.user
-        profile = user.profile
+        profile, created = Profile.objects.get_or_create(user=user)
         
         data = json.loads(request.body)
         
@@ -1109,7 +1133,7 @@ def get_trending_hashtags(request):
 def check_profile_completion(request):
     """Check profile completion status"""
     try:
-        profile = request.user.profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
         user = request.user
         
         completion_score = 0
@@ -1138,6 +1162,44 @@ def check_profile_completion(request):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        }, status=500)
+
+@login_required
+@require_GET
+def check_username_availability(request):
+    """Check if username is available"""
+    try:
+        username = request.GET.get('username', '').strip().lower()
+        
+        if not username:
+            return JsonResponse({
+                'available': False,
+                'message': 'Username is required'
+            })
+        
+        if len(username) < 3:
+            return JsonResponse({
+                'available': False,
+                'message': 'Username must be at least 3 characters'
+            })
+        
+        # Check if username exists (excluding current user)
+        exists = User.objects.filter(username__iexact=username).exclude(id=request.user.id).exists()
+        
+        if exists:
+            return JsonResponse({
+                'available': False,
+                'message': 'Username is already taken'
+            })
+        
+        return JsonResponse({
+            'available': True,
+            'message': 'Username is available'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'available': False,
+            'message': 'Error checking username'
         }, status=500)
 
 @login_required
@@ -1328,7 +1390,7 @@ def update_profile_info_form(request):
     """Legacy form-based profile update"""
     try:
         user = request.user
-        profile = user.profile
+        profile, created = Profile.objects.get_or_create(user=user)
         
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
@@ -1865,9 +1927,11 @@ def edit_profile_modern_view(request):
     if request.method == 'POST':
         return edit_profile_view(request)  # Use existing logic
     
+    # Ensure profile exists
+    profile, created = Profile.objects.get_or_create(user=request.user)
     return render(request, 'core/edit_profile_modern_v2.html', {
         'user': request.user,
-        'profile': request.user.profile
+        'profile': profile
     })
 
 @login_required
@@ -1886,3 +1950,443 @@ def delete_story(request, story_id):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_GET
+def get_user_posts(request, user_id):
+    """Get paginated posts from a specific user"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        page = int(request.GET.get('page', 1))
+        exclude_id = request.GET.get('exclude')
+        posts_per_page = 5
+        
+        posts_query = Post.objects.filter(author=user).select_related('author', 'author__profile').prefetch_related('likes', 'comments').order_by('-created_at')
+        
+        if exclude_id:
+            posts_query = posts_query.exclude(id=exclude_id)
+        
+        total_posts = posts_query.count()
+        total_pages = (total_posts + posts_per_page - 1) // posts_per_page
+        start_idx = (page - 1) * posts_per_page
+        end_idx = start_idx + posts_per_page
+        
+        posts = posts_query[start_idx:end_idx]
+        
+        posts_data = []
+        for post in posts:
+            posts_data.append({
+                'id': post.id,
+                'content': post.content,
+                'author': {
+                    'id': post.author.id,
+                    'username': post.author.username,
+                    'name': post.author.profile.full_name or post.author.username,
+                    'avatar': post.author.profile.profile_pic.url if post.author.profile.profile_pic else None
+                },
+                'image': post.image.url if post.image else None,
+                'created_at': post.created_at.strftime('%b %d, %Y'),
+                'like_count': post.likes.count(),
+                'comment_count': post.comments.count(),
+                'is_liked': post.likes.filter(user=request.user).exists()
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'posts': posts_data,
+            'has_next': page < total_pages,
+            'current_page': page,
+            'total_pages': total_pages
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# ==================== ADMIN PANEL ====================
+
+@staff_member_required
+def admin_panel(request):
+    """Admin panel main view"""
+    users = User.objects.all().select_related('profile').order_by('-date_joined')[:50]
+    posts = Post.objects.all().select_related('author', 'author__profile').order_by('-created_at')[:20]
+    
+    # Statistics
+    total_users = User.objects.count()
+    total_posts = Post.objects.count()
+    active_users = User.objects.filter(last_login__gte=timezone.now() - timedelta(days=1)).count()
+    
+    context = {
+        'users': users,
+        'posts': posts,
+        'total_users': total_users,
+        'total_posts': total_posts,
+        'active_users': active_users,
+    }
+    
+    return render(request, 'core/admin_panel.html', context)
+
+@staff_member_required
+@require_GET
+def admin_get_user(request, user_id):
+    """Get user details for editing"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        profile, created = Profile.objects.get_or_create(user=user)
+        
+        return JsonResponse({
+            'success': True,
+            'username': user.username,
+            'email': user.email,
+            'full_name': profile.full_name or '',
+            'is_active': user.is_active,
+            'is_staff': user.is_staff,
+            'date_joined': user.date_joined.strftime('%Y-%m-%d'),
+            'last_login': user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_update_user(request, user_id):
+    """Update user details"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        profile, created = Profile.objects.get_or_create(user=user)
+        
+        # Update user fields
+        user.username = request.POST.get('username', user.username)
+        user.email = request.POST.get('email', user.email)
+        user.is_active = request.POST.get('is_active') == 'true'
+        user.is_staff = request.POST.get('is_staff') == 'true'
+        
+        # Update profile
+        full_name = request.POST.get('full_name', '')
+        if full_name:
+            names = full_name.split(' ', 1)
+            user.first_name = names[0]
+            user.last_name = names[1] if len(names) > 1 else ''
+        
+        user.save()
+        profile.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'User updated successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_toggle_user_status(request, user_id):
+    """Activate/deactivate user"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        user.is_active = data.get('is_active', True)
+        user.save()
+        
+        action = 'activated' if user.is_active else 'suspended'
+        return JsonResponse({
+            'success': True,
+            'message': f'User {action} successfully',
+            'is_active': user.is_active
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_delete_user(request, user_id):
+    """Delete user account"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        
+        # Don't allow deleting superusers or self
+        if user.is_superuser or user == request.user:
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot delete this user'
+            }, status=400)
+        
+        username = user.username
+        user.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'User {username} deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_change_password(request, user_id):
+    """Change user password"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        new_password = data.get('new_password')
+        if not new_password or len(new_password) < 6:
+            return JsonResponse({
+                'success': False,
+                'error': 'Password must be at least 6 characters'
+            }, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Password changed successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_delete_post(request, post_id):
+    """Delete post from admin panel"""
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        author_name = post.author.username
+        post.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Post by {author_name} deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# ==================== ADMIN API ENDPOINTS ====================
+
+@staff_member_required
+@require_POST
+def admin_api_user_toggle(request, user_id):
+    """API: Toggle user active status"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        user.is_active = data.get('is_active', True)
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'User {"activated" if user.is_active else "suspended"} successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_api_user_delete(request, user_id):
+    """API: Delete user"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        
+        if user.is_superuser or user == request.user:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot delete this user'
+            }, status=400)
+        
+        user.delete()
+        return JsonResponse({
+            'success': True,
+            'message': 'User deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_api_user_update(request, user_id):
+    """API: Update user"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        user.username = data.get('username', user.username)
+        user.email = data.get('email', user.email)
+        user.is_active = data.get('is_active', user.is_active)
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'User updated successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_api_user_password(request, user_id):
+    """API: Change user password"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        new_password = data.get('new_password')
+        if len(new_password) < 6:
+            return JsonResponse({
+                'success': False,
+                'message': 'Password must be at least 6 characters'
+            }, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Password changed successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@staff_member_required
+@require_POST
+def admin_api_post_delete(request, post_id):
+    """API: Delete post"""
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        post.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Post deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required
+def profile_by_id_view(request, user_id):
+    """View profile by user ID"""
+    user = get_object_or_404(User, id=user_id)
+    return profile_view(request, username=user.username)
+
+def admin_send_notification(request):
+    """Send notification to user(s)"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Not authorized'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required'}, status=405)
+    
+    try:
+        from .models import Notification
+        data = json.loads(request.body)
+        
+        user_ids = data.get('user_ids', [])
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return JsonResponse({'success': False, 'message': 'Message is required'}, status=400)
+        
+        if not user_ids:
+            return JsonResponse({'success': False, 'message': 'Select at least one user'}, status=400)
+        
+        # Send to all users or specific users
+        if 'all' in user_ids:
+            users = User.objects.filter(is_active=True).exclude(id=request.user.id)
+        else:
+            users = User.objects.filter(id__in=user_ids, is_active=True).exclude(id=request.user.id)
+        
+        notifications_created = 0
+        for user in users:
+            Notification.objects.create(
+                sender=request.user,
+                recipient=user,
+                notification_type='mention',
+                verb=f'Admin: {message}'
+            )
+            notifications_created += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Notification sent to {notifications_created} users'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+def admin_send_message(request):
+    """Send message to user(s)"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Not authorized'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required'}, status=405)
+    
+    try:
+        from .models import Message
+        data = json.loads(request.body)
+        
+        user_ids = data.get('user_ids', [])
+        message_content = data.get('message', '').strip()
+        
+        if not message_content:
+            return JsonResponse({'success': False, 'message': 'Message is required'}, status=400)
+        
+        if not user_ids:
+            return JsonResponse({'success': False, 'message': 'Select at least one user'}, status=400)
+        
+        # Send to all users or specific users
+        if 'all' in user_ids:
+            users = User.objects.filter(is_active=True).exclude(id=request.user.id)
+        else:
+            users = User.objects.filter(id__in=user_ids, is_active=True).exclude(id=request.user.id)
+        
+        messages_sent = 0
+        for user in users:
+            Message.objects.create(
+                sender=request.user,
+                recipient=user,
+                content=f'Admin Message: {message_content}'
+            )
+            messages_sent += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Message sent to {messages_sent} users'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+# Test endpoints
+def test_admin_notification(request):
+    return JsonResponse({
+        'success': True, 
+        'message': 'Test notification endpoint working', 
+        'method': request.method, 
+        'user': str(request.user),
+        'is_staff': request.user.is_staff if request.user.is_authenticated else False
+    })
+
+def test_admin_message(request):
+    return JsonResponse({
+        'success': True, 
+        'message': 'Test message endpoint working', 
+        'method': request.method, 
+        'user': str(request.user),
+        'is_staff': request.user.is_staff if request.user.is_authenticated else False
+    })
+
+def admin_debug_urls(request):
+    """Debug endpoint to check URL routing"""
+    from django.urls import reverse
+    try:
+        urls = {
+            'test_notification': reverse('test_admin_notification'),
+            'test_message': reverse('test_admin_message'),
+            'send_notification': reverse('admin_send_notification'),
+            'send_message': reverse('admin_send_message'),
+        }
+        return JsonResponse({'success': True, 'urls': urls})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

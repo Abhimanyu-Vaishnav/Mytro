@@ -1,24 +1,54 @@
-// Image Cropper Functionality
+// High Quality Image Cropper Functionality
 let currentCropImage = null;
 let cropCanvas = null;
 let cropContext = null;
+let originalImageDimensions = { width: 0, height: 0 };
 
-// Open image cropper
+// Open image cropper with quality preservation
 window.openImageCropper = function(imageFile, callback) {
     const modal = document.getElementById('cropModal') || createCropModal();
     const preview = document.getElementById('cropPreview');
     
     if (imageFile) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            currentCropImage = e.target.result;
+        // Process image with quality preservation
+        processImageForCropping(imageFile, function(processedDataUrl) {
+            preview.src = processedDataUrl;
+            currentCropImage = processedDataUrl;
             window.cropCallback = callback;
             modal.style.display = 'flex';
-        };
-        reader.readAsDataURL(imageFile);
+        });
     }
 };
+
+// Process image for cropping with quality preservation
+function processImageForCropping(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+        // Maintain original dimensions for cropping
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // High quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Draw original image
+        ctx.drawImage(img, 0, 0);
+        
+        // Return maximum quality data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
+        callback(dataUrl);
+    };
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
 
 // Create crop modal
 function createCropModal() {
@@ -69,19 +99,84 @@ window.closeCropModal = function() {
     }
 };
 
-// Save cropped image
+// Save cropped image with high quality
 window.saveCroppedImage = function() {
     if (currentCropImage && window.cropCallback) {
-        // Simple implementation - in production you'd use a proper cropping library
-        window.cropCallback(currentCropImage);
-        closeCropModal();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+            // Set high resolution canvas
+            canvas.width = Math.min(img.width, 1920); // Max width 1920px
+            canvas.height = Math.min(img.height, 1080); // Max height 1080px
+            
+            // Enable high quality rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // Draw image with high quality
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to maximum quality blob
+            canvas.toBlob(function(blob) {
+                const highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.98); // 98% quality
+                window.cropCallback(highQualityDataUrl);
+                closeCropModal();
+            }, 'image/jpeg', 0.98);
+        };
+        
+        img.src = currentCropImage;
     }
 };
 
-// Enhanced file upload with cropping
+// Enhanced file upload with high quality cropping
 window.handleImageUploadWithCrop = function(input, callback) {
     const file = input.files[0];
     if (file && file.type.startsWith('image/')) {
-        openImageCropper(file, callback);
+        // Compress and optimize image before cropping
+        compressImage(file, function(compressedDataUrl) {
+            openImageCropper(file, callback);
+        });
     }
 };
+
+// High quality image compression
+function compressImage(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+        // Calculate optimal dimensions
+        let { width, height } = img;
+        const maxWidth = 1920;
+        const maxHeight = 1080;
+        
+        if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width *= ratio;
+            height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // High quality settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Draw with high quality
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Return maximum quality data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
+        callback(dataUrl);
+    };
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}

@@ -3,88 +3,103 @@
 
 {% block title %}{{ profile_user.get_full_name|default:profile_user.username }} - Mytro{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="profile-container">
+<div class="modern-profile-container">
   <!-- Cover Photo Section -->
-  <div class="cover-section">
+  <div class="modern-cover-section">
     {% if profile_user.profile.cover_pic %}
-      <img src="{{ profile_user.profile.cover_pic.url }}" alt="Cover Photo" class="cover-photo">
+      <img src="{{ profile_user.profile.cover_pic.url }}" alt="Cover Photo" class="modern-cover-photo">
     {% else %}
-      <div class="cover-photo default-cover"></div>
+      <div class="modern-cover-photo default-cover"></div>
     {% endif %}
     {% if is_own_profile %}
-      <div class="photo-edit-overlay">
-        <button class="edit-photo-btn" onclick="editCoverPhoto()">
+      <div class="cover-edit-overlay">
+        <button class="modern-edit-btn" onclick="editCoverPhoto()">
           <i class="fas fa-camera"></i> Edit Cover
         </button>
       </div>
     {% endif %}
+    <div class="cover-gradient-overlay"></div>
   </div>
 
-  <!-- Profile Info Section -->
-  <div class="profile-info-wrapper">
-    <div class="profile-main-info">
+  <!-- Modern Profile Info Section -->
+  <div class="modern-profile-info">
+    <div class="profile-header-content">
       <!-- Profile Avatar -->
-      <div class="avatar-section">
-        <div class="profile-avatar">
+      <div class="modern-avatar-section">
+        <div class="modern-profile-avatar">
           {% if profile_user.profile.profile_pic %}
-            <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}">
+            <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}" class="avatar-image">
           {% else %}
-            <div class="avatar-fallback">
-              {{ profile_user.profile.full_name|first|upper }}
+            <div class="modern-avatar-fallback">
+              {{ profile_user.username|first|upper }}
             </div>
           {% endif %}
           {% if is_own_profile %}
-            <button class="edit-avatar-btn" onclick="editProfilePhoto()">
+            <button class="modern-avatar-edit-btn" onclick="editProfilePhoto()">
               <i class="fas fa-camera"></i>
             </button>
           {% endif %}
+          <div class="avatar-ring"></div>
         </div>
       </div>
 
       <!-- User Details -->
-      <div class="user-details">
-        <div class="name-section">
-          <h1 class="display-name">{{ profile_user.profile.full_name }}</h1>
-          <p class="username">@{{ profile_user.username }}</p>
+      <div class="modern-user-details">
+        <div class="user-name-section">
+          <h1 class="modern-display-name">{{ profile_user.profile.full_name|default:profile_user.username }}</h1>
+          <p class="modern-username">@{{ profile_user.username }}</p>
+          <div class="verification-badge">
+            <i class="fas fa-check-circle"></i>
+          </div>
         </div>
         
         {% if profile_user.profile.bio %}
-          <p class="bio">{{ profile_user.profile.bio }}</p>
+          <p class="modern-bio">{{ profile_user.profile.bio }}</p>
         {% endif %}
 
-        <!-- Profile Stats -->
-        <div class="profile-stats">
-          <div class="stat-item">
-            <span class="stat-number">{{ posts_count }}</span>
-            <span class="stat-label">Posts</span>
+        <!-- Modern Profile Stats -->
+        <div class="modern-profile-stats">
+          <div class="modern-stat-item">
+            <span class="modern-stat-number">{{ posts_count }}</span>
+            <span class="modern-stat-label">Posts</span>
           </div>
-          <div class="stat-item clickable" onclick="showFollowers()">
-            <span class="stat-number" id="followers-count">{{ followers_count }}</span>
-            <span class="stat-label">Followers</span>
+          <div class="modern-stat-item clickable" onclick="showFollowers()" style="cursor: pointer;">
+            <span class="modern-stat-number" id="followers-count">{{ followers_count }}</span>
+            <span class="modern-stat-label">Followers</span>
           </div>
-          <div class="stat-item clickable" onclick="showFollowing()">
-            <span class="stat-number" id="following-count">{{ following_count }}</span>
-            <span class="stat-label">Following</span>
+          <div class="modern-stat-item clickable" onclick="showFollowing()" style="cursor: pointer;">
+            <span class="modern-stat-number" id="following-count">{{ following_count }}</span>
+            <span class="modern-stat-label">Following</span>
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
+
+
+        <!-- Modern Action Buttons -->
+        <div class="modern-action-buttons">
           {% if is_own_profile %}
-            <a href="{% url 'edit_profile' %}" class="btn-primary">
-              <i class="fas fa-edit"></i> Edit Profile
+            <a href="{% url 'edit_profile' %}" class="modern-btn modern-btn-primary">
+              <i class="fas fa-edit"></i>
+              <span>Edit Profile</span>
             </a>
           {% else %}
-            <button class="btn-follow" id="followBtn" onclick="toggleFollow({{ profile_user.id }})">
+            <button class="modern-btn modern-btn-follow follow-btn" onclick="followUser({{ profile_user.id }}, this)">
               {% if is_following %}
-                <i class="fas fa-user-check"></i> Following
+                <i class="fas fa-user-check"></i>
+                <span>Following</span>
               {% else %}
-                <i class="fas fa-user-plus"></i> Follow
+                <i class="fas fa-user-plus"></i>
+                <span>Follow</span>
               {% endif %}
             </button>
-            <button class="btn-message" onclick="sendMessage({{ profile_user.id }})">
-              <i class="fas fa-envelope"></i> Message
+            <button class="modern-btn modern-btn-secondary" onclick="sendMessage({{ profile_user.id }})">
+              <i class="fas fa-envelope"></i>
+              <span>Message</span>
             </button>
           {% endif %}
         </div>
@@ -92,891 +107,978 @@
     </div>
   </div>
 
-  <!-- Profile Navigation -->
-  <div class="profile-nav">
-    <ul class="nav-tabs">
-      <li class="nav-item">
-        <a href="#" class="nav-link active" onclick="showSection('posts'); return false;">
-          <i class="fas fa-stream"></i> Posts
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" onclick="showSection('about'); return false;">
-          <i class="fas fa-user"></i> About
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" onclick="showSection('photos'); return false;">
-          <i class="fas fa-images"></i> Photos
-        </a>
-      </li>
-    </ul>
+  <!-- Modern Profile Navigation -->
+  <div class="modern-profile-nav">
+    <div class="modern-nav-container">
+      <div class="modern-nav-tabs">
+        <button class="modern-nav-tab active" data-section="posts">
+          <i class="fas fa-stream"></i>
+          <span>Posts</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="modern-nav-tab" data-section="about">
+          <i class="fas fa-user"></i>
+          <span>About</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="modern-nav-tab" data-section="photos">
+          <i class="fas fa-images"></i>
+          <span>Photos</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="modern-nav-tab" data-section="videos">
+          <i class="fas fa-video"></i>
+          <span>Videos</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="modern-nav-tab" data-section="followers">
+          <i class="fas fa-users"></i>
+          <span>Followers</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="modern-nav-tab" data-section="following">
+          <i class="fas fa-user-friends"></i>
+          <span>Following</span>
+          <div class="tab-indicator"></div>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Profile Content -->
-  <div class="profile-content">
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Posts Section -->
-      <div id="posts-section" class="content-section">
-        {% if user_posts %}
-          <div class="posts-feed">
-            {% for post in user_posts %}
-              {% include 'core/components/post_card.html' with post=post %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-stream"></i></div>
-            <div class="empty-text">No posts yet</div>
-            <div class="empty-subtext">
-              {% if is_own_profile %}
-                Share your first post with the world!
-              {% else %}
-                {{ profile_user.profile.full_name }} hasn't posted anything yet.
-              {% endif %}
-            </div>
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- About Section -->
-      <div id="about-section" class="content-section" style="display: none;">
-        <div class="about-grid">
-          <div class="about-item">
-            <div class="about-label">Full Name</div>
-            <div class="about-value">{{ profile_user.profile.full_name }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Email</div>
-            <div class="about-value">{{ profile_user.email }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Gender</div>
-            <div class="about-value">{{ profile_user.profile.get_gender_display|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Date of Birth</div>
-            <div class="about-value">{{ profile_user.profile.dob|date:"F d, Y"|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Work</div>
-            <div class="about-value">{{ profile_user.profile.work|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Education</div>
-            <div class="about-value">{{ profile_user.profile.education|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Relationship Status</div>
-            <div class="about-value">{{ profile_user.profile.relationship_status|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Hometown</div>
-            <div class="about-value">{{ profile_user.profile.hometown|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Current City</div>
-            <div class="about-value">{{ profile_user.profile.current_city|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Website</div>
-            <div class="about-value">
-              {% if profile_user.profile.website %}
-                <a href="{{ profile_user.profile.website }}" target="_blank">{{ profile_user.profile.website }}</a>
-              {% else %}
-                Not specified
-              {% endif %}
-            </div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Phone</div>
-            <div class="about-value">{{ profile_user.profile.phone_number|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item">
-            <div class="about-label">Languages</div>
-            <div class="about-value">{{ profile_user.profile.languages_known|default:"Not specified" }}</div>
-          </div>
-          <div class="about-item full-width">
-            <div class="about-label">Bio</div>
-            <div class="about-value">{{ profile_user.profile.bio|default:"Not specified" }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Photos Section -->
-      <div id="photos-section" class="content-section" style="display: none;">
-        {% if user_posts %}
-          <div class="photos-grid">
-            {% for post in user_posts %}
+  <!-- Modern Profile Content -->
+  <div class="modern-profile-content">
+    <!-- Posts Section -->
+    <div id="posts-section" class="content-section">
+      {% if user_posts %}
+        <div class="modern-posts-grid">
+          {% for post in user_posts %}
+            <div class="modern-post-card" data-post-id="{{ post.id }}" onclick="openPost({{ post.id }})" style="cursor: pointer;">
               {% if post.image %}
-                <div class="photo-item" onclick="openPost({{ post.id }})">
-                  <img src="{{ post.image.url }}" alt="Post" class="photo-image">
-                  <div class="photo-overlay">
-                    <div class="post-stat">
-                      <i class="fas fa-heart"></i>
-                      <span>{{ post.likes.count }}</span>
+                <div class="post-image-container">
+                  <img src="{{ post.image.url }}" alt="Post" class="modern-post-image">
+                  <div class="post-overlay">
+                    <div class="post-stats">
+                      <div class="stat">
+                        <i class="fas fa-heart"></i>
+                        <span>{{ post.likes.count }}</span>
+                      </div>
+                      <div class="stat">
+                        <i class="fas fa-comment"></i>
+                        <span>{{ post.comments.count }}</span>
+                      </div>
                     </div>
-                    <div class="post-stat">
-                      <i class="fas fa-comment"></i>
-                      <span>{{ post.comments.count }}</span>
+                  </div>
+                </div>
+              {% else %}
+                <div class="text-post-container">
+                  <div class="text-post-content">
+                    <p>{{ post.content|truncatewords:20 }}</p>
+                  </div>
+                  <div class="post-overlay">
+                    <div class="post-stats">
+                      <div class="stat">
+                        <i class="fas fa-heart"></i>
+                        <span>{{ post.likes.count }}</span>
+                      </div>
+                      <div class="stat">
+                        <i class="fas fa-comment"></i>
+                        <span>{{ post.comments.count }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               {% endif %}
-            {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="modern-empty-state">
+          <div class="empty-animation">
+            <i class="fas fa-stream"></i>
           </div>
-        {% else %}
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-images"></i></div>
-            <div class="empty-text">No photos yet</div>
+          <h3>No posts yet</h3>
+          <p>
+            {% if is_own_profile %}
+              Share your first post with the world!
+            {% else %}
+              {{ profile_user.username }} hasn't posted anything yet.
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- About Section -->
+    <div id="about-section" class="content-section" style="display: none;">
+      <div class="modern-about-container">
+        <div class="about-cards-grid">
+          <!-- Personal Information -->
+          <div class="about-card">
+            <div class="card-header">
+              <i class="fas fa-user-circle"></i>
+              <h3>Personal Information</h3>
+            </div>
+            <div class="card-content">
+              <div class="info-item">
+                <span class="label">Full Name</span>
+                <span class="value">{{ profile_user.profile.full_name|default:"Not specified" }}</span>
+              </div>
+              {% if is_own_profile or is_following %}
+              <div class="info-item">
+                <span class="label">Gender</span>
+                <span class="value">{{ profile_user.profile.get_gender_display|default:"Not specified" }}</span>
+              </div>
+              {% if profile_user.profile.dob %}
+              <div class="info-item">
+                <span class="label">Date of Birth</span>
+                <span class="value">{{ profile_user.profile.dob|date:"F d, Y" }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.phone_number %}
+              <div class="info-item">
+                <span class="label">Phone</span>
+                <span class="value">{{ profile_user.profile.phone_number }}</span>
+              </div>
+              {% endif %}
+              {% endif %}
+              {% if is_own_profile %}
+              <div class="info-item">
+                <span class="label">Email</span>
+                <span class="value">{{ profile_user.email }}</span>
+              </div>
+              {% endif %}
+              <div class="info-item">
+                <span class="label">Joined</span>
+                <span class="value">{{ profile_user.date_joined|date:"F Y" }}</span>
+              </div>
+            </div>
           </div>
-        {% endif %}
+          
+          <!-- Bio -->
+          {% if profile_user.profile.bio %}
+          <div class="about-card">
+            <div class="card-header">
+              <i class="fas fa-quote-left"></i>
+              <h3>Bio</h3>
+            </div>
+            <div class="card-content">
+              <p class="bio-text">{{ profile_user.profile.bio }}</p>
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Location & Contact -->
+          {% if is_own_profile or is_following %}
+          <div class="about-card">
+            <div class="card-header">
+              <i class="fas fa-map-marker-alt"></i>
+              <h3>Location & Contact</h3>
+            </div>
+            <div class="card-content">
+              {% if profile_user.profile.location %}
+              <div class="info-item">
+                <span class="label">Current Location</span>
+                <span class="value">{{ profile_user.profile.location }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.hometown %}
+              <div class="info-item">
+                <span class="label">Hometown</span>
+                <span class="value">{{ profile_user.profile.hometown }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.current_city %}
+              <div class="info-item">
+                <span class="label">Current City</span>
+                <span class="value">{{ profile_user.profile.current_city }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.website %}
+              <div class="info-item">
+                <span class="label">Website</span>
+                <span class="value"><a href="{{ profile_user.profile.website }}" target="_blank">{{ profile_user.profile.website }}</a></span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Work & Education -->
+          {% if is_own_profile or is_following %}
+          <div class="about-card">
+            <div class="card-header">
+              <i class="fas fa-briefcase"></i>
+              <h3>Work & Education</h3>
+            </div>
+            <div class="card-content">
+              {% if profile_user.profile.work %}
+              <div class="info-item">
+                <span class="label">Work</span>
+                <span class="value">{{ profile_user.profile.work }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.education %}
+              <div class="info-item">
+                <span class="label">Education</span>
+                <span class="value">{{ profile_user.profile.education }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Languages & Interests -->
+          {% if is_own_profile or is_following %}
+          <div class="about-card">
+            <div class="card-header">
+              <i class="fas fa-heart"></i>
+              <h3>Interests & Languages</h3>
+            </div>
+            <div class="card-content">
+              {% if profile_user.profile.languages_known %}
+              <div class="info-item">
+                <span class="label">Languages</span>
+                <span class="value">{{ profile_user.profile.languages_known }}</span>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.interests.all %}
+              <div class="info-item">
+                <span class="label">Interests</span>
+                <div class="interests-list">
+                  {% for interest in profile_user.profile.interests.all %}
+                    <span class="interest-tag">{{ interest.name }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              {% if profile_user.profile.relationship_status %}
+              <div class="info-item">
+                <span class="label">Relationship Status</span>
+                <span class="value">{{ profile_user.profile.relationship_status }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Privacy Notice -->
+          {% if not is_own_profile and not is_following %}
+          <div class="about-card privacy-notice">
+            <div class="card-header">
+              <i class="fas fa-lock"></i>
+              <h3>Private Information</h3>
+            </div>
+            <div class="card-content">
+              <p class="privacy-text">Follow {{ profile_user.profile.full_name }} to see more detailed information about their profile.</p>
+              <button class="follow-to-see-btn" onclick="followUser({{ profile_user.id }})">
+                <i class="fas fa-user-plus"></i>
+                Follow to See More
+              </button>
+            </div>
+          </div>
+          {% endif %}
+        </div>
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- Followers Section -->
-      <div class="sidebar-section">
-        <div class="section-header">
-          <h3 class="section-title">Followers</h3>
-          <span class="count-badge">{{ followers_count }}</span>
-        </div>
-        
-        <div class="followers-list" id="followers-list">
-          {% if followers_count > 0 %}
-            <div class="loading-state">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span>Loading followers...</span>
-            </div>
-          {% else %}
-            <div class="empty-sidebar">
-              <i class="fas fa-users"></i>
-              <p>No followers yet</p>
+    <!-- Photos Section -->
+    <div id="photos-section" class="content-section" style="display: none;">
+      <div class="modern-photos-grid">
+        {% for post in user_posts %}
+          {% if post.image %}
+            <div class="photo-item" onclick="viewPhoto('{{ post.image.url }}')">
+              <img src="{{ post.image.url }}" alt="Photo" class="photo-thumbnail">
+              <div class="photo-overlay">
+                <div class="photo-stats">
+                  <span><i class="fas fa-heart"></i> {{ post.likes.count }}</span>
+                  <span><i class="fas fa-comment"></i> {{ post.comments.count }}</span>
+                </div>
+              </div>
             </div>
           {% endif %}
-        </div>
+        {% empty %}
+          <div class="modern-empty-state">
+            <i class="fas fa-images"></i>
+            <h3>No photos yet</h3>
+            <p>Photos from posts will appear here</p>
+          </div>
+        {% endfor %}
       </div>
+    </div>
 
-      <!-- Following Section -->
-      <div class="sidebar-section">
-        <div class="section-header">
-          <h3 class="section-title">Following</h3>
-          <span class="count-badge">{{ following_count }}</span>
+    <!-- Videos Section -->
+    <div id="videos-section" class="content-section" style="display: none;">
+      <div class="modern-empty-state">
+        <i class="fas fa-video"></i>
+        <h3>No videos yet</h3>
+        <p>Video posts will appear here</p>
+      </div>
+    </div>
+
+    <!-- Followers Section -->
+    <div id="followers-section" class="content-section" style="display: none;">
+      <div class="followers-list-container">
+        <div class="loading-state" id="followersLoading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading followers...</p>
         </div>
-        
-        <div class="following-list" id="following-list">
-          {% if following_count > 0 %}
-            <div class="loading-state">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span>Loading following...</span>
-            </div>
-          {% else %}
-            <div class="empty-sidebar">
-              <i class="fas fa-user-plus"></i>
-              <p>Not following anyone</p>
-            </div>
-          {% endif %}
+        <div class="followers-grid" id="followersGrid"></div>
+      </div>
+    </div>
+
+    <!-- Following Section -->
+    <div id="following-section" class="content-section" style="display: none;">
+      <div class="following-list-container">
+        <div class="loading-state" id="followingLoading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading following...</p>
         </div>
+        <div class="following-grid" id="followingGrid"></div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Followers Modal -->
-<div id="followersModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
+<div id="followersModal" class="modern-modal">
+  <div class="modern-modal-content">
+    <div class="modern-modal-header">
       <h3>Followers</h3>
-      <button class="close-btn" onclick="closeFollowersModal()">&times;</button>
+      <button class="modern-modal-close" onclick="closeFollowersModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <div class="modal-body">
-      <div id="followers-modal-list" class="user-list"></div>
+    <div class="modern-modal-body">
+      <div id="followersLoading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading followers...</p>
+      </div>
+      <div id="followersList" class="users-list"></div>
     </div>
   </div>
 </div>
 
 <!-- Following Modal -->
-<div id="followingModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
+<div id="followingModal" class="modern-modal">
+  <div class="modern-modal-content">
+    <div class="modern-modal-header">
       <h3>Following</h3>
-      <button class="close-btn" onclick="closeFollowingModal()">&times;</button>
+      <button class="modern-modal-close" onclick="closeFollowingModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <div class="modal-body">
-      <div id="following-modal-list" class="user-list"></div>
+    <div class="modern-modal-body">
+      <div id="followingLoading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading following...</p>
+      </div>
+      <div id="followingList" class="users-list"></div>
     </div>
   </div>
 </div>
 
-<!-- Photo Editor Modal -->
-<div class="photo-editor-modal" id="photoEditorModal">
-  <div class="editor-container">
-    <div class="editor-header">
-      <h3 id="editorTitle">Edit Photo</h3>
-      <button class="close-btn" onclick="closePhotoEditor()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <div class="editor-body">
-      <div class="editor-main">
-        <div class="image-container">
-          <canvas id="imageCanvas" width="800" height="400"></canvas>
+<script>
+// Simple section navigation
+function showSection(sectionName) {
+  console.log('Switching to section:', sectionName);
+  
+  // Hide all sections
+  document.querySelectorAll('.content-section').forEach(section => {
+    section.style.display = 'none';
+  });
+  
+  // Remove active from all tabs
+  document.querySelectorAll('.modern-nav-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Show target section
+  const section = document.getElementById(sectionName + '-section');
+  if (section) {
+    section.style.display = 'block';
+    console.log('Section found and displayed:', sectionName + '-section');
+  } else {
+    console.error('Section not found:', sectionName + '-section');
+  }
+  
+  // Activate tab
+  const tab = document.querySelector(`[data-section="${sectionName}"]`);
+  if (tab) {
+    tab.classList.add('active');
+  }
+  
+  // Load data for followers/following sections
+  if (sectionName === 'followers') {
+    console.log('Loading followers section...');
+    loadFollowersSection();
+  } else if (sectionName === 'following') {
+    console.log('Loading following section...');
+    loadFollowingSection();
+  }
+}
+
+// Followers modal
+function showFollowers() {
+  const isDark = document.body.classList.contains('dark-theme');
+  
+  const modalHTML = `
+    <div id="followersPopup" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    ">
+      <div style="
+        background: ${isDark ? '#1a1a1a' : 'white'};
+        color: ${isDark ? 'white' : 'black'};
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      ">
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 25px;
+          border-bottom: 1px solid ${isDark ? '#333' : '#e9ecef'};
+        ">
+          <h3 style="margin: 0; font-size: 20px; font-weight: 700;">Followers</h3>
+          <button onclick="closeFollowersPopup()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            color: ${isDark ? 'white' : 'black'};
+          ">&times;</button>
         </div>
-        
-        <div class="editor-controls">
-          <div class="control-tabs">
-            <button class="tab-btn active" onclick="showTab('crop')">Crop</button>
-            <button class="tab-btn" onclick="showTab('adjust')">Adjust</button>
-            <button class="tab-btn" onclick="showTab('filters')">Filters</button>
-          </div>
-          
-          <div class="control-panel" id="cropPanel">
-            <div class="crop-controls">
-              <button class="control-btn" onclick="rotateCrop(-90)"><i class="fas fa-undo"></i></button>
-              <button class="control-btn" onclick="rotateCrop(90)"><i class="fas fa-redo"></i></button>
-              <button class="control-btn" onclick="flipCrop('horizontal')"><i class="fas fa-arrows-alt-h"></i></button>
-              <button class="control-btn" onclick="flipCrop('vertical')"><i class="fas fa-arrows-alt-v"></i></button>
-            </div>
-            <div class="crop-presets">
-              <button class="preset-btn" onclick="setCropRatio(1)">Square</button>
-              <button class="preset-btn" onclick="setCropRatio(16/9)">16:9</button>
-              <button class="preset-btn" onclick="setCropRatio(4/3)">4:3</button>
-              <button class="preset-btn" onclick="setCropRatio(0)">Free</button>
-            </div>
-            <div class="crop-info">
-              <p><strong>Drag</strong> to create crop area<br>
-              <strong>Drag inside</strong> to move crop area</p>
-            </div>
-          </div>
-          
-          <div class="control-panel" id="adjustPanel" style="display: none;">
-            <div class="slider-control">
-              <label>Brightness</label>
-              <input type="range" id="brightness" min="-100" max="100" value="0" oninput="applyAdjustments()">
-            </div>
-            <div class="slider-control">
-              <label>Contrast</label>
-              <input type="range" id="contrast" min="-100" max="100" value="0" oninput="applyAdjustments()">
-            </div>
-            <div class="slider-control">
-              <label>Saturation</label>
-              <input type="range" id="saturation" min="-100" max="100" value="0" oninput="applyAdjustments()">
-            </div>
-            <div class="slider-control">
-              <label>Blur</label>
-              <input type="range" id="blur" min="0" max="10" value="0" oninput="applyAdjustments()">
-            </div>
-          </div>
-          
-          <div class="control-panel" id="filtersPanel" style="display: none;">
-            <div class="filter-grid">
-              <button class="filter-btn active" onclick="applyFilter('none')">Original</button>
-              <button class="filter-btn" onclick="applyFilter('grayscale')">B&W</button>
-              <button class="filter-btn" onclick="applyFilter('sepia')">Sepia</button>
-              <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
-              <button class="filter-btn" onclick="applyFilter('warm')">Warm</button>
-              <button class="filter-btn" onclick="applyFilter('cool')">Cool</button>
-              <button class="filter-btn" onclick="applyFilter('dramatic')">Dramatic</button>
-              <button class="filter-btn" onclick="applyFilter('vivid')">Vivid</button>
-            </div>
+        <div id="followersContent" style="max-height: 400px; overflow-y: auto; padding: 10px 0;">
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; color: #FF9933;"></i>
+            <p>Loading followers...</p>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="editor-footer">
-      <button class="btn-cancel" onclick="closePhotoEditor()">Cancel</button>
-      <button class="btn-reset" onclick="resetEditor()">Reset</button>
-      <button class="btn-save" onclick="savePhoto()">Save</button>
+  `;
+  
+  const existing = document.getElementById('followersPopup');
+  if (existing) existing.remove();
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  fetch(`/api/followers/{{ profile_user.username }}/`)
+    .then(response => response.json())
+    .then(data => {
+      const content = document.getElementById('followersContent');
+      
+      if (data.followers && data.followers.length > 0) {
+        content.innerHTML = data.followers.map(user => `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            border-bottom: 1px solid ${isDark ? '#333' : '#e9ecef'};
+            transition: background-color 0.2s ease;
+          " onmouseover="this.style.backgroundColor='${isDark ? '#333' : '#f8f9fa'}'" onmouseout="this.style.backgroundColor='transparent'">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              overflow: hidden;
+              flex-shrink: 0;
+              background: #FF9933;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: 600;
+            ">
+              ${user.profile_pic ? 
+                `<img src="${user.profile_pic}" style="width: 100%; height: 100%; object-fit: cover;">` : 
+                user.full_name.charAt(0)
+              }
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 14px; color: ${isDark ? 'white' : 'black'};">${user.full_name}</div>
+              <div style="color: #6c757d; font-size: 12px; margin-top: 2px;">@${user.username}</div>
+            </div>
+            <button onclick="window.location.href='/profile/${user.username}/'" style="
+              background: #FF9933;
+              color: white;
+              border: none;
+              padding: 6px 12px;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            ">View</button>
+          </div>
+        `).join('');
+      } else {
+        content.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;"><p>No followers yet</p></div>';
+      }
+    })
+    .catch(error => {
+      document.getElementById('followersContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;"><p>Error loading followers</p></div>';
+    });
+}
+
+function closeFollowersPopup() {
+  const popup = document.getElementById('followersPopup');
+  if (popup) popup.remove();
+}
+
+// Following modal
+function showFollowing() {
+  const isDark = document.body.classList.contains('dark-theme');
+  
+  const modalHTML = `
+    <div id="followingPopup" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    ">
+      <div style="
+        background: ${isDark ? '#1a1a1a' : 'white'};
+        color: ${isDark ? 'white' : 'black'};
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      ">
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 25px;
+          border-bottom: 1px solid ${isDark ? '#333' : '#e9ecef'};
+        ">
+          <h3 style="margin: 0; font-size: 20px; font-weight: 700;">Following</h3>
+          <button onclick="closeFollowingPopup()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            color: ${isDark ? 'white' : 'black'};
+          ">&times;</button>
+        </div>
+        <div id="followingContent" style="max-height: 400px; overflow-y: auto; padding: 10px 0;">
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; color: #FF9933;"></i>
+            <p>Loading following...</p>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-<input type="file" id="coverFileInput" accept="image/*" style="display: none;">
-<input type="file" id="profileFileInput" accept="image/*" style="display: none;">
-
-<style>
-.photo-edit-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  `;
+  
+  const existing = document.getElementById('followingPopup');
+  if (existing) existing.remove();
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  fetch(`/api/following/{{ profile_user.username }}/`)
+    .then(response => response.json())
+    .then(data => {
+      const content = document.getElementById('followingContent');
+      
+      if (data.following && data.following.length > 0) {
+        content.innerHTML = data.following.map(user => `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            border-bottom: 1px solid ${isDark ? '#333' : '#e9ecef'};
+            transition: background-color 0.2s ease;
+          " onmouseover="this.style.backgroundColor='${isDark ? '#333' : '#f8f9fa'}'" onmouseout="this.style.backgroundColor='transparent'">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              overflow: hidden;
+              flex-shrink: 0;
+              background: #FF9933;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: 600;
+            ">
+              ${user.profile_pic ? 
+                `<img src="${user.profile_pic}" style="width: 100%; height: 100%; object-fit: cover;">` : 
+                user.full_name.charAt(0)
+              }
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 14px; color: ${isDark ? 'white' : 'black'};">${user.full_name}</div>
+              <div style="color: #6c757d; font-size: 12px; margin-top: 2px;">@${user.username}</div>
+            </div>
+            <button onclick="window.location.href='/profile/${user.username}/'" style="
+              background: #FF9933;
+              color: white;
+              border: none;
+              padding: 6px 12px;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            ">View</button>
+          </div>
+        `).join('');
+      } else {
+        content.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;"><p>Not following anyone yet</p></div>';
+      }
+    })
+    .catch(error => {
+      document.getElementById('followingContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;"><p>Error loading following</p></div>';
+    });
 }
 
-.cover-section:hover .photo-edit-overlay {
-  opacity: 1;
+function closeFollowingPopup() {
+  const popup = document.getElementById('followingPopup');
+  if (popup) popup.remove();
 }
 
-.edit-photo-btn {
-  background: #ff6b35;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+function closeFollowersModal() {
+  document.getElementById('followersModal').style.display = 'none';
 }
 
-.photo-editor-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.9);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+function closeFollowingModal() {
+  document.getElementById('followingModal').style.display = 'none';
 }
-
-.editor-container {
-  background: white;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 1000px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.editor-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-.editor-main {
-  flex: 1;
-  display: flex;
-}
-
-.image-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  padding: 20px;
-}
-
-#imageCanvas {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  cursor: crosshair;
-}
-
-.editor-controls {
-  width: 300px;
-  background: #f8f9fa;
-  border-left: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-}
-
-.control-tabs {
-  display: flex;
-  border-bottom: 1px solid #eee;
-}
-
-.tab-btn {
-  flex: 1;
-  padding: 15px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.tab-btn.active {
-  background: #ff6b35;
-  color: white;
-}
-
-.control-panel {
-  padding: 20px;
-  flex: 1;
-}
-
-.crop-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.control-btn {
-  padding: 15px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.crop-presets {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.preset-btn {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.preset-btn.active {
-  background: #ff6b35;
-  color: white;
-  border-color: #ff6b35;
-}
-
-.crop-info {
-  font-size: 12px;
-  color: #666;
-  text-align: center;
-}
-
-.crop-overlay {
-  position: absolute;
-  border: 2px dashed #ff6b35;
-  background: rgba(255, 107, 53, 0.1);
-  cursor: move;
-}
-
-.crop-handle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #ff6b35;
-  border: 2px solid white;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.crop-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
-.crop-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
-.crop-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
-.crop-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
-
-.slider-control {
-  margin-bottom: 20px;
-}
-
-.slider-control label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.slider-control input[type="range"] {
-  width: 100%;
-}
-
-.filter-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.filter-btn {
-  padding: 12px 8px;
-  border: 2px solid #ddd;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.filter-btn.active {
-  border-color: #ff6b35;
-  background: #fff5f2;
-  color: #ff6b35;
-}
-
-.editor-footer {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  padding: 20px;
-  border-top: 1px solid #eee;
-}
-
-.btn-cancel, .btn-reset, .btn-save {
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-cancel { background: #f8f9fa; color: #666; }
-.btn-reset { background: #6c757d; color: white; }
-.btn-save { background: #ff6b35; color: white; }
-</style>
-
-<script>
-let currentPhotoType = '';
-let originalImage = null;
-let canvas = null;
-let ctx = null;
-let currentFilter = 'none';
-let adjustments = { brightness: 0, contrast: 0, saturation: 0, blur: 0 };
-let rotation = 0;
-let flipH = false;
-let flipV = false;
-let cropArea = { x: 0, y: 0, width: 0, height: 0 };
-let isDragging = false;
-let isResizing = false;
-let dragStart = { x: 0, y: 0 };
-let cropRatio = 0;
 
 function editCoverPhoto() {
-  currentPhotoType = 'cover';
-  document.getElementById('coverFileInput').click();
+  alert('Cover photo edit - coming soon!');
 }
 
 function editProfilePhoto() {
-  currentPhotoType = 'profile';
-  document.getElementById('profileFileInput').click();
+  alert('Profile photo edit - coming soon!');
 }
 
-document.getElementById('coverFileInput').addEventListener('change', handleFileSelect);
-document.getElementById('profileFileInput').addEventListener('change', handleFileSelect);
-
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      openPhotoEditor(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  }
+function openPost(postId) {
+  window.location.href = `/post/${postId}/`;
 }
 
-function openPhotoEditor(imageSrc) {
-  document.getElementById('editorTitle').textContent = `Edit ${currentPhotoType === 'cover' ? 'Cover' : 'Profile'} Photo`;
-  document.getElementById('photoEditorModal').style.display = 'flex';
+function viewPhoto(imageUrl) {
+  // Create photo viewer modal
+  const modal = document.createElement('div');
+  modal.className = 'photo-viewer-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    cursor: pointer;
+  `;
   
-  canvas = document.getElementById('imageCanvas');
-  ctx = canvas.getContext('2d');
+  modal.innerHTML = `
+    <img src="${imageUrl}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+    <button onclick="this.parentElement.remove()" style="
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      font-size: 24px;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+    ">&times;</button>
+  `;
   
-  originalImage = new Image();
-  originalImage.onload = function() {
-    if (currentPhotoType === 'cover') {
-      canvas.width = 800;
-      canvas.height = 300;
-      cropRatio = 800/300;
-    } else {
-      canvas.width = 400;
-      canvas.height = 400;
-      cropRatio = 1;
+  modal.onclick = function(e) {
+    if (e.target === modal) {
+      modal.remove();
     }
-    initializeCropArea();
-    drawImage();
-    setupCanvasEvents();
-  };
-  originalImage.src = imageSrc;
-}
-
-function closePhotoEditor() {
-  document.getElementById('photoEditorModal').style.display = 'none';
-  resetEditor();
-}
-
-function showTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.control-panel').forEach(panel => panel.style.display = 'none');
-  
-  event.target.classList.add('active');
-  document.getElementById(tab + 'Panel').style.display = 'block';
-}
-
-function drawImage() {
-  if (!originalImage) return;
-  
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate(rotation * Math.PI / 180);
-  ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-  
-  ctx.filter = getFilterString();
-  
-  const scale = Math.min(canvas.width / originalImage.width, canvas.height / originalImage.height);
-  const width = originalImage.width * scale;
-  const height = originalImage.height * scale;
-  
-  ctx.drawImage(originalImage, -width / 2, -height / 2, width, height);
-  ctx.restore();
-  
-  drawCropOverlay();
-}
-
-function drawCropOverlay() {
-  if (cropArea.width === 0 || cropArea.height === 0) return;
-  
-  ctx.save();
-  ctx.strokeStyle = '#ff6b35';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 5]);
-  ctx.strokeRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
-  
-  ctx.fillStyle = 'rgba(255, 107, 53, 0.1)';
-  ctx.fillRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
-  
-  ctx.restore();
-}
-
-function initializeCropArea() {
-  const margin = 50;
-  cropArea = {
-    x: margin,
-    y: margin,
-    width: canvas.width - (margin * 2),
-    height: canvas.height - (margin * 2)
   };
   
-  if (cropRatio > 0) {
-    const maxWidth = canvas.width - (margin * 2);
-    const maxHeight = canvas.height - (margin * 2);
-    
-    if (maxWidth / cropRatio <= maxHeight) {
-      cropArea.width = maxWidth;
-      cropArea.height = maxWidth / cropRatio;
-    } else {
-      cropArea.height = maxHeight;
-      cropArea.width = maxHeight * cropRatio;
-    }
-    
-    cropArea.x = (canvas.width - cropArea.width) / 2;
-    cropArea.y = (canvas.height - cropArea.height) / 2;
+  document.body.appendChild(modal);
+}
+
+// Close modals on outside click
+window.onclick = function(event) {
+  if (event.target.classList.contains('modern-modal')) {
+    event.target.style.display = 'none';
   }
 }
 
-function setupCanvasEvents() {
-  canvas.addEventListener('mousedown', handleMouseDown);
-  canvas.addEventListener('mousemove', handleMouseMove);
-  canvas.addEventListener('mouseup', handleMouseUp);
-}
 
-function handleMouseDown(e) {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  
-  // Check if clicking inside existing crop area to move it
-  if (x >= cropArea.x && x <= cropArea.x + cropArea.width &&
-      y >= cropArea.y && y <= cropArea.y + cropArea.height) {
-    isDragging = true;
-    dragStart = { x: x - cropArea.x, y: y - cropArea.y };
-  } else {
-    // Start new crop area
-    isResizing = true;
-    cropArea.x = x;
-    cropArea.y = y;
-    cropArea.width = 0;
-    cropArea.height = 0;
-    dragStart = { x, y };
-  }
-}
 
-function handleMouseMove(e) {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+function loadFollowersSection() {
+  const loading = document.getElementById('followersLoading');
+  const grid = document.getElementById('followersGrid');
   
-  if (isDragging) {
-    // Move existing crop area
-    cropArea.x = Math.max(0, Math.min(canvas.width - cropArea.width, x - dragStart.x));
-    cropArea.y = Math.max(0, Math.min(canvas.height - cropArea.height, y - dragStart.y));
-  } else if (isResizing) {
-    // Create new crop area
-    const width = x - dragStart.x;
-    const height = y - dragStart.y;
-    
-    cropArea.x = Math.min(dragStart.x, x);
-    cropArea.y = Math.min(dragStart.y, y);
-    cropArea.width = Math.abs(width);
-    cropArea.height = Math.abs(height);
-    
-    // Apply ratio constraint if set
-    if (cropRatio > 0) {
-      if (cropArea.width / cropRatio > cropArea.height) {
-        cropArea.height = cropArea.width / cropRatio;
+  if (grid.innerHTML) return; // Already loaded
+  
+  loading.style.display = 'block';
+  console.log('Loading followers for:', '{{ profile_user.username }}');
+  
+  fetch(`/api/followers/{{ profile_user.username }}/`)
+    .then(response => {
+      console.log('Followers response status:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Followers data received:', data);
+      loading.style.display = 'none';
+      
+      if (data.followers && data.followers.length > 0) {
+        grid.innerHTML = data.followers.map(user => `
+          <div class="user-card" onclick="window.location.href='/profile/${user.username}/'">
+            <div class="user-avatar">
+              ${user.profile_pic ? 
+                `<img src="${user.profile_pic}" alt="${user.full_name}">` : 
+                `<div class="avatar-fallback">${user.full_name.charAt(0)}</div>`
+              }
+            </div>
+            <div class="user-info">
+              <h4 class="user-name">${user.full_name}</h4>
+              <p class="user-username">@${user.username}</p>
+            </div>
+            <button class="follow-btn" onclick="event.stopPropagation(); window.location.href='/profile/${user.username}/'">
+              View Profile
+            </button>
+          </div>
+        `).join('');
       } else {
-        cropArea.width = cropArea.height * cropRatio;
+        grid.innerHTML = '<div class="modern-empty-state"><i class="fas fa-users"></i><h3>No followers yet</h3><p>When people follow this account, they will appear here</p></div>';
       }
-    }
-    
-    // Keep within canvas bounds
-    cropArea.x = Math.max(0, Math.min(canvas.width - cropArea.width, cropArea.x));
-    cropArea.y = Math.max(0, Math.min(canvas.height - cropArea.height, cropArea.y));
-    cropArea.width = Math.min(cropArea.width, canvas.width - cropArea.x);
-    cropArea.height = Math.min(cropArea.height, canvas.height - cropArea.y);
-  }
-  
-  drawImage();
+    })
+    .catch(error => {
+      console.error('Error loading followers:', error);
+      loading.style.display = 'none';
+      grid.innerHTML = '<div class="modern-empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error loading followers</h3><p>Please try again later</p></div>';
+    });
 }
 
-function handleMouseUp() {
-  isDragging = false;
-  isResizing = false;
+function loadFollowingSection() {
+  const loading = document.getElementById('followingLoading');
+  const grid = document.getElementById('followingGrid');
+  
+  if (grid.innerHTML) return; // Already loaded
+  
+  loading.style.display = 'block';
+  console.log('Loading following for:', '{{ profile_user.username }}');
+  
+  fetch(`/api/following/{{ profile_user.username }}/`)
+    .then(response => {
+      console.log('Following response status:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Following data received:', data);
+      loading.style.display = 'none';
+      
+      if (data.following && data.following.length > 0) {
+        grid.innerHTML = data.following.map(user => `
+          <div class="user-card" onclick="window.location.href='/profile/${user.username}/'">
+            <div class="user-avatar">
+              ${user.profile_pic ? 
+                `<img src="${user.profile_pic}" alt="${user.full_name}">` : 
+                `<div class="avatar-fallback">${user.full_name.charAt(0)}</div>`
+              }
+            </div>
+            <div class="user-info">
+              <h4 class="user-name">${user.full_name}</h4>
+              <p class="user-username">@${user.username}</p>
+            </div>
+            <button class="follow-btn" onclick="event.stopPropagation(); window.location.href='/profile/${user.username}/'">
+              View Profile
+            </button>
+          </div>
+        `).join('');
+      } else {
+        grid.innerHTML = '<div class="modern-empty-state"><i class="fas fa-user-friends"></i><h3>Not following anyone</h3><p>When this account follows people, they will appear here</p></div>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading following:', error);
+      loading.style.display = 'none';
+      grid.innerHTML = '<div class="modern-empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error loading following</h3><p>Please try again later</p></div>';
+    });
 }
 
-function setCropRatio(ratio) {
-  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+// Simple section navigation
+function showSection(sectionName) {
+  console.log('Switching to section:', sectionName);
   
-  cropRatio = ratio;
-  initializeCropArea();
-  drawImage();
-}
-
-function getFilterString() {
-  let filters = [];
-  
-  if (adjustments.brightness !== 0) filters.push(`brightness(${100 + adjustments.brightness}%)`);
-  if (adjustments.contrast !== 0) filters.push(`contrast(${100 + adjustments.contrast}%)`);
-  if (adjustments.saturation !== 0) filters.push(`saturate(${100 + adjustments.saturation}%)`);
-  if (adjustments.blur > 0) filters.push(`blur(${adjustments.blur}px)`);
-  
-  switch (currentFilter) {
-    case 'grayscale': filters.push('grayscale(100%)'); break;
-    case 'sepia': filters.push('sepia(100%)'); break;
-    case 'vintage': filters.push('sepia(50%) contrast(120%) brightness(90%)'); break;
-    case 'warm': filters.push('sepia(20%) saturate(120%) brightness(110%)'); break;
-    case 'cool': filters.push('hue-rotate(180deg) saturate(120%)'); break;
-    case 'dramatic': filters.push('contrast(150%) brightness(90%) saturate(130%)'); break;
-    case 'vivid': filters.push('saturate(150%) contrast(110%)'); break;
-  }
-  
-  return filters.join(' ') || 'none';
-}
-
-function rotateCrop(degrees) {
-  rotation += degrees;
-  drawImage();
-}
-
-function flipCrop(direction) {
-  if (direction === 'horizontal') flipH = !flipH;
-  else flipV = !flipV;
-  drawImage();
-}
-
-function applyAdjustments() {
-  adjustments.brightness = parseInt(document.getElementById('brightness').value);
-  adjustments.contrast = parseInt(document.getElementById('contrast').value);
-  adjustments.saturation = parseInt(document.getElementById('saturation').value);
-  adjustments.blur = parseInt(document.getElementById('blur').value);
-  
-  drawImage();
-}
-
-function applyFilter(filter) {
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  currentFilter = filter;
-  drawImage();
-}
-
-function resetEditor() {
-  rotation = 0;
-  flipH = false;
-  flipV = false;
-  currentFilter = 'none';
-  adjustments = { brightness: 0, contrast: 0, saturation: 0, blur: 0 };
-  
-  document.getElementById('brightness').value = 0;
-  document.getElementById('contrast').value = 0;
-  document.getElementById('saturation').value = 0;
-  document.getElementById('blur').value = 0;
-  
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector('.filter-btn').classList.add('active');
-  
-  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-  
-  initializeCropArea();
-  if (originalImage) drawImage();
-}
-
-function savePhoto() {
-  // Create a new canvas with the cropped area
-  const croppedCanvas = document.createElement('canvas');
-  const croppedCtx = croppedCanvas.getContext('2d');
-  
-  croppedCanvas.width = cropArea.width;
-  croppedCanvas.height = cropArea.height;
-  
-  // Draw the cropped portion
-  croppedCtx.drawImage(canvas, cropArea.x, cropArea.y, cropArea.width, cropArea.height, 0, 0, cropArea.width, cropArea.height);
-  
-  const dataURL = croppedCanvas.toDataURL('image/jpeg', 0.9);
-  
-  const formData = new FormData();
-  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-  formData.append(currentPhotoType + '_pic_data', dataURL);
-  
-  fetch('/edit_profile/', {
-    method: 'POST',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest'
-    },
-    body: formData
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      location.reload();
-    } else {
-      alert('Error saving photo: ' + (data.message || 'Unknown error'));
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error saving photo. Please try again.');
+  // Hide all sections
+  document.querySelectorAll('.content-section').forEach(section => {
+    section.style.display = 'none';
   });
   
-  closePhotoEditor();
+  // Remove active from all tabs
+  document.querySelectorAll('.modern-nav-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Show target section
+  const section = document.getElementById(sectionName + '-section');
+  if (section) {
+    section.style.display = 'block';
+    console.log('Section found and displayed:', sectionName + '-section');
+  } else {
+    console.error('Section not found:', sectionName + '-section');
+  }
+  
+  // Activate tab
+  const tab = document.querySelector(`[data-section="${sectionName}"]`);
+  if (tab) {
+    tab.classList.add('active');
+  }
+  
+  // Load data for followers/following sections
+  if (sectionName === 'followers') {
+    console.log('Loading followers section...');
+    loadFollowersSection();
+  } else if (sectionName === 'following') {
+    console.log('Loading following section...');
+    loadFollowingSection();
+  }
 }
+
+// Test function
+function testTabClick() {
+  console.log('Tab clicked - test function working!');
+  alert('Tab click working!');
+}
+
+async function followUser(userId, button) {
+  console.log('followUser called with:', userId, button);
+  
+  if (button.disabled) return;
+  
+  button.disabled = true;
+  const originalHTML = button.innerHTML;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+  
+  try {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    
+    console.log('CSRF Token:', csrfToken);
+    console.log('Making request to:', `/api/follow/${userId}/`);
+    
+    const response = await fetch(`/api/follow/${userId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Response status:', response.status);
+    const responseText = await response.text();
+    console.log('Response text:', responseText);
+    
+    if (response.ok) {
+      const data = JSON.parse(responseText);
+      console.log('Response data:', data);
+      
+      if (data.is_following) {
+        button.innerHTML = '<i class="fas fa-user-check"></i> <span>Following</span>';
+        button.classList.add('following');
+        if (window.showGlobalNotification) {
+          window.showGlobalNotification('Now following user', 'success');
+        }
+      } else {
+        button.innerHTML = '<i class="fas fa-user-plus"></i> <span>Follow</span>';
+        button.classList.remove('following');
+        if (window.showGlobalNotification) {
+          window.showGlobalNotification('Unfollowed user', 'success');
+        }
+      }
+      
+      // Update follower count
+      const followersCount = document.getElementById('followers-count');
+      if (followersCount && data.followers_count !== undefined) {
+        followersCount.textContent = data.followers_count;
+      }
+    } else {
+      console.error('Request failed:', response.status, responseText);
+      button.innerHTML = originalHTML;
+      if (window.showGlobalNotification) {
+        window.showGlobalNotification('Failed to update follow status', 'error');
+      } else {
+        alert('Failed to update follow status');
+      }
+    }
+  } catch (error) {
+    console.error('Follow error:', error);
+    button.innerHTML = originalHTML;
+    if (window.showGlobalNotification) {
+      window.showGlobalNotification('Network error', 'error');
+    } else {
+      alert('Network error');
+    }
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  showSection('posts');
+  console.log('Profile page loaded for:', '{{ profile_user.username }}');
+  
+  // Follow buttons use inline onclick
+  
+  // Add click handlers to tabs
+  const tabs = document.querySelectorAll('.modern-nav-tab');
+  console.log('Found tabs:', tabs.length);
+  
+  tabs.forEach(tab => {
+    const section = tab.getAttribute('data-section');
+    console.log('Adding click handler for tab:', section);
+    
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('Tab clicked:', section);
+      
+      // Direct test
+      if (section === 'followers') {
+        console.log('Direct followers test');
+        loadFollowersSection();
+      } else if (section === 'following') {
+        console.log('Direct following test');
+        loadFollowingSection();
+      }
+      
+      showSection(section);
+    });
+  });
+});
 </script>
 
 {% endblock %}

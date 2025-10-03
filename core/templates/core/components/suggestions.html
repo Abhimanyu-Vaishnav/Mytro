@@ -35,9 +35,9 @@
             <button class="follow-btn {% if suggested_user in user.profile.following.all %}following{% endif %}" 
                     onclick="followUser({{ suggested_user.id }}, this)">
                 {% if suggested_user in user.profile.following.all %}
-                    Following
+                    <i class="fas fa-user-check"></i> Following
                 {% else %}
-                    Follow
+                    <i class="fas fa-user-plus"></i> Follow
                 {% endif %}
             </button>
         </div>
@@ -89,106 +89,80 @@
 </div>
 
 <script>
-// Enhanced follow functionality
 async function followUser(userId, button) {
+    console.log('followUser called with:', userId, button);
+    
+    if (button.disabled) return;
+    
+    button.disabled = true;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
     try {
-        button.disabled = true;
-        const originalText = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        
+        console.log('CSRF Token:', csrfToken);
+        console.log('Making request to:', `/api/follow/${userId}/`);
         
         const response = await fetch(`/api/follow/${userId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
         });
-
+        
+        console.log('Response status:', response.status);
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
         if (response.ok) {
-            const data = await response.json();
-            if (data.following) {
-                button.textContent = 'Following';
+            const data = JSON.parse(responseText);
+            console.log('Response data:', data);
+            
+            if (data.is_following) {
+                button.innerHTML = '<i class="fas fa-user-check"></i> Following';
                 button.classList.add('following');
-                showNotification(`You started following @${data.username}`);
-                
-                // Remove from suggestions after following
-                const suggestionItem = button.closest('.suggestion-item');
-                suggestionItem.style.opacity = '0.5';
-                setTimeout(() => {
-                    suggestionItem.remove();
-                    
-                    // Check if no suggestions left
-                    const suggestions = document.querySelectorAll('.suggestion-item');
-                    if (suggestions.length === 0) {
-                        document.getElementById('suggestionsList').innerHTML = `
-                            <div class="empty-suggestions">
-                                <i class="fas fa-check-circle"></i>
-                                <p>You're following all suggestions!</p>
-                                <button class="btn-secondary" onclick="refreshSuggestions()">Find More</button>
-                            </div>
-                        `;
-                    }
-                }, 1000);
+                if (window.showGlobalNotification) {
+                    window.showGlobalNotification('Now following user', 'success');
+                }
             } else {
-                button.textContent = 'Follow';
+                button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
                 button.classList.remove('following');
-                showNotification(`You unfollowed @${data.username}`);
+                if (window.showGlobalNotification) {
+                    window.showGlobalNotification('Unfollowed user', 'success');
+                }
+            }
+        } else {
+            console.error('Request failed:', response.status, responseText);
+            button.innerHTML = originalHTML;
+            if (window.showGlobalNotification) {
+                window.showGlobalNotification('Failed to update follow status', 'error');
+            } else {
+                alert('Failed to update follow status');
             }
         }
     } catch (error) {
-        console.error('Error following user:', error);
-        showNotification('Error following user', 'error');
+        console.error('Follow error:', error);
+        button.innerHTML = originalHTML;
+        if (window.showGlobalNotification) {
+            window.showGlobalNotification('Network error', 'error');
+        } else {
+            alert('Network error');
+        }
     } finally {
         button.disabled = false;
     }
 }
 
 function refreshSuggestions() {
-    const refreshBtn = document.querySelector('.refresh-suggestions');
-    const suggestionsList = document.getElementById('suggestionsList');
-    
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    refreshBtn.disabled = true;
-    
-    // Show loading state
-    suggestionsList.innerHTML = `
-        <div class="loading-suggestions">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Finding new suggestions...</p>
-        </div>
-    `;
-    
-    setTimeout(() => {
-        location.reload();
-    }, 1500);
+    location.reload();
 }
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `global-notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
-            <span>${message}</span>
-        </div>
-        <button class="notification-close" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-// Hover effects for suggestions
+// Hover effects
 document.addEventListener('DOMContentLoaded', function() {
     const suggestionItems = document.querySelectorAll('.suggestion-item');
-    
     suggestionItems.forEach(item => {
         item.addEventListener('mouseenter', function() {
             this.style.transform = 'translateX(5px)';

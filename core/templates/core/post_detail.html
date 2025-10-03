@@ -1,0 +1,354 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ post.author.profile.full_name|default:post.author.username }} - Post - Mytro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/post-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="post-detail-page">
+  <div class="container">
+    <!-- Back Button -->
+    <div class="back-section">
+      <button class="back-btn" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
+      </button>
+    </div>
+
+    <!-- Main Post -->
+    <div class="main-post-container">
+      {% include 'core/components/post_card.html' with post=post %}
+    </div>
+
+    <!-- More Posts from User -->
+    <div class="more-posts-section">
+      <div class="section-header">
+        <h3>More posts from {{ post.author.profile.full_name|default:post.author.username }}</h3>
+      </div>
+      
+      <div class="posts-container" id="morePosts">
+        <!-- More posts will be loaded here -->
+      </div>
+      
+      
+      <div class="no-more-posts" id="noMorePosts" style="display: none;">
+        <p>No more posts from this user</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.post-detail-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #f8f9fa);
+  padding: 20px 0;
+}
+
+[data-theme="dark"] .post-detail-page {
+  background: var(--bg-primary, #0a0a0a);
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Back Section */
+.back-section {
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-primary, #2c3e50);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 20px;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: var(--bg-secondary, #e9ecef);
+  color: #FF9933;
+}
+
+[data-theme="dark"] .back-btn {
+  color: var(--text-primary, #ffffff);
+}
+
+[data-theme="dark"] .back-btn:hover {
+  background: var(--bg-secondary, #1a1a1a);
+}
+
+/* Main Post Container */
+.main-post-container {
+  margin-bottom: 30px;
+}
+
+/* More Posts Section */
+.more-posts-section {
+  margin-top: 30px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #FF9933;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #2c3e50);
+}
+
+[data-theme="dark"] .section-header h3 {
+  color: var(--text-primary, #ffffff);
+}
+
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Loading States */
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  color: var(--text-secondary, #6c757d);
+  font-size: 16px;
+}
+
+.loading-more i {
+  color: #FF9933;
+  font-size: 20px;
+}
+
+.no-more-posts {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+}
+
+[data-theme="dark"] .loading-more,
+[data-theme="dark"] .no-more-posts {
+  color: var(--text-secondary, #cccccc);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+  
+  .back-btn {
+    padding: 10px 15px;
+    font-size: 15px;
+  }
+  
+  .section-header h3 {
+    font-size: 18px;
+  }
+}
+
+/* Ensure post cards have proper spacing */
+.post-card {
+  margin-bottom: 0 !important;
+}
+</style>
+
+<script>
+let currentPage = 1;
+let isLoading = false;
+let hasMorePosts = true;
+const authorId = {{ post.author.id }};
+const currentPostId = {{ post.id }};
+
+// Load more posts from the same user
+function loadMorePosts() {
+  if (isLoading || !hasMorePosts) return;
+  
+  isLoading = true;
+  document.getElementById('loadingMore').style.display = 'flex';
+  
+  fetch(`/api/user-posts/${authorId}/?page=${currentPage + 1}&exclude=${currentPostId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.posts.length > 0) {
+        const postsContainer = document.getElementById('morePosts');
+        
+        data.posts.forEach(postData => {
+          const postElement = createPostCard(postData);
+          postsContainer.appendChild(postElement);
+        });
+        
+        currentPage++;
+        
+        if (!data.has_next) {
+          hasMorePosts = false;
+          document.getElementById('noMorePosts').style.display = 'block';
+        }
+      } else {
+        hasMorePosts = false;
+        document.getElementById('noMorePosts').style.display = 'block';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading more posts:', error);
+      hasMorePosts = false;
+      document.getElementById('noMorePosts').style.display = 'block';
+    })
+    .finally(() => {
+      isLoading = false;
+      document.getElementById('loadingMore').style.display = 'none';
+    });
+}
+
+// Create post card element
+function createPostCard(postData) {
+  const postDiv = document.createElement('div');
+  postDiv.className = 'post-card';
+  postDiv.innerHTML = `
+    <div class="post-header">
+      <div class="post-author">
+        <div class="author-avatar">
+          ${postData.user.profile_pic ? 
+            `<img src="${postData.user.profile_pic}" alt="${postData.user.full_name}">` : 
+            `<div class="avatar-fallback">${postData.user.full_name.charAt(0)}</div>`
+          }
+        </div>
+        <div class="author-info">
+          <h4 class="author-name">${postData.user.full_name}</h4>
+          <p class="author-username">@${postData.user.username}</p>
+          <span class="post-time">${postData.created_at}</span>
+        </div>
+      </div>
+      <div class="post-menu">
+        <button class="menu-btn">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+      </div>
+    </div>
+    
+    ${postData.content ? `
+    <div class="post-content">
+      <p class="post-text">${postData.content}</p>
+    </div>
+    ` : ''}
+    
+    ${postData.image ? `
+    <div class="post-media">
+      <img src="${postData.image}" alt="Post image" class="post-image" onclick="openPost(${postData.id})">
+    </div>
+    ` : ''}
+    
+    <div class="post-actions">
+      <button class="action-btn like-btn ${postData.is_liked ? 'liked' : ''}" 
+              onclick="toggleLike(${postData.id})" data-post-id="${postData.id}">
+        <i class="fas fa-heart"></i>
+        <span class="like-count">${postData.likes_count || 0}</span>
+      </button>
+      
+      <button class="action-btn comment-btn" onclick="openPost(${postData.id})">
+        <i class="fas fa-comment"></i>
+        <span class="comment-count">${postData.comments_count || 0}</span>
+      </button>
+      
+      <button class="action-btn share-btn" onclick="sharePost(${postData.id})">
+        <i class="fas fa-share"></i>
+      </button>
+      
+      <button class="action-btn save-btn">
+        <i class="fas fa-bookmark"></i>
+      </button>
+    </div>
+  `;
+  
+  return postDiv;
+}
+
+// Infinite scroll
+function handleScroll() {
+  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000) {
+    loadMorePosts();
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  // Load initial more posts
+  loadMorePosts();
+  
+  // Add scroll listener for infinite scroll
+  window.addEventListener('scroll', handleScroll);
+});
+
+// Navigation function
+function openPost(postId) {
+  window.location.href = `/post/${postId}/`;
+}
+
+// Like functionality (reuse from main.js)
+function toggleLike(postId) {
+  const likeBtn = document.querySelector(`[data-post-id="${postId}"]`);
+  
+  fetch(`/api/posts/${postId}/like/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      likeBtn.classList.toggle('liked', data.liked);
+      likeBtn.querySelector('.like-count').textContent = data.like_count;
+    }
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+// Share functionality
+function sharePost(postId) {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Check out this post on Mytro',
+      url: `${window.location.origin}/post/${postId}/`
+    });
+  } else {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}/`);
+    alert('Link copied to clipboard!');
+  }
+}
+
+// Save functionality
+function savePost(postId) {
+  console.log('Save post:', postId);
+  // Implement save functionality
+}
+
+// Menu toggle
+function togglePostMenu(postId) {
+  console.log('Toggle menu for post:', postId);
+  // Implement menu functionality
+}
+</script>
+{% endblock %}

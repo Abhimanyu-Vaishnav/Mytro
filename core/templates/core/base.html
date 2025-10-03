@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Mytro - Modern Social Network{% endblock %}</title>
     
     {% load static %}
@@ -19,6 +20,7 @@
     <link rel="stylesheet" href="{% static 'css/utils/variables.css' %}">
     <link rel="stylesheet" href="{% static 'css/utils/responsive.css' %}">
     <link rel="stylesheet" href="{% static 'css/utils/animations.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dark-mode-fix.css' %}">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -72,13 +74,20 @@
                     <i class="fas fa-envelope"></i>
                     <span class="notification-badge" id="messageCount" style="display: none;">0</span>
                 </a>
+                <a href="#" class="nav-link theme-toggle-nav" onclick="toggleTheme()" data-tooltip="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </a>
                 {% else %}
+                {% if request.resolver_match.url_name != 'login' %}
                 <a href="{% url 'login' %}" class="nav-link" data-tooltip="Login">
                     <i class="fas fa-sign-in-alt"></i>
                 </a>
+                {% endif %}
+                {% if request.resolver_match.url_name != 'signup' %}
                 <a href="{% url 'signup' %}" class="nav-link" data-tooltip="Sign Up">
                     <i class="fas fa-user-plus"></i>
                 </a>
+                {% endif %}
                 {% endif %}
             </div>
 
@@ -108,7 +117,7 @@
                             <i class="fas fa-user"></i>
                             <span>My Profile</span>
                         </a>
-                        <a href="{% url 'edit_profile_modern' %}" class="dropdown-item">
+                        <a href="{% url 'edit_profile' %}" class="dropdown-item">
                             <i class="fas fa-edit"></i>
                             <span>Edit Profile</span>
                         </a>
@@ -129,8 +138,14 @@
             </div>
             {% else %}
             <div class="nav-auth-buttons">
-                <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+                {% if request.resolver_match.url_name == 'login' %}
+                    <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+                {% elif request.resolver_match.url_name == 'signup' %}
+                    <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+                    <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
             </div>
             {% endif %}
 
@@ -185,7 +200,7 @@
                     <span>Messages</span>
                     <span class="mobile-notification-badge">0</span>
                 </a>
-                <a href="{% url 'edit_profile_modern' %}" class="mobile-nav-link">
+                <a href="{% url 'edit_profile' %}" class="mobile-nav-link">
                     <i class="fas fa-edit"></i>
                     <span>Edit Profile</span>
                 </a>
@@ -279,13 +294,80 @@
                 <form id="createPostForm" class="post-form">
                     {% csrf_token %}
                     <div class="post-content-container">
-                        <textarea 
-                            name="content" 
-                            placeholder="What's on your mind, {{ user.profile.full_name }}?" 
-                            class="post-textarea" 
+                        <!-- Rich Text Toolbar -->
+                        <div class="rich-text-toolbar" id="richTextToolbar">
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="formatText('bold')" title="Bold">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="formatText('italic')" title="Italic">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="formatText('underline')" title="Underline">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="formatText('strikethrough')" title="Strikethrough">
+                                    <i class="fas fa-strikethrough"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="insertList('ul')" title="Bullet List">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertList('ol')" title="Numbered List">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertQuote()" title="Quote">
+                                    <i class="fas fa-quote-left"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="toolbar-group">
+                                <div class="color-picker-container">
+                                    <button type="button" class="toolbar-btn color-btn" onclick="toggleColorPicker()" title="Text Color">
+                                        <i class="fas fa-palette"></i>
+                                    </button>
+                                    <div class="color-picker" id="colorPicker">
+                                        <div class="color-option" data-color="#FF9933" style="background: #FF9933;"></div>
+                                        <div class="color-option" data-color="#FF6B35" style="background: #FF6B35;"></div>
+                                        <div class="color-option" data-color="#E74C3C" style="background: #E74C3C;"></div>
+                                        <div class="color-option" data-color="#3498DB" style="background: #3498DB;"></div>
+                                        <div class="color-option" data-color="#2ECC71" style="background: #2ECC71;"></div>
+                                        <div class="color-option" data-color="#9B59B6" style="background: #9B59B6;"></div>
+                                        <div class="color-option" data-color="#F39C12" style="background: #F39C12;"></div>
+                                        <div class="color-option" data-color="#1C1E21" style="background: #1C1E21;"></div>
+                                    </div>
+                                </div>
+                                <button type="button" class="toolbar-btn" onclick="insertEmoji()" title="Emoji">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMention()" title="Mention">
+                                    <i class="fas fa-at"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertHashtag()" title="Hashtag">
+                                    <i class="fas fa-hashtag"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="clearFormatting()" title="Clear Formatting">
+                                    <i class="fas fa-remove-format"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div 
+                            contenteditable="true" 
+                            class="rich-text-editor" 
                             id="postContent"
-                            rows="4"
-                        ></textarea>
+                            data-placeholder="What's on your mind, {{ user.profile.full_name }}?"
+                            oninput="handleRichTextInput()"
+                            onpaste="handlePaste(event)"
+                        ></div>
+                        
+                        <!-- Hidden textarea for form submission -->
+                        <textarea name="content" id="hiddenContent" style="display: none;"></textarea>
                         
                         <!-- Media Preview -->
                         <div class="media-preview-container" id="mediaPreview">
@@ -300,17 +382,17 @@
                                 <i class="fas fa-image"></i>
                                 <span>Photo/Video</span>
                             </button>
-                            <button type="button" class="option-btn feeling-btn" onclick="openEmojiPicker()">
-                                <i class="fas fa-smile"></i>
-                                <span>Feeling/Activity</span>
+                            <button type="button" class="option-btn gif-btn" onclick="openGifPicker()">
+                                <i class="fas fa-gif"></i>
+                                <span>GIF</span>
+                            </button>
+                            <button type="button" class="option-btn poll-btn" onclick="addPoll()">
+                                <i class="fas fa-poll"></i>
+                                <span>Poll</span>
                             </button>
                             <button type="button" class="option-btn location-btn" onclick="window.addLocation()">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span>Check In</span>
-                            </button>
-                            <button type="button" class="option-btn audio-btn" onclick="addAudio()">
-                                <i class="fas fa-microphone"></i>
-                                <span>Audio</span>
+                                <span>Location</span>
                             </button>
                         </div>
                         
@@ -479,7 +561,7 @@
             searchInput.addEventListener('blur', function() {
                 setTimeout(() => {
                     hideSearchResults();
-                }, 200);
+                }, 300);
             });
         }
     }
@@ -543,8 +625,10 @@
         
         if (searchEmpty) searchEmpty.style.display = 'none';
         
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
         const resultsHTML = users.slice(0, 8).map(user => `
-            <div class="search-result-item" data-username="${user.username}" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f2f5;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'">
+            <div class="search-result-item" data-username="${user.username}" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid ${isDark ? '#333' : '#f0f2f5'}; background: ${isDark ? '#1a1a1a' : 'white'};" onmouseover="this.style.background='${isDark ? '#333' : '#f8f9fa'}'" onmouseout="this.style.background='${isDark ? '#1a1a1a' : 'white'}'">
                 <div class="search-result-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
                     ${user.avatar ? 
                         `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
@@ -552,11 +636,11 @@
                     }
                 </div>
                 <div class="search-result-info" style="flex: 1; min-width: 0;">
-                    <h4 class="search-result-name" style="margin: 0 0 2px 0; font-size: 14px; font-weight: 600; color: #1c1e21; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</h4>
+                    <h4 class="search-result-name" style="margin: 0 0 2px 0; font-size: 14px; font-weight: 600; color: ${isDark ? 'white' : '#1c1e21'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</h4>
                     <p class="search-result-username" style="margin: 0; color: #65676b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${user.username}</p>
                 </div>
                 <div class="search-actions" style="display: flex; gap: 4px;">
-                    <button class="btn-sm message-btn" data-user-id="${user.id}" style="padding: 6px 8px; border: 1px solid #e1e5e9; border-radius: 6px; background: white; color: #1877f2; cursor: pointer; font-size: 12px;" title="Message">
+                    <button class="btn-sm message-btn" data-user-id="${user.id}" style="padding: 6px 8px; border: 1px solid ${isDark ? '#333' : '#e1e5e9'}; border-radius: 6px; background: ${isDark ? '#333' : 'white'}; color: #FF9933; cursor: pointer; font-size: 12px;" title="Message">
                         <i class="fas fa-comment"></i>
                     </button>
                 </div>
@@ -569,19 +653,28 @@
             ${resultsHTML}
         `;
         
+        // Apply dark theme to search results container
+        if (isDark) {
+            searchResults.style.background = '#1a1a1a';
+            searchResults.style.borderColor = '#333';
+        } else {
+            searchResults.style.background = 'white';
+            searchResults.style.borderColor = '#e9ecef';
+        }
+        
         // Add click event listeners after inserting HTML
         searchResults.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
                 if (!e.target.closest('.message-btn')) {
                     const username = this.dataset.username;
-                    hideSearchResults();
                     goToProfile(username);
                 }
             });
         });
         
         searchResults.querySelectorAll('.message-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+            btn.addEventListener('mousedown', function(e) {
                 e.stopPropagation();
                 const userId = this.dataset.userId;
                 hideSearchResults();
@@ -604,10 +697,15 @@
     }
     
     function goToProfile(username) {
-        // Add a small delay to ensure the click is registered
-        setTimeout(() => {
-            window.location.href = `/profile/${username}/`;
-        }, 100);
+        // Clear search input and hide results
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        hideSearchResults();
+        
+        // Navigate to profile
+        window.location.href = `/profile/${username}/`;
     }
     
     function quickMessage(userId) {
@@ -692,6 +790,578 @@
             window.showGlobalNotification('Apply image edits', 'info');
         }
     }
+
+    // Global Theme Management
+    function toggleTheme() {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setGlobalTheme(newTheme);
+    }
+
+    function setGlobalTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        const themeIcon = document.getElementById('themeIcon');
+        
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-sun';
+        } else {
+            themeIcon.className = 'fas fa-moon';
+        }
+    }
+
+    // Load saved theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setGlobalTheme(savedTheme);
+    });
     </script>
+
+    <style>
+    /* Global Theme Variables */
+    :root {
+        --kesari-primary: #FF9933;
+        --kesari-secondary: #FF6B35;
+        --kesari-accent: #FFB366;
+        --kesari-dark: #E8751A;
+        --kesari-light: #FFF4E6;
+    }
+
+    /* Light Theme */
+    [data-theme="light"] {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --bg-tertiary: #e9ecef;
+        --card-bg: #ffffff;
+        --text-primary: #2c3e50;
+        --text-secondary: #6c757d;
+        --border-color: #e9ecef;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #1a1a1a;
+        --bg-tertiary: #2a2a2a;
+        --card-bg: #2a2a2a;
+        --text-primary: #ffffff;
+        --text-secondary: #cccccc;
+        --border-color: rgba(255, 153, 51, 0.3);
+        --shadow-color: rgba(255, 153, 51, 0.1);
+    }
+
+    /* Apply theme to body and all elements */
+    body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+
+    /* Dark theme global overrides */
+    [data-theme="dark"] {
+        color-scheme: dark;
+    }
+
+    [data-theme="dark"] * {
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .nav-link i,
+    [data-theme="dark"] .nav-brand i,
+    [data-theme="dark"] .main-nav,
+    [data-theme="dark"] .sidebar,
+    [data-theme="dark"] .suggestions-section,
+    [data-theme="dark"] .suggestion-card,
+    [data-theme="dark"] .feed-container,
+    [data-theme="dark"] .post-card {
+        background-color: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+    [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+    [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .nav-link {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .suggestion-name,
+    [data-theme="dark"] .suggestion-username {
+        color: var(--text-primary) !important;
+    }
+
+    /* FIXED: Selected/Active Icons - Kesari Color with Dark Background */
+    .nav-link.active {
+        background: rgba(255, 153, 51, 0.15) !important;
+        color: var(--kesari-primary) !important;
+        border-radius: 8px !important;
+    }
+
+    .nav-link.active i {
+        color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .nav-link.active {
+        background: rgba(255, 153, 51, 0.2) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .nav-link.active i {
+        color: var(--kesari-primary) !important;
+    }
+
+    /* Navigation Hover Effects */
+    .nav-link:hover {
+        background: rgba(255, 153, 51, 0.1) !important;
+        color: var(--kesari-primary) !important;
+        border-radius: 8px !important;
+    }
+
+    .nav-link:hover i {
+        color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .nav-link:hover {
+        background: rgba(255, 153, 51, 0.15) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .nav-link:hover i {
+        color: var(--kesari-primary) !important;
+    }
+
+    /* FIXED: People You May Know Section Dark Mode */
+    [data-theme="dark"] .suggestions-section {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .suggestions-section h3,
+    [data-theme="dark"] .suggestions-section .section-title {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .suggestion-card {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .suggestion-card:hover {
+        background: var(--bg-secondary) !important;
+        border-color: rgba(255, 153, 51, 0.3) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    [data-theme="dark"] .suggestion-name {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .suggestion-username {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .suggestion-follow-btn,
+    [data-theme="dark"] .follow-btn {
+        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    [data-theme="dark"] .suggestion-follow-btn:hover,
+    [data-theme="dark"] .follow-btn:hover {
+        background: linear-gradient(135deg, var(--kesari-dark), var(--kesari-primary)) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3) !important;
+    }
+
+    /* FIXED: Comment System Dark Mode Hover */
+    [data-theme="dark"] .comment-wrapper {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .comment-wrapper:hover {
+        background: rgba(255, 153, 51, 0.05) !important;
+        border-radius: 12px !important;
+    }
+
+    [data-theme="dark"] .comment-bubble {
+        background: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .comment-wrapper:hover .comment-bubble {
+        background: var(--bg-tertiary) !important;
+        border-color: rgba(255, 153, 51, 0.3) !important;
+    }
+
+    [data-theme="dark"] .comment-name,
+    [data-theme="dark"] .comment-content {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .comment-timestamp {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .comment-action-btn {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .comment-action-btn:hover {
+        background: rgba(255, 153, 51, 0.15) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    /* Dropdown Menu Dark Theme Fix */
+    [data-theme="dark"] .user-dropdown-menu {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .dropdown-item {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .dropdown-item:hover {
+        background: var(--bg-secondary) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    /* Modal Dark Theme Fixes */
+    [data-theme="dark"] .modal-overlay {
+        background: rgba(0, 0, 0, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-container {
+        background: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .modal-header,
+    [data-theme="dark"] .modal-body,
+    [data-theme="dark"] .modal-title {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .post-textarea,
+    [data-theme="dark"] .comment-input,
+    [data-theme="dark"] input,
+    [data-theme="dark"] textarea {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .post-textarea::placeholder,
+    [data-theme="dark"] .comment-input::placeholder,
+    [data-theme="dark"] input::placeholder,
+    [data-theme="dark"] textarea::placeholder {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .option-btn {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .option-btn:hover {
+        background: var(--bg-tertiary) !important;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+        background: var(--bg-tertiary) !important;
+    }
+
+    [data-theme="dark"] .btn-primary {
+        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+        color: white !important;
+    }
+
+    /* Select dropdown dark theme fix */
+    [data-theme="dark"] select {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] select option {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Theme toggle item styling */
+    .theme-toggle-item {
+        cursor: pointer !important;
+        transition: all 0.3s ease;
+    }
+
+    .theme-toggle-item:hover {
+        background-color: var(--kesari-light) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    /* Search Results Dark Theme */
+    [data-theme="dark"] .search-results {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+        box-shadow: 0 4px 20px rgba(255, 153, 51, 0.1) !important;
+    }
+
+    [data-theme="dark"] .search-result-item {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .search-result-item:hover {
+        background: var(--bg-secondary) !important;
+    }
+
+    [data-theme="dark"] .search-result-name {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .search-result-username {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .search-loading,
+    [data-theme="dark"] .search-empty {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .message-btn {
+        background: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+        color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .message-btn:hover {
+        background: var(--bg-tertiary) !important;
+    }
+
+    /* Create Post Modal Dark Theme */
+    [data-theme="dark"] .post-author-info,
+    [data-theme="dark"] .author-details,
+    [data-theme="dark"] .author-name {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .privacy-select {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .post-content-container,
+    [data-theme="dark"] .media-preview-container,
+    [data-theme="dark"] .post-options-container {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .option-buttons .option-btn span {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .modal-actions {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    /* Story Creator Dark Theme */
+    [data-theme="dark"] .story-creator-modal .modal-container,
+    [data-theme="dark"] .story-creator-header,
+    [data-theme="dark"] .story-creator-body,
+    [data-theme="dark"] .story-creator-footer {
+        background: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .story-text-input,
+    [data-theme="dark"] .story-background-selector,
+    [data-theme="dark"] .story-tools {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .story-text-input::placeholder {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .background-option {
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .background-option.active {
+        border-color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .story-tool-btn {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .story-tool-btn:hover {
+        background: var(--bg-tertiary) !important;
+    }
+
+    /* Image Editor Modal Dark Theme */
+    [data-theme="dark"] .image-editor-container,
+    [data-theme="dark"] .editor-controls,
+    [data-theme="dark"] .filter-section,
+    [data-theme="dark"] .adjustment-section {
+        background: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .section-title {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .filter-option {
+        background: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .filter-option:hover,
+    [data-theme="dark"] .filter-option.active {
+        background: var(--bg-tertiary) !important;
+        border-color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .adjustment-control label {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .slider {
+        background: var(--bg-secondary) !important;
+    }
+
+    [data-theme="dark"] .editor-actions {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    /* Emoji Picker Modal Dark Theme */
+    [data-theme="dark"] .emoji-categories,
+    [data-theme="dark"] .emoji-grid {
+        background: var(--card-bg) !important;
+    }
+
+    [data-theme="dark"] .emoji-category {
+        background: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .emoji-category:hover,
+    [data-theme="dark"] .emoji-category.active {
+        background: var(--kesari-primary) !important;
+    }
+
+    /* Auth Buttons - Kesari Theme */
+    .btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+        color: white !important;
+        border-color: var(--kesari-primary) !important;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--kesari-dark), var(--kesari-primary)) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
+    }
+
+    .btn-outline {
+        background: transparent !important;
+        color: var(--kesari-primary) !important;
+        border-color: var(--kesari-primary) !important;
+    }
+
+    .btn-outline:hover {
+        background: var(--kesari-primary) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
+    }
+
+    /* Dark theme auth buttons */
+    [data-theme="dark"] .btn-primary {
+        background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+        color: white !important;
+        border-color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        background: transparent !important;
+        color: var(--kesari-primary) !important;
+        border-color: var(--kesari-primary) !important;
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: var(--kesari-primary) !important;
+        color: white !important;
+    }
+
+    /* Nav auth buttons container */
+    .nav-auth-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* General Modal Elements */
+    [data-theme="dark"] .modal-close {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .modal-close:hover {
+        background: var(--bg-secondary) !important;
+    }
+
+    /* Form Elements in Modals */
+    [data-theme="dark"] input[type="file"],
+    [data-theme="dark"] input[type="range"] {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Loading and Empty States */
+    [data-theme="dark"] .loading-notifications,
+    [data-theme="dark"] .empty-messages {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .empty-messages p {
+        color: var(--text-secondary) !important;
+    }
+    </style>
 </body>
 </html>

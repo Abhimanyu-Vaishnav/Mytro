@@ -183,6 +183,48 @@
     }
 }
 
+/* Auth Buttons */
+.nav-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-auth-buttons .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.nav-auth-buttons .btn-outline {
+    background: transparent;
+    color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.nav-auth-buttons .btn-outline:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.nav-auth-buttons .btn-primary {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.nav-auth-buttons .btn-primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* Tooltip Styles */
 .nav-link[data-tooltip]:hover::after {
     content: attr(data-tooltip);

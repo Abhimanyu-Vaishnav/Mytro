@@ -31,6 +31,40 @@
     background: #f8f9fa;
 }
 
+/* Dark Mode Fixes - Maximum Specificity */
+body[data-theme="dark"] .suggestion-item {
+    background: transparent !important;
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .suggestion-item:hover {
+    background: rgba(255, 153, 51, 0.08) !important;
+}
+
+body[data-theme="dark"] .user-name {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .user-name:hover {
+    color: #FF9933 !important;
+}
+
+body[data-theme="dark"] .user-mutual {
+    color: #b0b3b8 !important;
+}
+
+body[data-theme="dark"] .follow-btn {
+    background: linear-gradient(135deg, #FF9933, #ffad5c) !important;
+    color: white !important;
+    border-color: #FF9933 !important;
+}
+
+body[data-theme="dark"] .follow-btn:hover {
+    background: linear-gradient(135deg, #e6851a, #FF9933) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3) !important;
+}
+
 .suggestion-user {
     display: flex;
     align-items: center;
@@ -106,6 +140,18 @@
 
 .story-item:hover {
     background: #f0f2f5;
+}
+
+body[data-theme="dark"] .story-item {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .story-item:hover {
+    background: rgba(255, 153, 51, 0.08) !important;
+}
+
+body[data-theme="dark"] .story-user {
+    color: #e4e6ea !important;
 }
 
 .story-avatar {
@@ -227,6 +273,23 @@
 
 .search-result-item:hover {
     background: #f8f9fa;
+}
+
+body[data-theme="dark"] .search-result-item {
+    background: #1a1a1a !important;
+    border-color: #333 !important;
+}
+
+body[data-theme="dark"] .search-result-item:hover {
+    background: rgba(255, 153, 51, 0.08) !important;
+}
+
+body[data-theme="dark"] .search-result-name {
+    color: #e4e6ea !important;
+}
+
+body[data-theme="dark"] .search-result-username {
+    color: #b0b3b8 !important;
 }
 
 .search-result-item:last-child {

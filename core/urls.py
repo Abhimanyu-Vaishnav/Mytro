@@ -12,12 +12,14 @@ urlpatterns = [
 
     # ==================== MAIN PAGES ====================
     path("", views.feed_view, name="feed"),
+    path("feed/", views.feed_view, name="feed"),
     path("home/", views.home_view, name="home"),
     path("messages/", views.messages_view, name="messages"),
 
     # ==================== PROFILE URLs ====================
     path("profile/", views.my_profile_view, name="my_profile"),
     path("profile/<str:username>/", views.profile_view, name="profile"),
+    path("profile/user/<int:user_id>/", views.profile_by_id_view, name="profile_by_id"),
     path("edit_profile/", views.edit_profile_view, name="edit_profile"),
     path("edit_profile_modern/", views.edit_profile_modern_view, name="edit_profile_modern"),
 
@@ -58,6 +60,7 @@ urlpatterns = [
     path("api/profile/remove-cover/", views.remove_cover_pic, name="remove_cover_pic"),
     path("api/profile/update-info/", views.update_profile_info, name="update_profile_info"),
     path("api/profile/completion/", views.check_profile_completion, name="check_profile_completion"),
+    path("api/check-username/", views.check_username_availability, name="check_username"),
     path("api/followers/<str:username>/", views.get_followers, name="get_followers"),
     path("api/following/<str:username>/", views.get_following, name="get_following"),
     
@@ -87,6 +90,23 @@ urlpatterns = [
     
     # Polls
     path("api/posts/<int:post_id>/vote/", views.vote_poll, name="vote_poll"),
+    
+    # User Posts
+    path("api/user-posts/<int:user_id>/", views.get_user_posts, name="get_user_posts"),
+    
+    # Admin Panel URLs
+    path("admin-panel/", views.admin_panel, name="admin_panel"),
+    path("admin/api/user/<int:user_id>/", views.admin_get_user, name="admin_get_user"),
+    path("admin/api/user/<int:user_id>/update/", views.admin_update_user, name="admin_update_user"),
+    path("admin/api/user/<int:user_id>/toggle-status/", views.admin_toggle_user_status, name="admin_toggle_user_status"),
+    path("admin/api/user/<int:user_id>/delete/", views.admin_delete_user, name="admin_delete_user"),
+    path("admin/api/user/<int:user_id>/change-password/", views.admin_change_password, name="admin_change_password"),
+    path("admin/api/post/<int:post_id>/delete/", views.admin_delete_post, name="admin_delete_post"),
+    path("admin/api/send-notification/", views.admin_send_notification, name="admin_send_notification"),
+    path("admin/api/send-message/", views.admin_send_message, name="admin_send_message"),
+    path("admin/api/test-notification/", views.test_admin_notification, name="test_admin_notification"),
+    path("admin/api/test-message/", views.test_admin_message, name="test_admin_message"),
+    path("admin/debug-urls/", views.admin_debug_urls, name="admin_debug_urls"),
     
     # Online Users
     path("api/online-users/", views.get_online_users, name="get_online_users"),

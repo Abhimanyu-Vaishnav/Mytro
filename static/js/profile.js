@@ -1,5 +1,46 @@
-// Profile Page JavaScript
+// Profile Page JavaScript with High Quality Image Processing
 let currentSection = 'posts';
+
+// High quality image processing function
+function processHighQualityImage(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+        // Calculate optimal dimensions (maintain aspect ratio)
+        let { width, height } = img;
+        const maxWidth = 1920;  // High resolution
+        const maxHeight = 1080;
+        
+        // Only resize if image is larger than max dimensions
+        if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Enable high quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Draw image with high quality
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to maximum quality JPEG (98% quality)
+        const highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.98);
+        callback(highQualityDataUrl);
+    };
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
 
 // Section Navigation
 function showSection(section) {
@@ -473,16 +514,15 @@ document.addEventListener('DOMContentLoaded', function() {
         avatarInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                // Process with high quality
+                processHighQualityImage(file, function(highQualityDataUrl) {
                     const preview = document.getElementById('avatarPreview');
                     const img = document.getElementById('avatarPreviewImg');
                     if (preview && img) {
-                        img.src = e.target.result;
+                        img.src = highQualityDataUrl;
                         preview.style.display = 'block';
                     }
-                };
-                reader.readAsDataURL(file);
+                });
             }
         });
     }
@@ -492,16 +532,15 @@ document.addEventListener('DOMContentLoaded', function() {
         coverInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                // Process with high quality
+                processHighQualityImage(file, function(highQualityDataUrl) {
                     const preview = document.getElementById('coverPreview');
                     const img = document.getElementById('coverPreviewImg');
                     if (preview && img) {
-                        img.src = e.target.result;
+                        img.src = highQualityDataUrl;
                         preview.style.display = 'block';
                     }
-                };
-                reader.readAsDataURL(file);
+                });
             }
         });
     }

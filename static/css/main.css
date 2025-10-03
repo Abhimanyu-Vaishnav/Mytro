@@ -670,12 +670,14 @@ body {
 }
 
 .suggestion-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-sm);
-    border-radius: var(--radius-lg);
-    transition: var(--transition-normal);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .suggestion-item:hover {
@@ -716,34 +718,62 @@ body {
 }
 
 .follow-btn {
-    padding: 6px 12px;
-    border: 1px solid var(--primary-color);
-    background: var(--primary-color);
-    color: var(--text-white);
-    border-radius: var(--radius-md);
-    font-size: 12px;
-    font-weight: 600;
+    padding: 8px 16px;
+    border: 2px solid #FF9933;
+    background: linear-gradient(135deg, #FF9933, #FF6B35);
+    color: white;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition-normal);
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 6px;
+    min-width: 80px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
 }
 
 .follow-btn.following {
     background: transparent;
     color: var(--text-primary);
     border-color: var(--border-medium);
+    box-shadow: none;
 }
 
 .follow-btn:hover {
-    transform: scale(1.05);
+    background: linear-gradient(135deg, #E8751A, #FF9933) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
 }
 
 .follow-btn.following:hover {
     background: var(--error-color);
     color: var(--text-white);
     border-color: var(--error-color);
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+}
+
+[data-theme="dark"] .follow-btn {
+    color: white !important;
+    background: linear-gradient(135deg, #FF9933, #FF6B35) !important;
+    border-color: #FF9933 !important;
+}
+
+[data-theme="dark"] .follow-btn.following {
+    color: #e4e6eb !important;
+    border-color: #3a3b3c !important;
+    background: transparent !important;
+}
+
+[data-theme="dark"] .follow-btn.following:hover {
+    color: white !important;
+    background: #fa383e !important;
+    border-color: #fa383e !important;
 }
 
 .empty-suggestions {
@@ -1135,6 +1165,28 @@ body {
     color: var(--text-primary);
     margin-bottom: var(--space-md);
     white-space: pre-line;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: left;
+}
+
+/* Fix for extra spaces and proper line breaks */
+.post-text,
+.edit-post-textarea,
+.post-textarea {
+    white-space: pre-line !important;
+}
+
+/* Remove extra leading/trailing spaces */
+.post-text::before,
+.post-text::after {
+    content: none;
+}
+
+.post-text {
+    text-indent: 0 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
 }
 
 .post-text .hashtag {
@@ -2450,6 +2502,22 @@ select:focus {
     border-color: var(--primary-color);
 }
 
+/* Text formatting fixes */
+.post-textarea,
+.edit-post-textarea,
+.comment-input {
+    white-space: pre-wrap !important;
+    line-height: 1.5 !important;
+}
+
+/* Prevent extra spacing in displayed text */
+.post-text {
+    text-align: left !important;
+    text-indent: 0 !important;
+    padding: 0 !important;
+    margin: 0 0 var(--space-md) 0 !important;
+}
+
 .edit-media-preview {
     margin: 12px 0;
 }
@@ -2564,6 +2632,91 @@ select:focus {
     background: var(--primary-dark);
 }
 
+/* Light Mode Follow Button Fix - Maximum Specificity */
+body .suggestions-card .follow-btn,
+body .suggestion-item .follow-btn,
+body:not([data-theme="dark"]) .suggestions-card .follow-btn,
+body:not([data-theme="dark"]) .suggestion-item .follow-btn,
+[data-theme="light"] .suggestions-card .follow-btn,
+[data-theme="light"] .suggestion-item .follow-btn,
+.suggestions-section .follow-btn,
+.suggestions-list .follow-btn {
+    background: linear-gradient(135deg, #FF9933, #FF6B35) !important;
+    color: white !important;
+    border: 2px solid #FF9933 !important;
+    padding: 8px 16px !important;
+    border-radius: 25px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3) !important;
+    transition: all 0.3s ease !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+}
+
+body .suggestions-card .follow-btn:hover,
+body .suggestion-item .follow-btn:hover,
+body:not([data-theme="dark"]) .suggestions-card .follow-btn:hover,
+body:not([data-theme="dark"]) .suggestion-item .follow-btn:hover,
+[data-theme="light"] .suggestions-card .follow-btn:hover,
+[data-theme="light"] .suggestion-item .follow-btn:hover,
+.suggestions-section .follow-btn:hover,
+.suggestions-list .follow-btn:hover {
+    background: linear-gradient(135deg, #E8751A, #FF9933) !important;
+    color: white !important;
+    border-color: #E8751A !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4) !important;
+}
+
+body .suggestions-card .follow-btn.following,
+body .suggestion-item .follow-btn.following,
+body:not([data-theme="dark"]) .suggestions-card .follow-btn.following,
+body:not([data-theme="dark"]) .suggestion-item .follow-btn.following,
+[data-theme="light"] .suggestions-card .follow-btn.following,
+[data-theme="light"] .suggestion-item .follow-btn.following,
+.suggestions-section .follow-btn.following,
+.suggestions-list .follow-btn.following {
+    background: transparent !important;
+    color: #65676b !important;
+    border-color: #dddfe2 !important;
+    box-shadow: none !important;
+}
+
+body .suggestions-card .follow-btn.following:hover,
+body .suggestion-item .follow-btn.following:hover,
+body:not([data-theme="dark"]) .suggestions-card .follow-btn.following:hover,
+body:not([data-theme="dark"]) .suggestion-item .follow-btn.following:hover,
+[data-theme="light"] .suggestions-card .follow-btn.following:hover,
+[data-theme="light"] .suggestion-item .follow-btn.following:hover,
+.suggestions-section .follow-btn.following:hover,
+.suggestions-list .follow-btn.following:hover {
+    background: #fa383e !important;
+    color: white !important;
+    border-color: #fa383e !important;
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3) !important;
+}
+
+/* Suggestion Item Alignment Fix */
+.suggestion-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+.suggestion-user-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
 /* Stats with Kesari Colors */
 .likes-stat:hover .likes-preview {
     color: var(--error-color);
@@ -2597,6 +2750,24 @@ select:focus {
     }
 }
 
+/* Text Formatting Utilities */
+.text-content {
+    white-space: pre-line !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    line-height: 1.6 !important;
+}
+
+/* Remove unwanted spacing */
+.post-text,
+.comment-content {
+    text-indent: 0 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+}
+
 @media (max-width: 480px) {
     .sticker-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -2610,3 +2781,55 @@ select:focus {
         flex-direction: column;
     }
 }
+
+<script>
+// Text formatting utilities
+function formatPostText(text) {
+    if (!text) return '';
+    
+    // Trim leading and trailing whitespace but preserve internal line breaks
+    return text.trim();
+}
+
+function normalizeWhitespace(text) {
+    if (!text) return '';
+    
+    // Remove excessive leading spaces but keep line breaks
+    return text.replace(/^\s+/gm, '').trim();
+}
+
+// Apply text formatting on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Format all existing post text
+    document.querySelectorAll('.post-text').forEach(element => {
+        if (element.textContent) {
+            element.textContent = formatPostText(element.textContent);
+        }
+    });
+    
+    // Format textareas on input
+    document.querySelectorAll('.post-textarea, .edit-post-textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            // Preserve cursor position while formatting
+            const cursorPos = this.selectionStart;
+            const formatted = normalizeWhitespace(this.value);
+            if (formatted !== this.value) {
+                this.value = formatted;
+                this.setSelectionRange(cursorPos, cursorPos);
+            }
+        });
+    });
+});
+
+// Override existing form submission to format text
+if (typeof submitPost === 'function') {
+    const originalSubmitPost = submitPost;
+    submitPost = function() {
+        const textarea = document.querySelector('.post-textarea');
+        if (textarea) {
+            textarea.value = formatPostText(textarea.value);
+        }
+        return originalSubmitPost.apply(this, arguments);
+    };
+}
+</script>

@@ -7,11 +7,37 @@ window.isLoading = false;
 
 // ==================== UTILITY FUNCTIONS ====================
 function getCSRFToken() {
+    // Try multiple ways to get CSRF token
+    let token = '';
+    
+    // Method 1: From cookie
     const cookieValue = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
-    return cookieValue || '';
+    
+    if (cookieValue) {
+        token = cookieValue;
+    }
+    
+    // Method 2: From meta tag
+    if (!token) {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            token = metaTag.getAttribute('content');
+        }
+    }
+    
+    // Method 3: From form input
+    if (!token) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            token = csrfInput.value;
+        }
+    }
+    
+    console.log('CSRF Token found:', token ? 'Yes' : 'No');
+    return token;
 }
 
 function processHashtags(text) {
@@ -1511,34 +1537,108 @@ window.closeImageModal = function() {
 
 // ==================== ADDITIONAL FUNCTIONS ====================
 window.toggleFollow = async function(userId, button) {
+    console.log('toggleFollow called with userId:', userId, 'button:', button);
+    
+    if (!button) {
+        console.error('Follow button not found');
+        return;
+    }
+    
+    if (!userId) {
+        console.error('User ID not found');
+        return;
+    }
+    
+    // Prevent double clicks
+    if (button.disabled) {
+        console.log('Button already disabled, preventing double click');
+        return;
+    }
+    
+    button.disabled = true;
+    
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        window.showGlobalNotification('Security token missing. Please refresh the page.', 'error');
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        return;
+    }
+    
     try {
+        console.log('Making follow request to:', `/api/follow/${userId}/`);
+        console.log('CSRF Token:', csrfToken);
+        
         const response = await fetch(`/api/follow/${userId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCSRFToken(),
+                'X-CSRFToken': csrfToken,
                 'Content-Type': 'application/json'
             }
         });
         
+        console.log('Follow response status:', response.status);
+        
+        const responseText = await response.text();
+        console.log('Follow response text:', responseText);
+        
         if (response.ok) {
-            const data = await response.json();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error('Invalid response format');
+            }
+            console.log('Follow response data:', data);
             
             if (data.is_following) {
-                button.innerHTML = '<i class="fas fa-check"></i> Following';
+                button.innerHTML = '<i class="fas fa-user-check"></i> Following';
                 button.classList.add('following');
-                window.showGlobalNotification(`Now following ${data.user.username}`, 'success');
+                window.showGlobalNotification(`Now following ${data.user?.name || data.user?.username || 'user'}`, 'success');
             } else {
                 button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
                 button.classList.remove('following');
-                window.showGlobalNotification(`Unfollowed ${data.user.username}`, 'success');
+                window.showGlobalNotification(`Unfollowed ${data.user?.name || data.user?.username || 'user'}`, 'success');
+            }
+            
+            // Update follower counts if available
+            const followersCount = document.querySelector(`#followers-count, .followers-count`);
+            if (followersCount && data.followers_count !== undefined) {
+                followersCount.textContent = data.followers_count;
             }
         } else {
-            window.showGlobalNotification('Failed to update follow status', 'error');
+            console.error('Follow request failed with status:', response.status);
+            console.error('Response text:', responseText);
+            button.innerHTML = originalHTML;
+            
+            let errorMessage = `Failed to update follow status (${response.status})`;
+            try {
+                const errorData = JSON.parse(responseText);
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                console.log('Could not parse error response as JSON');
+            }
+            
+            window.showGlobalNotification(errorMessage, 'error');
         }
     } catch (error) {
         console.error('Follow error:', error);
-        window.showGlobalNotification('Error updating follow status', 'error');
+        button.innerHTML = originalHTML;
+        window.showGlobalNotification(`Network error: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        console.log('Follow button re-enabled');
     }
+};
+
+// Follow buttons now use inline onclick - no initialization needed
+window.initializeFollowButtons = function() {
+    console.log('Follow buttons use inline onclick - skipping initialization');
 };
 
 // ==================== POST MENU FUNCTIONS ====================

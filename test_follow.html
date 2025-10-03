@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Follow API</title>
+</head>
+<body>
+    <h1>Test Follow API</h1>
+    <button onclick="testFollow(2)">Test Follow User 2</button>
+    
+    <script>
+    async function testFollow(userId) {
+        try {
+            const csrfToken = 'test-token'; // You'll need to get this from Django
+            
+            const response = await fetch(`/api/follow/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log('Response status:', response.status);
+            const data = await response.text();
+            console.log('Response data:', data);
+            
+            if (response.ok) {
+                const jsonData = JSON.parse(data);
+                console.log('Follow successful:', jsonData);
+                alert('Follow successful: ' + JSON.stringify(jsonData));
+            } else {
+                console.error('Follow failed:', data);
+                alert('Follow failed: ' + data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error: ' + error.message);
+        }
+    }
+    </script>
+</body>
+</html>
