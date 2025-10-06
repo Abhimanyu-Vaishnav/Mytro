@@ -84,6 +84,18 @@ urlpatterns = [
     path('api/messages/unread-count/', views.get_unread_message_count, name='unread_message_count'),
     path('api/conversations/<int:conversation_id>/mark-read/', views.mark_conversation_read, name='mark_conversation_read'),
     
+
+    # Enhanced Messaging URLs
+    path("api/messages/search-users/", views.search_users_for_chat, name="search_users_for_chat"),
+    path("api/messages/<int:message_id>/delete/", views.delete_message, name="delete_message"),
+    path("api/conversations/<int:conversation_id>/delete/", views.delete_conversation, name="delete_conversation"),
+    path("api/conversations/<int:conversation_id>/clear/", views.clear_conversation, name="clear_conversation"),
+    path("api/messages/<int:message_id>/mark-unread/", views.mark_message_unread, name="mark_message_unread"),
+    path("api/conversations/<int:conversation_id>/search/", views.search_messages, name="search_messages"),
+    path("api/typing/start/", views.start_typing, name="start_typing"),
+    path("api/typing/stop/", views.stop_typing, name="stop_typing"),
+    path("api/users/<int:user_id>/online-status/", views.get_online_status, name="get_online_status"),
+
     # Stories
     path("api/stories/", views.get_stories, name="get_stories"),
     path("api/stories/create/", views.create_story, name="create_story"),
@@ -110,6 +122,7 @@ urlpatterns = [
     path("admin/api/test-notification/", views.test_admin_notification, name="test_admin_notification"),
     path("admin/api/test-message/", views.test_admin_message, name="test_admin_message"),
     path("admin/debug-urls/", views.admin_debug_urls, name="admin_debug_urls"),
+    path('api/messages/unread-persons-count/', views.unread_persons_count, name='unread_persons_count'),
     
     # Online Users
     path("api/online-users/", views.get_online_users, name="get_online_users"),

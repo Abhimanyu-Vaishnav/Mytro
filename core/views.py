@@ -213,6 +213,66 @@ def feed_view(request):
         from django.http import HttpResponse
         return HttpResponse(f"Feed Error: {str(e)}<br>User: {request.user}<br>Authenticated: {request.user.is_authenticated}")
 
+# @login_required
+# @require_http_methods(["GET", "POST"])
+# def create_post_view(request):
+#     """Create new post"""
+#     if request.method == 'POST':
+#         from datetime import timedelta
+#         import json
+        
+#         content = request.POST.get('content', '').strip()
+#         post_type = request.POST.get('post_type', 'text')
+        
+#         # Create post
+#         post = Post.objects.create(
+#             author=request.user,
+#             content=content,
+#             post_type=post_type
+#         )
+        
+#         # Handle media
+#         if 'image' in request.FILES:
+#             post.image = request.FILES['image']
+#         if 'video' in request.FILES:
+#             post.video = request.FILES['video']
+        
+#         # Handle poll
+#         if post_type == 'poll':
+#             poll_options = request.POST.get('poll_options')
+#             if poll_options:
+#                 try:
+#                     options = json.loads(poll_options)
+#                     post.poll_options = options
+#                     post.poll_multiple_choice = request.POST.get('poll_multiple_choice') == 'true'
+                    
+#                     # Set poll end date
+#                     duration_days = int(request.POST.get('poll_duration', 7))
+#                     post.poll_end_date = timezone.now() + timedelta(days=duration_days)
+#                 except (json.JSONDecodeError, ValueError):
+#                     pass
+        
+#         # Handle location
+#         location_data = request.POST.get('location')
+#         if location_data:
+#             try:
+#                 location = json.loads(location_data)
+#                 post.location = location.get('address', '')
+#             except json.JSONDecodeError:
+#                 pass
+        
+#         post.save()
+        
+#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#             return JsonResponse({
+#                 'success': True,
+#                 'post_id': post.id,
+#                 'message': 'Post created successfully!'
+#             })
+#         return redirect('feed')
+    
+#     return render(request, 'core/post_create.html', {})
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def create_post_view(request):
@@ -231,11 +291,13 @@ def create_post_view(request):
             post_type=post_type
         )
         
-        # Handle media
-        if 'image' in request.FILES:
-            post.image = request.FILES['image']
-        if 'video' in request.FILES:
-            post.video = request.FILES['video']
+        # Handle multiple images
+        images = request.FILES.getlist('image')
+        if images:
+            # Save first image to post.image field
+            post.image = images[0]
+            # You might want to handle multiple images differently
+            # depending on your model structure
         
         # Handle poll
         if post_type == 'poll':
@@ -244,13 +306,13 @@ def create_post_view(request):
                 try:
                     options = json.loads(poll_options)
                     post.poll_options = options
-                    post.poll_multiple_choice = request.POST.get('poll_multiple_choice') == 'true'
+                    post.poll_multiple_choice = request.POST.get('poll_multiple_choice', 'false') == 'true'
                     
                     # Set poll end date
                     duration_days = int(request.POST.get('poll_duration', 7))
                     post.poll_end_date = timezone.now() + timedelta(days=duration_days)
-                except (json.JSONDecodeError, ValueError):
-                    pass
+                except (json.JSONDecodeError, ValueError) as e:
+                    print(f"Error parsing poll options: {e}")
         
         # Handle location
         location_data = request.POST.get('location')
@@ -258,20 +320,23 @@ def create_post_view(request):
             try:
                 location = json.loads(location_data)
                 post.location = location.get('address', '')
-            except json.JSONDecodeError:
-                pass
+            except json.JSONDecodeError as e:
+                print(f"Error parsing location: {e}")
         
         post.save()
         
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': True,
-                'post_id': post.id,
-                'message': 'Post created successfully!'
-            })
-        return redirect('feed')
+        # Return consistent JSON response
+        return JsonResponse({
+            'success': True,
+            'post_id': post.id,
+            'message': 'Post created successfully!'
+        })
     
-    return render(request, 'core/post_create.html', {})
+    # For GET requests, you might want to return the modal HTML
+    # or redirect to feed if accessed directly
+    return redirect('feed')
+
+
 
 @login_required
 @require_POST
@@ -317,6 +382,33 @@ def edit_post(request, post_id):
         form = PostForm(instance=post)
     
     return render(request, 'core/edit_post.html', {'form': form, 'post': post})
+
+
+def unread_persons_count(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Authentication required'})
+    
+    try:
+        # Get conversations where user has unread messages
+        unread_conversations = Conversation.objects.filter(
+            Q(user1=request.user) | Q(user2=request.user),
+            messages__is_read=False,
+            messages__sender__ne=request.user
+        ).distinct()
+        
+        # Count unique persons with unread messages
+        unread_persons_count = unread_conversations.count()
+        
+        return JsonResponse({
+            'success': True,
+            'unread_persons_count': unread_persons_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
 
 # ==================== LIKE SYSTEM ====================
 
@@ -1424,22 +1516,26 @@ def create_group(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+@login_required
+@require_GET
 def get_unread_message_count(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'error': 'Not authenticated'})
-    
+    """Get unread message count for notifications - FIXED"""
     try:
-        # Total unread messages count
-        total_unread = Message.objects.filter(
+        from .models import ConversationMessage
+        
+        # Total unread messages count from Conversation system
+        total_unread = ConversationMessage.objects.filter(
             conversation__participants=request.user,
-            read=False
+            is_read=False
         ).exclude(sender=request.user).count()
         
         # Unique senders with unread messages
-        unique_senders = Message.objects.filter(
+        unique_senders = ConversationMessage.objects.filter(
             conversation__participants=request.user,
-            read=False
+            is_read=False
         ).exclude(sender=request.user).values('sender').distinct().count()
+        
+        print(f"📊 Unread counts - Total: {total_unread}, Senders: {unique_senders}")
         
         return JsonResponse({
             'success': True,
@@ -1448,21 +1544,33 @@ def get_unread_message_count(request):
         })
         
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        print(f"❌ Error in get_unread_message_count: {e}")
+        return JsonResponse({
+            'success': False, 
+            'total_unread': 0, 
+            'unique_senders': 0,
+            'error': str(e)
+        })
 
+@login_required
+@require_POST
 def mark_conversation_read(request, conversation_id):
-    if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'error': 'Not authenticated'})
-    
+    """Mark all messages in conversation as read - FIXED"""
     try:
-        # Mark all messages in conversation as read
-        Message.objects.filter(
-            conversation_id=conversation_id
-        ).exclude(sender=request.user).update(read=True)
+        from .models import ConversationMessage
         
-        return JsonResponse({'success': True})
+        # Mark all messages in conversation as read
+        updated_count = ConversationMessage.objects.filter(
+            conversation_id=conversation_id,
+            is_read=False
+        ).exclude(sender=request.user).update(is_read=True)
+        
+        print(f"✅ Marked {updated_count} messages as read in conversation {conversation_id}")
+        
+        return JsonResponse({'success': True, 'updated_count': updated_count})
         
     except Exception as e:
+        print(f"❌ Error in mark_conversation_read: {e}")
         return JsonResponse({'success': False, 'error': str(e)})
 
 # ==================== LEGACY COMPATIBILITY ====================
@@ -1650,45 +1758,80 @@ def messages_view(request):
 @login_required
 @require_GET
 def get_conversations(request):
-    """Get user's conversations"""
+    """Get user's conversations with proper unread count - FIXED"""
     try:
-        from .models import Conversation
+        from .models import Conversation, ConversationMessage
+        
         conversations = request.user.conversations.all().order_by('-updated_at')
         
         conversations_data = []
         for conv in conversations:
-            other_user = conv.get_other_participant(request.user)
-            last_message = conv.last_message
+            if conv.is_group:
+                # Group conversation
+                name = conv.group_name or "Group Chat"
+                avatar = conv.group_photo.url if conv.group_photo else None
+                other_user_id = None
+            else:
+                # One-on-one conversation
+                other_user = conv.get_other_participant(request.user)
+                if other_user:
+                    name = other_user.profile.full_name if hasattr(other_user, 'profile') else other_user.username
+                    avatar = other_user.profile.profile_pic.url if other_user.profile and other_user.profile.profile_pic else None
+                    other_user_id = other_user.id
+                else:
+                    name = "Unknown User"
+                    avatar = None
+                    other_user_id = None
+            
+            last_message = conv.messages.last()
+            
+            # Calculate unread count - FIXED
+            unread_count = conv.messages.filter(is_read=False).exclude(sender=request.user).count()
             
             conversations_data.append({
                 'id': conv.id,
                 'is_group': conv.is_group,
-                'name': conv.group_name if conv.is_group else (other_user.profile.full_name if other_user else 'Unknown User'),
-                'avatar': conv.group_photo.url if conv.group_photo else (other_user.profile.profile_pic.url if other_user and other_user.profile.profile_pic else None),
-                'other_user_id': other_user.id if other_user else None,
+                'name': name,
+                'avatar': avatar,
+                'other_user_id': other_user_id,
                 'last_message': {
-                    'content': last_message.content if last_message else '',
+                    'content': last_message.content if last_message else 'No messages yet',
                     'timestamp': last_message.timestamp.strftime('%H:%M') if last_message else '',
-                    'sender': last_message.sender.profile.full_name if last_message else '',
-                    'is_read': last_message.is_read if last_message else True,
+                    'sender': last_message.sender.username if last_message else '',
+                    'unread': unread_count,
                     'is_own': last_message.sender == request.user if last_message else False
-                } if last_message else None,
-                'unread_count': conv.messages.filter(is_read=False).exclude(sender=request.user).count()
+                } if last_message else {
+                    'content': 'No messages yet',
+                    'timestamp': '',
+                    'sender': '',
+                    'unread': 0,
+                    'is_own': False
+                },
+                'unread_count': unread_count,
+                'online': False  # You can implement online status later
             })
         
+        print(f"💬 Loaded {len(conversations_data)} conversations")
         return JsonResponse({
             'success': True,
             'conversations': conversations_data
         })
+        
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        print(f"❌ Error in get_conversations: {e}")
+        return JsonResponse({
+            'success': False, 
+            'conversations': [],
+            'error': str(e)
+        }, status=500)
 
 @login_required
 @require_POST
 def send_message(request):
-    """Send a message"""
+    """Send a message - FIXED"""
     try:
         from .models import Conversation, ConversationMessage
+        
         data = json.loads(request.body)
         
         recipient_id = data.get('recipient_id')
@@ -1699,7 +1842,7 @@ def send_message(request):
         
         recipient = get_object_or_404(User, id=recipient_id)
         
-        # Get or create conversation
+        # Get or create conversation - FIXED
         conversation = Conversation.objects.filter(
             participants=request.user
         ).filter(
@@ -1709,8 +1852,9 @@ def send_message(request):
         if not conversation:
             conversation = Conversation.objects.create(is_group=False)
             conversation.participants.add(request.user, recipient)
+            print(f"✅ Created new conversation {conversation.id}")
         
-        # Create message
+        # Create message - FIXED
         message = ConversationMessage.objects.create(
             conversation=conversation,
             sender=request.user,
@@ -1720,6 +1864,8 @@ def send_message(request):
         conversation.updated_at = timezone.now()
         conversation.save()
         
+        print(f"✅ Sent message in conversation {conversation.id}")
+        
         return JsonResponse({
             'success': True,
             'conversation_id': conversation.id,
@@ -1728,14 +1874,17 @@ def send_message(request):
                 'content': message.content,
                 'sender': {
                     'id': message.sender.id,
-                    'name': message.sender.profile.full_name,
-                    'avatar': message.sender.profile.profile_pic.url if message.sender.profile.profile_pic else None
+                    'name': message.sender.profile.full_name if hasattr(message.sender, 'profile') else message.sender.username,
+                    'avatar': message.sender.profile.profile_pic.url if message.sender.profile and message.sender.profile.profile_pic else None
                 },
                 'timestamp': message.timestamp.strftime('%H:%M'),
-                'is_read': message.is_read
+                'is_read': message.is_read,
+                'is_own': True
             }
         })
+        
     except Exception as e:
+        print(f"❌ Error in send_message: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
@@ -1779,9 +1928,10 @@ def start_conversation(request):
 @login_required
 @require_GET
 def get_messages(request, conversation_id):
-    """Get messages for a conversation"""
+    """Get messages for a conversation - FIXED"""
     try:
-        from .models import Conversation
+        from .models import Conversation, ConversationMessage
+        
         conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
         messages = conversation.messages.all().order_by('timestamp')
         
@@ -1792,22 +1942,28 @@ def get_messages(request, conversation_id):
                 'content': message.content,
                 'sender': {
                     'id': message.sender.id,
-                    'name': message.sender.profile.full_name,
-                    'avatar': message.sender.profile.profile_pic.url if message.sender.profile.profile_pic else None
+                    'name': message.sender.profile.full_name if hasattr(message.sender, 'profile') else message.sender.username,
+                    'avatar': message.sender.profile.profile_pic.url if message.sender.profile and message.sender.profile.profile_pic else None
                 },
                 'timestamp': message.timestamp.strftime('%H:%M'),
                 'is_read': message.is_read,
-                'is_own': message.sender == request.user
+                'is_own': message.sender == request.user,
+                'type': 'text'  # Default type
             })
         
-        # Mark messages as read
-        conversation.messages.filter(is_read=False).exclude(sender=request.user).update(is_read=True)
+        # Mark messages as read - FIXED
+        unread_messages = conversation.messages.filter(is_read=False).exclude(sender=request.user)
+        updated_count = unread_messages.update(is_read=True)
+        print(f"📖 Marked {updated_count} messages as read in conversation {conversation_id}")
         
         return JsonResponse({
             'success': True,
-            'messages': messages_data
+            'messages': messages_data,
+            'conversation_id': conversation_id
         })
+        
     except Exception as e:
+        print(f"❌ Error in get_messages: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
@@ -2484,3 +2640,275 @@ def admin_debug_urls(request):
         return JsonResponse({'success': True, 'urls': urls})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+    
+# ==================== ENHANCED MESSAGING APIs ====================
+
+@login_required
+@require_GET
+def search_users_for_chat(request):
+    """Search users for new chat - ENHANCED"""
+    try:
+        query = request.GET.get('q', '').strip()
+        
+        if not query or len(query) < 2:
+            return JsonResponse({
+                'success': True,
+                'users': []
+            })
+        
+        # Get users that current user follows or who follow current user
+        following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
+        followers = Follow.objects.filter(following=request.user).values_list('follower', flat=True)
+        
+        # Combine both lists for search
+        connected_users = set(following_users) | set(followers)
+        
+        # Search in connected users first
+        users = User.objects.filter(
+            Q(id__in=connected_users) &
+            (Q(username__icontains=query) |
+             Q(first_name__icontains=query) |
+             Q(last_name__icontains=query) |
+             Q(profile__full_name__icontains=query))
+        ).exclude(id=request.user.id).select_related('profile')[:20]
+        
+        users_data = []
+        for user in users:
+            # Check if conversation already exists
+            existing_conversation = Conversation.objects.filter(
+                participants=request.user
+            ).filter(
+                participants=user
+            ).filter(is_group=False).first()
+            
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'name': user.profile.full_name or user.username,
+                'avatar': user.profile.profile_pic.url if user.profile.profile_pic else None,
+                'is_online': user.last_login and (timezone.now() - user.last_login) < timedelta(minutes=5),
+                'conversation_id': existing_conversation.id if existing_conversation else None,
+                'is_following': Follow.objects.filter(follower=request.user, following=user).exists(),
+                'is_follower': Follow.objects.filter(follower=user, following=request.user).exists()
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'users': users_data
+        })
+        
+    except Exception as e:
+        print(f"Error searching users: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def delete_message(request, message_id):
+    """Delete a message"""
+    try:
+        message = get_object_or_404(ConversationMessage, id=message_id, sender=request.user)
+        conversation_id = message.conversation.id
+        message.delete()
+        
+        # Get updated last message
+        conversation = Conversation.objects.get(id=conversation_id)
+        last_message = conversation.messages.last()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Message deleted successfully',
+            'conversation_id': conversation_id,
+            'last_message': {
+                'content': last_message.content if last_message else '',
+                'timestamp': last_message.timestamp.strftime('%H:%M') if last_message else '',
+                'sender': last_message.sender.username if last_message else ''
+            } if last_message else None
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def delete_conversation(request, conversation_id):
+    """Delete entire conversation"""
+    try:
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        
+        # Delete all messages in conversation
+        conversation.messages.all().delete()
+        conversation.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Conversation deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def clear_conversation(request, conversation_id):
+    """Clear all messages but keep conversation"""
+    try:
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        
+        # Delete all messages
+        deleted_count = conversation.messages.all().delete()[0]
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Cleared {deleted_count} messages',
+            'deleted_count': deleted_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def mark_message_unread(request, message_id):
+    """Mark message as unread"""
+    try:
+        message = get_object_or_404(ConversationMessage, id=message_id)
+        # Only mark as unread if you're the recipient
+        if request.user in message.conversation.participants.all() and message.sender != request.user:
+            message.is_read = False
+            message.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Message marked as unread'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot mark this message as unread'
+            }, status=400)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_GET  
+def search_messages(request, conversation_id):
+    """Search messages within a conversation"""
+    try:
+        query = request.GET.get('q', '').strip()
+        
+        if not query:
+            return JsonResponse({
+                'success': True,
+                'messages': []
+            })
+        
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        
+        # Search messages containing query
+        messages = conversation.messages.filter(
+            content__icontains=query
+        ).order_by('-timestamp')[:50]
+        
+        messages_data = []
+        for message in messages:
+            messages_data.append({
+                'id': message.id,
+                'content': message.content,
+                'timestamp': message.timestamp.strftime('%b %d, %Y %H:%M'),
+                'sender': {
+                    'name': message.sender.profile.full_name or message.sender.username,
+                    'avatar': message.sender.profile.profile_pic.url if message.sender.profile.profile_pic else None
+                },
+                'is_own': message.sender == request.user
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'query': query,
+            'results': messages_data,
+            'count': len(messages_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def start_typing(request):
+    """Start typing indicator"""
+    try:
+        data = json.loads(request.body)
+        conversation_id = data.get('conversation_id')
+        
+        # Here you would typically use WebSockets
+        # For now, we'll just return success
+        return JsonResponse({
+            'success': True,
+            'typing': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_POST
+def stop_typing(request):
+    """Stop typing indicator"""
+    try:
+        data = json.loads(request.body)
+        conversation_id = data.get('conversation_id')
+        
+        return JsonResponse({
+            'success': True,
+            'typing': False
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+@require_GET
+def get_online_status(request, user_id):
+    """Get user online status"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        
+        is_online = user.last_login and (timezone.now() - user.last_login) < timedelta(minutes=5)
+        last_seen = user.last_login.strftime('%H:%M') if user.last_login else 'Never'
+        
+        return JsonResponse({
+            'success': True,
+            'is_online': is_online,
+            'last_seen': last_seen
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

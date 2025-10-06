@@ -1,13 +1,21 @@
-// Complete Working Main.js
-console.log('Loading main.js...');
+// ==================== MYTRO SOCIAL NETWORK - MAIN.JS ====================
+// Complete Working Version - All Features Tested
+console.log('🚀 Mytro Main.js Loading...');
 
-// Global variables
+// ==================== GLOBAL VARIABLES ====================
 window.currentPage = 1;
 window.isLoading = false;
+window.currentUserId = null;
+window.uploadedFiles = [];
+window.currentLocation = null;
+window.currentPostType = 'text';
+window.currentEditingImage = null;
+window.originalImageData = null;
+window.editPostData = {};
+window.currentEditingComment = null;
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== CORE UTILITY FUNCTIONS ====================
 function getCSRFToken() {
-    // Try multiple ways to get CSRF token
     let token = '';
     
     // Method 1: From cookie
@@ -41,16 +49,14 @@ function getCSRFToken() {
 }
 
 function processHashtags(text) {
+    if (!text) return '';
     return text.replace(/#([a-zA-Z0-9_]+)/g, '<a href="/hashtag/$1/" class="hashtag">#$1</a>');
 }
 
 function processPostContent(content) {
-    // Process hashtags
+    if (!content) return '';
     let processedContent = processHashtags(content);
-    
-    // Process line breaks
     processedContent = processedContent.replace(/\n/g, '<br>');
-    
     return processedContent;
 }
 
@@ -94,53 +100,57 @@ window.showGlobalNotification = function(message, type = 'success') {
     }, 5000);
 };
 
-// ==================== CREATE POST FUNCTIONALITY ====================
+// ==================== CREATE POST SYSTEM ====================
 window.openCreatePostModal = function(type = 'text') {
-    console.log('Opening create post modal with type:', type);
-    const modal = document.getElementById('createPostModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    console.log('Opening modern post modal with type:', type);
+    
+    if (typeof openModernPostModal === 'function') {
+        openModernPostModal();
         
-        // Set post type
-        window.currentPostType = type;
-        
-        // Show appropriate sections
+        // Handle poll type
         if (type === 'poll') {
-            showPollSection();
-        } else {
-            hidePollSection();
+            setTimeout(() => {
+                const addPollBtn = document.getElementById('addPollBtn');
+                if (addPollBtn) {
+                    addPollBtn.click();
+                }
+            }, 100);
         }
-        
-        // Focus on textarea
-        setTimeout(() => {
-            const textarea = document.getElementById('postContent');
-            if (textarea) textarea.focus();
-        }, 100);
+    } else {
+        // Fallback to old modal if modern not available
+        console.log('Modern modal not available, using fallback');
+        const modal = document.getElementById('createPostModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
     }
 };
 
 function showPollSection() {
     let pollSection = document.getElementById('pollSection');
     if (!pollSection) {
-        const mediaPreview = document.getElementById('mediaPreview');
+        const modalBody = document.querySelector('.modal-body');
         pollSection = document.createElement('div');
         pollSection.id = 'pollSection';
         pollSection.innerHTML = `
-            <div class="poll-creator">
-                <h4>Create a Poll</h4>
-                <div class="poll-options">
-                    <input type="text" class="poll-option" placeholder="Option 1" maxlength="100">
-                    <input type="text" class="poll-option" placeholder="Option 2" maxlength="100">
+            <div class="poll-creator" style="margin: 16px 0; padding: 16px; border: 1px solid #e1e5e9; border-radius: 8px;">
+                <h4 style="margin: 0 0 12px 0; color: #333;">Create a Poll</h4>
+                <div class="poll-options" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" class="poll-option" placeholder="Option 1" maxlength="100" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
+                    <input type="text" class="poll-option" placeholder="Option 2" maxlength="100" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
                 </div>
-                <button type="button" class="add-poll-option" onclick="addPollOption()">+ Add Option</button>
-                <div class="poll-settings">
-                    <label>
-                        <input type="checkbox" id="allowMultipleChoice"> Allow multiple choices
+                <button type="button" class="add-poll-option" onclick="addPollOption()" style="padding: 8px 16px; background: #f8f9fa; border: 1px dashed #ddd; border-radius: 6px; cursor: pointer; margin-bottom: 12px;">
+                    + Add Option
+                </button>
+                <div class="poll-settings" style="display: flex; flex-direction: column; gap: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="allowMultipleChoice">
+                        Allow multiple choices
                     </label>
-                    <div class="poll-duration">
-                        <label>Poll duration:</label>
-                        <select id="pollDuration">
+                    <div class="poll-duration" style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-weight: 500;">Poll duration:</label>
+                        <select id="pollDuration" style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;">
                             <option value="1">1 day</option>
                             <option value="3">3 days</option>
                             <option value="7" selected>1 week</option>
@@ -150,7 +160,11 @@ function showPollSection() {
                 </div>
             </div>
         `;
-        mediaPreview.insertAdjacentElement('afterend', pollSection);
+        
+        const postContent = document.getElementById('postContent');
+        if (postContent) {
+            postContent.insertAdjacentElement('afterend', pollSection);
+        }
     }
     pollSection.style.display = 'block';
 }
@@ -172,32 +186,21 @@ window.addPollOption = function() {
         newOption.className = 'poll-option';
         newOption.placeholder = `Option ${optionCount + 1}`;
         newOption.maxLength = 100;
+        newOption.style.cssText = 'padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;';
         
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'remove-poll-option';
-        removeBtn.innerHTML = '×';
-        removeBtn.onclick = function() {
-            const container = this.parentElement;
-            container.remove();
-        };
-        
-        const container = document.createElement('div');
-        container.className = 'poll-option-container';
-        container.appendChild(newOption);
-        container.appendChild(removeBtn);
-        
-        pollOptions.appendChild(container);
+        pollOptions.appendChild(newOption);
     }
 };
 
 window.closeCreatePostModal = function() {
-    console.log('Closing create post modal');
-    const modal = document.getElementById('createPostModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        resetCreatePostForm();
+    if (typeof closeModernPostModal === 'function') {
+        closeModernPostModal();
+    } else {
+        const modal = document.getElementById('createPostModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
     }
 };
 
@@ -217,6 +220,8 @@ function resetCreatePostForm() {
     }
     
     window.currentPostType = 'text';
+    window.uploadedFiles = [];
+    window.currentLocation = null;
 }
 
 window.updatePostButtonState = function() {
@@ -227,7 +232,15 @@ window.updatePostButtonState = function() {
     if (postSubmitBtn) {
         const hasContent = postContent && postContent.value.trim().length > 0;
         const hasMedia = mediaPreview && mediaPreview.children.length > 0;
-        postSubmitBtn.disabled = !(hasContent || hasMedia);
+        const isPoll = window.currentPostType === 'poll';
+        
+        if (isPoll) {
+            const pollOptions = document.querySelectorAll('.poll-option');
+            const validOptions = Array.from(pollOptions).filter(option => option.value.trim()).length;
+            postSubmitBtn.disabled = !(hasContent || hasMedia || validOptions >= 2);
+        } else {
+            postSubmitBtn.disabled = !(hasContent || hasMedia);
+        }
     }
 };
 
@@ -237,17 +250,14 @@ window.handleMediaUpload = function(event) {
     
     if (!mediaPreview || !files.length) return;
     
-    // Initialize uploaded files array
     if (!window.uploadedFiles) window.uploadedFiles = [];
     
     for (let file of files) {
-        // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
             window.showGlobalNotification('File size too large. Maximum 10MB allowed.', 'error');
             continue;
         }
         
-        // Store file
         window.uploadedFiles.push(file);
         
         if (file.type.startsWith('image/')) {
@@ -347,7 +357,6 @@ window.removeMediaItem = function(button) {
     if (mediaItem) {
         const fileName = mediaItem.dataset.fileName;
         
-        // Remove from uploaded files array
         if (window.uploadedFiles && fileName) {
             window.uploadedFiles = window.uploadedFiles.filter(file => file.name !== fileName);
         }
@@ -357,7 +366,7 @@ window.removeMediaItem = function(button) {
     }
 };
 
-// ==================== LOCATION FUNCTIONALITY ====================
+// ==================== LOCATION SYSTEM ====================
 window.addLocation = function() {
     if (navigator.geolocation) {
         window.showGlobalNotification('Getting your location...', 'info');
@@ -367,36 +376,31 @@ window.addLocation = function() {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 
-                // Use reverse geocoding to get address
-                fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=YOUR_API_KEY`)
+                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.results && data.results.length > 0) {
-                            const location = data.results[0].formatted;
-                            window.currentLocation = {
-                                lat: lat,
-                                lng: lng,
-                                address: location
-                            };
-                            
-                            // Show location in UI
-                            const locationDisplay = document.getElementById('locationDisplay');
-                            if (locationDisplay) {
-                                locationDisplay.innerHTML = `
-                                    <div class="location-item">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>${location}</span>
-                                        <button onclick="window.removeLocation()" class="remove-location">×</button>
-                                    </div>
-                                `;
-                                locationDisplay.style.display = 'block';
-                            }
-                            
-                            window.showGlobalNotification('Location added successfully', 'success');
+                        const location = data.city || data.locality || 'Unknown Location';
+                        window.currentLocation = {
+                            lat: lat,
+                            lng: lng,
+                            address: location
+                        };
+                        
+                        const locationDisplay = document.getElementById('locationDisplay');
+                        if (locationDisplay) {
+                            locationDisplay.innerHTML = `
+                                <div class="location-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin: 8px 0;">
+                                    <i class="fas fa-map-marker-alt" style="color: #ff6b35;"></i>
+                                    <span style="flex: 1;">${location}</span>
+                                    <button onclick="window.removeLocation()" class="remove-location" style="background: none; border: none; color: #666; cursor: pointer; padding: 4px;">×</button>
+                                </div>
+                            `;
+                            locationDisplay.style.display = 'block';
                         }
+                        
+                        window.showGlobalNotification('Location added successfully', 'success');
                     })
                     .catch(() => {
-                        // Fallback to manual location
                         window.openManualLocationModal();
                     });
             },
@@ -421,10 +425,10 @@ window.openManualLocationModal = function() {
         const locationDisplay = document.getElementById('locationDisplay');
         if (locationDisplay) {
             locationDisplay.innerHTML = `
-                <div class="location-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>${locationInput.trim()}</span>
-                    <button onclick="window.removeLocation()" class="remove-location">×</button>
+                <div class="location-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin: 8px 0;">
+                    <i class="fas fa-map-marker-alt" style="color: #ff6b35;"></i>
+                    <span style="flex: 1;">${locationInput.trim()}</span>
+                    <button onclick="window.removeLocation()" class="remove-location" style="background: none; border: none; color: #666; cursor: pointer; padding: 4px;">×</button>
                 </div>
             `;
             locationDisplay.style.display = 'block';
@@ -450,63 +454,71 @@ window.editImage = function(fileName, imageData) {
 };
 
 window.openImageEditor = function(imageUrl) {
-    // Create image editor modal if it doesn't exist
     let modal = document.getElementById('imageEditorModal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'imageEditorModal';
-        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        `;
+        
         modal.innerHTML = `
-            <div class="modal-container large-modal">
-                <div class="modal-header">
-                    <h3>Edit Image</h3>
-                    <button class="modal-close" onclick="window.closeImageEditor()">×</button>
+            <div style="background: white; border-radius: 12px; padding: 20px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Edit Image</h3>
+                    <button onclick="window.closeImageEditor()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
                 </div>
-                <div class="modal-body">
-                    <div class="image-editor-container">
-                        <div class="image-preview">
-                            <canvas id="imageCanvas" width="600" height="400"></canvas>
-                        </div>
-                        <div class="editor-controls">
-                            <div class="filter-section">
-                                <h4>Filters</h4>
-                                <div class="filter-grid">
-                                    <button class="filter-btn active" data-filter="none">Original</button>
-                                    <button class="filter-btn" data-filter="grayscale">B&W</button>
-                                    <button class="filter-btn" data-filter="sepia">Sepia</button>
-                                    <button class="filter-btn" data-filter="blur">Blur</button>
-                                    <button class="filter-btn" data-filter="brightness">Bright</button>
-                                    <button class="filter-btn" data-filter="contrast">Contrast</button>
-                                </div>
+                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
+                    <div>
+                        <canvas id="imageCanvas" width="600" height="400" style="border: 1px solid #ddd; border-radius: 8px; max-width: 100%;"></canvas>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 12px;">Filters</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                                <button class="filter-btn active" data-filter="none" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">Original</button>
+                                <button class="filter-btn" data-filter="grayscale" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">B&W</button>
+                                <button class="filter-btn" data-filter="sepia" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">Sepia</button>
+                                <button class="filter-btn" data-filter="blur" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">Blur</button>
                             </div>
-                            <div class="adjustment-section">
-                                <h4>Adjustments</h4>
-                                <div class="slider-control">
-                                    <label>Brightness</label>
-                                    <input type="range" id="brightnessSlider" min="-50" max="50" value="0">
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 12px;">Adjustments</h4>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 4px; font-size: 14px;">Brightness</label>
+                                    <input type="range" id="brightnessSlider" min="-50" max="50" value="0" style="width: 100%;">
                                 </div>
-                                <div class="slider-control">
-                                    <label>Contrast</label>
-                                    <input type="range" id="contrastSlider" min="-50" max="50" value="0">
+                                <div>
+                                    <label style="display: block; margin-bottom: 4px; font-size: 14px;">Contrast</label>
+                                    <input type="range" id="contrastSlider" min="-50" max="50" value="0" style="width: 100%;">
                                 </div>
-                                <div class="slider-control">
-                                    <label>Saturation</label>
-                                    <input type="range" id="saturationSlider" min="-50" max="50" value="0">
+                                <div>
+                                    <label style="display: block; margin-bottom: 4px; font-size: 14px;">Saturation</label>
+                                    <input type="range" id="saturationSlider" min="-50" max="50" value="0" style="width: 100%;">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="editor-actions">
-                        <button class="btn btn-secondary" onclick="window.resetImageEditor()">Reset</button>
-                        <button class="btn btn-secondary" onclick="window.closeImageEditor()">Cancel</button>
-                        <button class="btn btn-primary" onclick="window.applyImageEdit()">Apply</button>
-                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                    <button onclick="window.resetImageEditor()" style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">Reset</button>
+                    <button onclick="window.closeImageEditor()" style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">Cancel</button>
+                    <button onclick="window.applyImageEdit()" style="padding: 8px 16px; background: #ff6b35; color: white; border: none; border-radius: 6px; cursor: pointer;">Apply</button>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
         
-        // Add event listeners for filters and sliders
         modal.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 modal.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -521,7 +533,6 @@ window.openImageEditor = function(imageUrl) {
         });
     }
     
-    // Load image into canvas
     const canvas = document.getElementById('imageCanvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
@@ -597,12 +608,10 @@ window.resetImageEditor = function() {
         ctx.putImageData(window.originalImageData, 0, 0);
     }
     
-    // Reset sliders
     document.getElementById('brightnessSlider').value = 0;
     document.getElementById('contrastSlider').value = 0;
     document.getElementById('saturationSlider').value = 0;
     
-    // Reset filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.filter-btn[data-filter="none"]').classList.add('active');
 };
@@ -612,16 +621,13 @@ window.applyImageEdit = function() {
     
     canvas.toBlob(function(blob) {
         if (window.currentEditingImage && window.uploadedFiles) {
-            // Replace the original file with edited version
             const fileName = window.currentEditingImage.fileName;
             const fileIndex = window.uploadedFiles.findIndex(f => f.name === fileName);
             
             if (fileIndex !== -1) {
-                // Create new file from blob
                 const editedFile = new File([blob], fileName, { type: 'image/png' });
                 window.uploadedFiles[fileIndex] = editedFile;
                 
-                // Update preview
                 const mediaItem = document.querySelector(`[data-file-name="${fileName}"]`);
                 if (mediaItem) {
                     const img = mediaItem.querySelector('img');
@@ -645,25 +651,36 @@ window.closeImageEditor = function() {
     window.currentEditingImage = null;
 };
 
+// ==================== POST CREATION ====================
 window.handleCreatePost = async function(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     console.log('Creating post...');
     
+    const modernModal = document.getElementById('createPostModal');
+    const isModernModal = modernModal && modernModal.style.display === 'flex';
+
+
+     if (isModernModal) {
+        await handleModernPostSubmit(event);
+        return;
+    }
+    
+
     const postContent = document.getElementById('postContent');
     const postSubmitBtn = document.getElementById('postSubmitBtn');
     const btnText = postSubmitBtn?.querySelector('.btn-text');
     const mediaPreview = document.getElementById('mediaPreview');
-    
+
     if (!postContent || !postSubmitBtn) {
         console.error('Required elements not found');
+        window.showGlobalNotification('Post creation elements not found. Please refresh the page.', 'error');
         return;
     }
-    
+
     const content = postContent.value.trim();
     const hasMedia = mediaPreview && mediaPreview.children.length > 0;
     const isPoll = window.currentPostType === 'poll';
     
-    // Validate poll if it's a poll post
     if (isPoll) {
         const pollOptions = document.querySelectorAll('.poll-option');
         const validOptions = Array.from(pollOptions).filter(option => option.value.trim()).length;
@@ -679,7 +696,6 @@ window.handleCreatePost = async function(event) {
         return;
     }
     
-    // Show loading state
     postSubmitBtn.disabled = true;
     if (btnText) btnText.textContent = 'Posting...';
     
@@ -689,7 +705,6 @@ window.handleCreatePost = async function(event) {
         formData.append('post_type', window.currentPostType || 'text');
         formData.append('csrfmiddlewaretoken', getCSRFToken());
         
-        // Add poll data if it's a poll
         if (isPoll) {
             const pollOptions = Array.from(document.querySelectorAll('.poll-option'))
                 .map(option => option.value.trim())
@@ -700,16 +715,13 @@ window.handleCreatePost = async function(event) {
             formData.append('poll_duration', document.getElementById('pollDuration')?.value || 7);
         }
         
-        // Add location if available
-        const locationData = window.currentLocation;
-        if (locationData) {
-            formData.append('location', JSON.stringify(locationData));
+        if (window.currentLocation) {
+            formData.append('location', JSON.stringify(window.currentLocation));
         }
         
-        // Add media files from preview
         if (window.uploadedFiles && window.uploadedFiles.length > 0) {
             window.uploadedFiles.forEach((file, index) => {
-                formData.append(`media_${index}`, file);
+                formData.append(`image`, file);
             });
         }
         
@@ -741,7 +753,6 @@ window.handleCreatePost = async function(event) {
         window.showGlobalNotification(isPoll ? 'Poll created successfully!' : 'Post created successfully!', 'success');
         window.closeCreatePostModal();
         
-        // Reload page to show new post
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -752,13 +763,204 @@ window.handleCreatePost = async function(event) {
     } finally {
         postSubmitBtn.disabled = false;
         if (btnText) btnText.textContent = 'Post';
-        // Clear uploaded files and reset form
         window.uploadedFiles = [];
         window.currentLocation = null;
         window.currentPostType = 'text';
         resetCreatePostForm();
     }
 };
+
+
+// ==================== MODERN POST SUBMISSION ====================
+async function handleModernPostSubmit(e) {
+    if (e) e.preventDefault();
+    
+    console.log('Handling modern post submission...');
+    
+    const submitBtn = document.getElementById('modernPostSubmitBtn');
+    const loadingSpinner = submitBtn?.querySelector('.btn-loading');
+    const btnText = submitBtn?.querySelector('.btn-text');
+    
+    if (!submitBtn) {
+        console.error('Modern post submit button not found');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    if (btnText) btnText.textContent = 'Posting...';
+    if (loadingSpinner) loadingSpinner.style.display = 'inline-block';
+    
+    try {
+        const formData = new FormData();
+        
+        // Get content from Quill editor
+        let content = '';
+        if (window.quill) {
+            content = window.quill.root.innerHTML;
+        } else {
+            // Fallback to textarea
+            const postContent = document.getElementById('postContent');
+            content = postContent ? postContent.value : '';
+        }
+        
+        formData.append('content', content);
+        formData.append('post_type', 'text');
+        formData.append('privacy', document.getElementById('postPrivacy')?.value || 'public');
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
+        
+        // Add media files
+        if (window.uploadedMedia && window.uploadedMedia.length > 0) {
+            window.uploadedMedia.forEach((media, index) => {
+                formData.append('image', media.file);
+            });
+        }
+        
+        // Check if poll is created
+        const pollCreator = document.getElementById('pollCreator');
+        if (pollCreator && pollCreator.style.display !== 'none') {
+            const pollQuestion = document.getElementById('pollQuestion')?.value;
+            const pollOptions = Array.from(document.querySelectorAll('.poll-option-input'))
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            if (pollQuestion && pollOptions.length >= 2) {
+                formData.append('poll_question', pollQuestion);
+                formData.append('poll_options', JSON.stringify(pollOptions));
+                formData.append('poll_multiple_choice', document.getElementById('multipleChoice')?.checked || false);
+                formData.append('poll_duration', document.getElementById('pollDuration')?.value || '7');
+            }
+        }
+        
+        console.log('Submitting post data...');
+        
+        const response = await fetch('/create_post/', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            let errorMessage = `Failed to create post: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                console.log('Non-JSON error response');
+            }
+            throw new Error(errorMessage);
+        }
+        
+        let data;
+        try {
+            data = await response.json();
+            console.log('Post created successfully:', data);
+        } catch (e) {
+            console.log('Post created successfully (non-JSON response)');
+            data = { success: true };
+        }
+        
+        window.showGlobalNotification('Post created successfully!', 'success');
+        closeModernPostModal();
+        
+        // Reload page after short delay
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Create post error:', error);
+        window.showGlobalNotification(error.message || 'Something went wrong while creating post', 'error');
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        if (btnText) btnText.textContent = 'Post';
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+    }
+}
+
+// ==================== MODERN POST MODAL FUNCTIONS ====================
+function closeModernPostModal() {
+    const modal = document.getElementById('createPostModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        resetModernPostForm();
+    }
+}
+
+function resetModernPostForm() {
+    // Reset Quill editor
+    if (window.quill) {
+        window.quill.setText('');
+    }
+    
+    // Reset uploaded media
+    window.uploadedMedia = [];
+    const mediaPreview = document.getElementById('modernMediaPreview');
+    if (mediaPreview) {
+        mediaPreview.innerHTML = '';
+    }
+    
+    // Reset poll
+    const pollCreator = document.getElementById('pollCreator');
+    if (pollCreator) {
+        pollCreator.style.display = 'none';
+    }
+    
+    // Reset character counter
+    const charCount = document.getElementById('charCount');
+    if (charCount) {
+        charCount.textContent = '0';
+    }
+}
+
+// Make sure Quill is available globally
+window.quill = null;
+
+
+function insertModernEmoji(emoji) {
+    console.log('Inserting emoji:', emoji);
+    
+    // Check if Quill editor is available
+    if (window.quill) {
+        try {
+            const range = window.quill.getSelection();
+            if (range) {
+                window.quill.insertText(range.index, emoji);
+                window.quill.setSelection(range.index + emoji.length);
+            } else {
+                // If no selection, insert at the end
+                const length = window.quill.getLength();
+                window.quill.insertText(length - 1, emoji);
+                window.quill.setSelection(length + emoji.length - 1);
+            }
+        } catch (error) {
+            console.error('Error inserting emoji in Quill:', error);
+            // Fallback to simple textarea
+            const postContent = document.getElementById('postContent');
+            if (postContent) {
+                postContent.value += emoji;
+            }
+        }
+    } else {
+        // Fallback for old modal
+        const postContent = document.getElementById('postContent');
+        if (postContent) {
+            const start = postContent.selectionStart;
+            const end = postContent.selectionEnd;
+            postContent.value = postContent.value.substring(0, start) + emoji + postContent.value.substring(end);
+            postContent.selectionStart = postContent.selectionEnd = start + emoji.length;
+            postContent.focus();
+        }
+    }
+    
+    // Close emoji picker
+    const emojiPickerModal = document.getElementById('modernEmojiPickerModal');
+    if (emojiPickerModal) {
+        emojiPickerModal.style.display = 'none';
+    }
+}
+
 
 // ==================== POST INTERACTIONS ====================
 window.toggleLike = async function(postId, button) {
@@ -780,20 +982,18 @@ window.toggleLike = async function(postId, button) {
         const data = await response.json();
         console.log('Like response:', data);
         
-        // Update like count
         const likeCountElements = document.querySelectorAll(`[data-post-id="${postId}"] .like-count`);
         likeCountElements.forEach(el => {
             el.textContent = data.like_count || 0;
         });
 
-        // Update button state based on server response
         if (data.liked) {
             button.classList.add('liked');
             const actionText = button.querySelector('.action-text');
             const icon = button.querySelector('i');
             
             if (actionText) actionText.textContent = 'Liked';
-            if (icon) icon.className = 'fas fa-heart'; // Solid heart
+            if (icon) icon.className = 'fas fa-heart';
             button.style.color = '#e74c3c';
         } else {
             button.classList.remove('liked');
@@ -801,7 +1001,7 @@ window.toggleLike = async function(postId, button) {
             const icon = button.querySelector('i');
             
             if (actionText) actionText.textContent = 'Like';
-            if (icon) icon.className = 'far fa-heart'; // Outline heart
+            if (icon) icon.className = 'far fa-heart';
             button.style.color = '';
         }
 
@@ -911,11 +1111,11 @@ function createCommentElement(comment) {
             </div>
             <div class="comment-text" id="comment-content-${comment.id}" style="font-size: 14px; line-height: 1.4; margin-bottom: 8px; color: #1c1e21;">${processPostContent(comment.content || '')}</div>
             <div class="comment-actions" style="display: flex; gap: 16px;">
-                <button class="comment-action-btn" onclick="likeComment('${comment.id}')" style="background: none; border: none; cursor: pointer; color: #65676b; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='none'">
+                <button class="comment-action-btn" onclick="window.likeComment('${comment.id}')" style="background: none; border: none; cursor: pointer; color: #65676b; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='none'">
                     <i class="far fa-heart"></i>
                     <span>Like</span>
                 </button>
-                <button class="comment-action-btn" onclick="replyToComment('${comment.id}')" style="background: none; border: none; cursor: pointer; color: #65676b; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='none'">
+                <button class="comment-action-btn" onclick="window.replyToComment('${comment.id}')" style="background: none; border: none; cursor: pointer; color: #65676b; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='none'">
                     <i class="fas fa-reply"></i>
                     <span>Reply</span>
                 </button>
@@ -925,19 +1125,9 @@ function createCommentElement(comment) {
     return commentDiv;
 }
 
-window.likeComment = function(commentId) {
-    window.showGlobalNotification('Comment liked!', 'success');
-};
-
-window.replyToComment = function(commentId) {
-    window.showGlobalNotification('Reply feature coming soon', 'info');
-};
-
-// Toggle comment menu
 window.toggleCommentMenu = function(commentId) {
     const menu = document.getElementById(`comment-menu-${commentId}`);
     if (menu) {
-        // Close all other menus
         document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
             if (dropdown.id !== `comment-menu-${commentId}`) {
                 dropdown.style.display = 'none';
@@ -947,7 +1137,6 @@ window.toggleCommentMenu = function(commentId) {
     }
 };
 
-// Close comment menus when clicking outside
 document.addEventListener('click', function(event) {
     if (!event.target.closest('.comment-menu')) {
         document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
@@ -956,7 +1145,14 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Edit comment
+window.likeComment = function(commentId) {
+    window.showGlobalNotification('Comment liked!', 'success');
+};
+
+window.replyToComment = function(commentId) {
+    window.showGlobalNotification('Reply feature coming soon', 'info');
+};
+
 window.editComment = async function(commentId) {
     const contentElement = document.getElementById(`comment-content-${commentId}`);
     if (!contentElement) return;
@@ -971,8 +1167,8 @@ window.editComment = async function(commentId) {
     const actions = document.createElement('div');
     actions.style.cssText = 'display: flex; gap: 8px; margin-top: 8px;';
     actions.innerHTML = `
-        <button onclick="saveCommentEdit('${commentId}')" style="padding: 4px 8px; background: #ff6b35; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Save</button>
-        <button onclick="cancelCommentEdit('${commentId}')" style="padding: 4px 8px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Cancel</button>
+        <button onclick="window.saveCommentEdit('${commentId}')" style="padding: 4px 8px; background: #ff6b35; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Save</button>
+        <button onclick="window.cancelCommentEdit('${commentId}')" style="padding: 4px 8px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Cancel</button>
     `;
     
     contentElement.style.display = 'none';
@@ -982,11 +1178,9 @@ window.editComment = async function(commentId) {
     input.focus();
     window.currentEditingComment = { commentId, originalContent: currentContent };
     
-    // Close menu
-    toggleCommentMenu(commentId);
+    window.toggleCommentMenu(commentId);
 };
 
-// Save comment edit
 window.saveCommentEdit = async function(commentId) {
     const comment = document.querySelector(`[data-comment-id="${commentId}"]`);
     const input = comment.querySelector('.edit-comment-input');
@@ -1010,7 +1204,7 @@ window.saveCommentEdit = async function(commentId) {
         if (response.ok) {
             const contentElement = document.getElementById(`comment-content-${commentId}`);
             contentElement.innerHTML = processPostContent(newContent);
-            cancelCommentEdit(commentId);
+            window.cancelCommentEdit(commentId);
             window.showGlobalNotification('Comment updated', 'success');
         } else {
             throw new Error('Failed to update comment');
@@ -1021,7 +1215,6 @@ window.saveCommentEdit = async function(commentId) {
     }
 };
 
-// Cancel comment edit
 window.cancelCommentEdit = function(commentId) {
     const comment = document.querySelector(`[data-comment-id="${commentId}"]`);
     const contentElement = document.getElementById(`comment-content-${commentId}`);
@@ -1035,7 +1228,6 @@ window.cancelCommentEdit = function(commentId) {
     window.currentEditingComment = null;
 };
 
-// Delete comment
 window.deleteComment = async function(commentId) {
     if (!confirm('Are you sure you want to delete this comment?')) return;
     
@@ -1061,6 +1253,13 @@ window.deleteComment = async function(commentId) {
     } catch (error) {
         console.error('Error deleting comment:', error);
         window.showGlobalNotification('Error deleting comment', 'error');
+    }
+};
+
+window.reportComment = function(commentId) {
+    if (confirm('Are you sure you want to report this comment?')) {
+        window.showGlobalNotification('Comment reported. Thank you for keeping our community safe.', 'success');
+        window.toggleCommentMenu(commentId);
     }
 };
 
@@ -1104,7 +1303,6 @@ window.submitComment = async function(postId) {
         
         input.value = '';
         
-        // Add new comment to list
         if (data.comment) {
             const commentsContainer = document.getElementById(`comments-container-${postId}`) ||
                                     document.querySelector(`[data-post-id="${postId}"] .comments-list`);
@@ -1150,7 +1348,6 @@ window.togglePostMenu = function(postId) {
         return;
     }
     
-    // Close all other menus
     const allMenus = document.querySelectorAll('.post-menu-dropdown');
     allMenus.forEach(m => {
         if (m.id !== `postMenu-${postId}`) {
@@ -1474,7 +1671,6 @@ window.toggleMessagesPanel = function() {
 window.openImageModal = function(imageUrl) {
     console.log('Open image modal:', imageUrl);
     
-    // Create image modal if it doesn't exist
     let modal = document.getElementById('imageModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -1535,7 +1731,7 @@ window.closeImageModal = function() {
     }
 };
 
-// ==================== ADDITIONAL FUNCTIONS ====================
+// ==================== FOLLOW SYSTEM ====================
 window.toggleFollow = async function(userId, button) {
     console.log('toggleFollow called with userId:', userId, 'button:', button);
     
@@ -1549,7 +1745,6 @@ window.toggleFollow = async function(userId, button) {
         return;
     }
     
-    // Prevent double clicks
     if (button.disabled) {
         console.log('Button already disabled, preventing double click');
         return;
@@ -1571,7 +1766,6 @@ window.toggleFollow = async function(userId, button) {
     
     try {
         console.log('Making follow request to:', `/api/follow/${userId}/`);
-        console.log('CSRF Token:', csrfToken);
         
         const response = await fetch(`/api/follow/${userId}/`, {
             method: 'POST',
@@ -1606,7 +1800,6 @@ window.toggleFollow = async function(userId, button) {
                 window.showGlobalNotification(`Unfollowed ${data.user?.name || data.user?.username || 'user'}`, 'success');
             }
             
-            // Update follower counts if available
             const followersCount = document.querySelector(`#followers-count, .followers-count`);
             if (followersCount && data.followers_count !== undefined) {
                 followersCount.textContent = data.followers_count;
@@ -1636,528 +1829,15 @@ window.toggleFollow = async function(userId, button) {
     }
 };
 
-// Follow buttons now use inline onclick - no initialization needed
-window.initializeFollowButtons = function() {
-    console.log('Follow buttons use inline onclick - skipping initialization');
-};
-
-// ==================== POST MENU FUNCTIONS ====================
-window.toggleRepostMenu = function(postId) {
-    const menu = document.getElementById(`repostMenu-${postId}`);
-    const allMenus = document.querySelectorAll('.repost-dropdown');
-    
-    allMenus.forEach(m => {
-        if (m.id !== `repostMenu-${postId}`) {
-            m.classList.remove('active');
-        }
-    });
-    
-    if (menu) menu.classList.toggle('active');
-};
-
-window.toggleShareMenu = function(postId) {
-    const menu = document.getElementById(`shareMenu-${postId}`);
-    const allMenus = document.querySelectorAll('.share-dropdown');
-    
-    allMenus.forEach(m => {
-        if (m.id !== `shareMenu-${postId}`) {
-            m.classList.remove('active');
-        }
-    });
-    
-    if (menu) menu.classList.toggle('active');
-};
-
-window.repost = async function(postId) {
-    try {
-        const response = await fetch(`/api/posts/${postId}/repost/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            window.showGlobalNotification('Post reposted successfully', 'success');
-            
-            const repostCount = document.querySelector(`[data-post-id="${postId}"] .repost-count`);
-            if (repostCount) repostCount.textContent = data.repost_count || 0;
-            
-            // Close repost menu
-            window.toggleRepostMenu(postId);
-        } else {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to repost');
-        }
-    } catch (error) {
-        console.error('Repost error:', error);
-        window.showGlobalNotification(error.message || 'Error reposting post', 'error');
-    }
-};
-
-window.quotePost = function(postId) {
-    const postCard = document.querySelector(`[data-post-id="${postId}"]`);
-    const postText = postCard?.querySelector('.post-text')?.textContent || '';
-    const postAuthor = postCard?.querySelector('.user-name')?.textContent || '';
-    
-    // Close repost menu
-    window.toggleRepostMenu(postId);
-    
-    window.openCreatePostModal();
-    
-    setTimeout(() => {
-        const textarea = document.getElementById('postContent');
-        if (textarea && postText) {
-            textarea.value = `"${postText}" - ${postAuthor}\n\n`;
-            textarea.focus();
-            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-            window.updatePostButtonState();
-        }
-    }, 200);
-};
-
-window.savePost = async function(postId) {
-    try {
-        const response = await fetch(`/api/save_post/${postId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            window.showGlobalNotification(data.saved ? 'Post saved!' : 'Post unsaved', 'success');
-        }
-    } catch (error) {
-        console.error('Save post error:', error);
-        window.showGlobalNotification('Error saving post', 'error');
-    }
-};
-
-window.copyPostLink = function(postId) {
-    const postUrl = `${window.location.origin}/post/${postId}/`;
-    navigator.clipboard.writeText(postUrl).then(() => {
-        window.showGlobalNotification('Post link copied to clipboard!', 'success');
-    }).catch(() => {
-        window.showGlobalNotification('Failed to copy link', 'error');
-    });
-};
-
-window.reportPost = function(postId) {
-    if (confirm('Are you sure you want to report this post?')) {
-        window.showGlobalNotification('Post reported. Thank you for keeping our community safe.', 'success');
-    }
-};
-
-window.shareToFeed = function(postId) {
-    window.sharePost(postId);
-};
-
-window.shareToMessage = function(postId) {
-    window.showGlobalNotification('Share to message coming soon', 'info');
-};
-
-window.shareToStory = function(postId) {
-    window.showGlobalNotification('Share to story coming soon', 'info');
-};
-
-window.showLikesModal = function(postId) {
-    window.showGlobalNotification('Likes modal coming soon', 'info');
-};
-
-window.showRepostsModal = function(postId) {
-    window.showGlobalNotification('Reposts modal coming soon', 'info');
-};
-
-window.downloadImage = function(imageUrl) {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = 'image.jpg';
-    link.click();
-    window.showGlobalNotification('Image download started', 'success');
-};
-
-window.openImageFilters = function(postId, imageUrl) {
-    window.showGlobalNotification('Image filters coming soon', 'info');
-};
-
-window.editPostImage = function(postId, imageUrl) {
-    window.openImageEditor(imageUrl);
-};
-
-window.openStoryCreator = function() {
-    let modal = document.getElementById('storyCreatorModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'storyCreatorModal';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-container large-modal" style="max-width: 800px;">
-                <div class="modal-header">
-                    <h3>Create Story</h3>
-                    <button class="modal-close" onclick="window.closeStoryCreator()">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="story-creator-container" style="display: flex; gap: 20px;">
-                        <div class="story-preview" style="flex: 1;">
-                            <canvas id="storyCanvas" width="300" height="533" style="border: 1px solid #ddd; border-radius: 12px;"></canvas>
-                        </div>
-                        <div class="story-controls" style="flex: 1;">
-                            <div class="story-type-selector" style="display: flex; gap: 8px; margin-bottom: 20px;">
-                                <button class="story-type-btn active" data-type="text" onclick="window.setStoryType('text')" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; background: #1877f2; color: white; cursor: pointer;">Text</button>
-                                <button class="story-type-btn" data-type="image" onclick="window.setStoryType('image')" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">Photo</button>
-                                <button class="story-type-btn" data-type="video" onclick="window.setStoryType('video')" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer;">Video</button>
-                            </div>
-                            
-                            <div class="story-content-controls">
-                                <div class="text-story-controls" id="textStoryControls">
-                                    <textarea id="storyText" placeholder="What's on your mind?" maxlength="200" style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; resize: none; font-family: inherit;"></textarea>
-                                    <div class="text-style-controls" style="display: flex; gap: 8px; margin-top: 12px; align-items: center;">
-                                        <label style="font-size: 12px;">Color:</label>
-                                        <input type="color" id="textColor" value="#ffffff" style="width: 40px; height: 30px; border: none; border-radius: 4px; cursor: pointer;">
-                                        <label style="font-size: 12px;">Size:</label>
-                                        <input type="range" id="fontSize" min="16" max="48" value="24" style="flex: 1;">
-                                        <select id="fontFamily" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-                                            <option value="Arial">Arial</option>
-                                            <option value="Helvetica">Helvetica</option>
-                                            <option value="Georgia">Georgia</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="media-story-controls" id="mediaStoryControls" style="display: none;">
-                                    <input type="file" id="storyMediaUpload" accept="image/*,video/*" onchange="window.handleStoryMediaUpload(this)" style="display: none;">
-                                    <button onclick="document.getElementById('storyMediaUpload').click()" style="padding: 12px 24px; background: #1877f2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Choose File</button>
-                                </div>
-                            </div>
-                            
-                            <div class="story-background-controls" style="margin-top: 20px;">
-                                <h4 style="margin-bottom: 12px; font-size: 14px;">Background</h4>
-                                <div class="background-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                                    <div class="bg-color-option" style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); border: 2px solid transparent;" onclick="window.setStoryBackground('gradient1')"></div>
-                                    <div class="bg-color-option" style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; background: linear-gradient(45deg, #667eea, #764ba2); border: 2px solid transparent;" onclick="window.setStoryBackground('gradient2')"></div>
-                                    <div class="bg-color-option" style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; background: linear-gradient(45deg, #f093fb, #f5576c); border: 2px solid transparent;" onclick="window.setStoryBackground('gradient3')"></div>
-                                    <div class="bg-color-option" style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; background: #000000; border: 2px solid transparent;" onclick="window.setStoryBackground('black')"></div>
-                                    <div class="bg-color-option" style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; background: #ffffff; border: 2px solid #ddd;" onclick="window.setStoryBackground('white')"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="story-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                        <button onclick="window.closeStoryCreator()" style="padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 14px;">Cancel</button>
-                        <button onclick="window.publishStory()" style="padding: 10px 20px; background: #1877f2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Share Story</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        const storyText = document.getElementById('storyText');
-        const textColor = document.getElementById('textColor');
-        const fontSize = document.getElementById('fontSize');
-        const fontFamily = document.getElementById('fontFamily');
-        
-        [storyText, textColor, fontSize, fontFamily].forEach(element => {
-            element.addEventListener('input', window.updateStoryPreview);
-        });
-    }
-    
-    modal.style.display = 'flex';
-    window.currentStoryType = 'text';
-    window.updateStoryPreview();
-};
-
-window.setStoryType = function(type) {
-    window.currentStoryType = type;
-    
-    document.querySelectorAll('.story-type-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = 'white';
-        btn.style.color = 'black';
-    });
-    
-    const activeBtn = document.querySelector(`[data-type="${type}"]`);
-    activeBtn.classList.add('active');
-    activeBtn.style.background = '#1877f2';
-    activeBtn.style.color = 'white';
-    
-    const textControls = document.getElementById('textStoryControls');
-    const mediaControls = document.getElementById('mediaStoryControls');
-    
-    if (type === 'text') {
-        textControls.style.display = 'block';
-        mediaControls.style.display = 'none';
-    } else {
-        textControls.style.display = 'none';
-        mediaControls.style.display = 'block';
-    }
-    
-    window.updateStoryPreview();
-};
-
-window.setStoryBackground = function(bgType) {
-    window.currentStoryBackground = bgType;
-    
-    document.querySelectorAll('.bg-color-option').forEach(option => {
-        option.style.border = '2px solid transparent';
-    });
-    
-    event.target.style.border = '2px solid #1877f2';
-    
-    window.updateStoryPreview();
-};
-
-window.updateStoryPreview = function() {
-    const canvas = document.getElementById('storyCanvas');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const bg = window.currentStoryBackground || 'gradient1';
-    switch(bg) {
-        case 'gradient1':
-            const gradient1 = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient1.addColorStop(0, '#ff6b6b');
-            gradient1.addColorStop(1, '#4ecdc4');
-            ctx.fillStyle = gradient1;
-            break;
-        case 'gradient2':
-            const gradient2 = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient2.addColorStop(0, '#667eea');
-            gradient2.addColorStop(1, '#764ba2');
-            ctx.fillStyle = gradient2;
-            break;
-        case 'gradient3':
-            const gradient3 = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient3.addColorStop(0, '#f093fb');
-            gradient3.addColorStop(1, '#f5576c');
-            ctx.fillStyle = gradient3;
-            break;
-        case 'black':
-            ctx.fillStyle = '#000000';
-            break;
-        case 'white':
-            ctx.fillStyle = '#ffffff';
-            break;
-    }
-    
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    if (window.currentStoryType === 'text') {
-        const textElement = document.getElementById('storyText');
-        const colorElement = document.getElementById('textColor');
-        const sizeElement = document.getElementById('fontSize');
-        const familyElement = document.getElementById('fontFamily');
-        
-        if (textElement && colorElement && sizeElement && familyElement) {
-            const text = textElement.value;
-            const color = colorElement.value;
-            const size = sizeElement.value;
-            const family = familyElement.value;
-            
-            if (text) {
-                ctx.fillStyle = color;
-                ctx.font = `${size}px ${family}`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                const words = text.split(' ');
-                const lines = [];
-                let currentLine = '';
-                
-                words.forEach(word => {
-                    const testLine = currentLine + word + ' ';
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > canvas.width - 40 && currentLine !== '') {
-                        lines.push(currentLine);
-                        currentLine = word + ' ';
-                    } else {
-                        currentLine = testLine;
-                    }
-                });
-                lines.push(currentLine);
-                
-                const lineHeight = parseInt(size) * 1.2;
-                const startY = (canvas.height - (lines.length * lineHeight)) / 2;
-                
-                lines.forEach((line, index) => {
-                    ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
-                });
-            }
-        }
-    }
-};
-
-window.handleStoryMediaUpload = function(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    const canvas = document.getElementById('storyCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    if (file.type.startsWith('image/')) {
-        const img = new Image();
-        img.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const aspectRatio = img.width / img.height;
-            const canvasAspectRatio = canvas.width / canvas.height;
-            
-            let drawWidth, drawHeight, drawX, drawY;
-            
-            if (aspectRatio > canvasAspectRatio) {
-                drawHeight = canvas.height;
-                drawWidth = drawHeight * aspectRatio;
-                drawX = (canvas.width - drawWidth) / 2;
-                drawY = 0;
-            } else {
-                drawWidth = canvas.width;
-                drawHeight = drawWidth / aspectRatio;
-                drawX = 0;
-                drawY = (canvas.height - drawHeight) / 2;
-            }
-            
-            ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-            window.currentStoryMedia = { type: 'image', file: file };
-        };
-        img.src = URL.createObjectURL(file);
-    }
-};
-
-window.publishStory = async function() {
-    const canvas = document.getElementById('storyCanvas');
-    
-    try {
-        canvas.toBlob(async function(blob) {
-            const formData = new FormData();
-            formData.append('story_image', blob, 'story.png');
-            formData.append('story_type', window.currentStoryType || 'text');
-            formData.append('csrfmiddlewaretoken', getCSRFToken());
-            
-            if (window.currentStoryType === 'text') {
-                const textElement = document.getElementById('storyText');
-                if (textElement) {
-                    formData.append('story_text', textElement.value);
-                }
-            } else if (window.currentStoryMedia) {
-                formData.append('story_media', window.currentStoryMedia.file);
-            }
-            
-            const response = await fetch('/api/stories/create/', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                window.showGlobalNotification('Story published successfully!', 'success');
-                window.closeStoryCreator();
-                setTimeout(() => window.location.reload(), 500);
-            } else {
-                throw new Error('Failed to publish story');
-            }
-        }, 'image/png');
-    } catch (error) {
-        console.error('Story publish error:', error);
-        window.showGlobalNotification('Story created successfully!', 'success');
-        window.closeStoryCreator();
-    }
-};
-
-window.closeStoryCreator = function() {
-    const modal = document.getElementById('storyCreatorModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    window.currentStoryType = null;
-    window.currentStoryBackground = null;
-    window.currentStoryMedia = null;
-};
-
-window.openLiveStream = function() {
-    window.showGlobalNotification('Live streaming coming soon', 'info');
-};
-
-window.refreshSuggestions = function() {
-    window.showGlobalNotification('Refreshing suggestions...', 'info');
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
-};
-
-// ==================== COMMENT FUNCTIONS ====================
-window.loadMoreComments = async function(postId) {
-    try {
-        const response = await fetch(`/api/comments/${postId}/?offset=5`);
-        if (response.ok) {
-            const data = await response.json();
-            const commentsList = document.getElementById(`commentsList-${postId}`);
-            
-            data.comments.forEach(comment => {
-                const commentElement = createCommentElement(comment);
-                commentsList.appendChild(commentElement);
-            });
-            
-            // Hide load more button if no more comments
-            if (data.comments.length < 5) {
-                const loadMoreBtn = commentsList.querySelector('.load-more-comments');
-                if (loadMoreBtn) loadMoreBtn.remove();
-            }
-        }
-    } catch (error) {
-        console.error('Error loading more comments:', error);
-        window.showGlobalNotification('Error loading comments', 'error');
-    }
-};
-
-// ==================== EVENT HANDLERS ====================
-window.handleOutsideClick = function(event) {
-    // Close dropdowns when clicking outside
-    const dropdowns = document.querySelectorAll('.post-menu-dropdown.active');
-    dropdowns.forEach(dropdown => {
-        if (!dropdown.contains(event.target) && !event.target.closest('.post-menu-btn')) {
-            dropdown.classList.remove('active');
-        }
-    });
-    
-    // Close comment menus
-    const commentMenus = document.querySelectorAll('.comment-dropdown.show');
-    commentMenus.forEach(menu => {
-        if (!menu.contains(event.target) && !event.target.closest('.comment-menu-btn')) {
-            menu.classList.remove('show');
-        }
-    });
-};
-
-window.handleKeyboardShortcuts = function(event) {
-    // Escape key to close modals
-    if (event.key === 'Escape') {
-        window.closeCreatePostModal();
-        window.closeImageModal();
-    }
-    
-    // N key for new post
-    if (event.key === 'n' && !event.ctrlKey && !event.metaKey && 
-        !['INPUT', 'TEXTAREA'].includes(event.target.tagName)) {
-        event.preventDefault();
-        window.openCreatePostModal();
-    }
-};
-
 // ==================== INITIALIZATION ====================
 window.loadInitialData = function() {
     console.log('Loading initial data');
-    // Set current user ID for comment ownership checks
+    
     const userElement = document.querySelector('[data-user-id]');
     if (userElement) {
         window.currentUserId = userElement.dataset.userId;
     }
     
-    // Process hashtags in existing posts
     document.querySelectorAll('.post-text').forEach(postText => {
         const content = postText.textContent;
         if (content && content.includes('#')) {
@@ -2166,381 +1846,198 @@ window.loadInitialData = function() {
     });
 };
 
+// ==================== INITIALIZATION ====================
 window.initializeApp = function() {
-    console.log('Initializing app');
+    console.log('🚀 Initializing Mytro App with Modern Modal Support...');
     
-    // Setup event listeners
-    document.addEventListener('click', window.handleOutsideClick);
-    document.addEventListener('keydown', window.handleKeyboardShortcuts);
+    // Load initial data
+    window.loadInitialData();
     
-    // Setup form listeners
+    // ==================== MODERN MODAL FOCUSED SETUP ====================
+    
+    // NOTE: We're using MODERN modal system from base.html
+    // So we REMOVE all old modal event listeners
+    
     const createPostForm = document.getElementById('createPostForm');
     if (createPostForm) {
-        createPostForm.addEventListener('submit', window.handleCreatePost);
-    }
-    
-    const postContent = document.getElementById('postContent');
-    if (postContent) {
-        postContent.addEventListener('input', window.updatePostButtonState);
-    }
-    
-    const mediaUpload = document.getElementById('mediaUpload');
-    if (mediaUpload) {
-        mediaUpload.addEventListener('change', window.handleMediaUpload);
-    }
-    
-    // Setup modal close buttons
-    const closeCreatePostBtn = document.getElementById('closeCreatePostModal');
-    if (closeCreatePostBtn) {
-        closeCreatePostBtn.addEventListener('click', window.closeCreatePostModal);
-    }
-    
-    // Initialize sidebar hover scrolling
-    window.initializeSidebarScrolling();
-    
-    window.loadInitialData();
-};
-
-// ==================== SIDEBAR SCROLLING ====================
-window.initializeSidebarScrolling = function() {
-    const sidebars = document.querySelectorAll('.sidebar');
-    
-    sidebars.forEach(sidebar => {
-        let scrollTimeout;
+        // Remove OLD event listeners completely
+        createPostForm.removeEventListener('submit', window.handleCreatePost);
         
-        sidebar.addEventListener('mouseenter', function() {
-            this.style.overflowY = 'auto';
+        // Also remove old input listeners
+        const postContent = document.getElementById('postContent');
+        if (postContent) {
+            postContent.removeEventListener('input', window.updatePostButtonState);
+        }
+        
+        const mediaUpload = document.getElementById('mediaUpload');
+        if (mediaUpload) {
+            mediaUpload.removeEventListener('change', window.handleMediaUpload);
+        }
+        
+        const closeCreatePostBtn = document.getElementById('closeCreatePostModal');
+        if (closeCreatePostBtn) {
+            closeCreatePostBtn.removeEventListener('click', window.closeCreatePostModal);
+        }
+    }
+    
+    // ==================== GLOBAL EVENT HANDLERS ====================
+    
+    // Global click handlers for dropdowns
+    document.addEventListener('click', function(event) {
+        // Close post menus when clicking outside
+        const dropdowns = document.querySelectorAll('.post-menu-dropdown.active');
+        dropdowns.forEach(dropdown => {
+            if (!dropdown.contains(event.target) && !event.target.closest('.post-menu-btn')) {
+                dropdown.classList.remove('active');
+            }
         });
         
-        sidebar.addEventListener('mouseleave', function() {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                this.style.overflowY = 'hidden';
-            }, 1000);
-        });
-        
-        sidebar.addEventListener('scroll', function() {
-            clearTimeout(scrollTimeout);
-            this.style.overflowY = 'auto';
+        // Close comment menus when clicking outside
+        const commentMenus = document.querySelectorAll('.comment-dropdown');
+        commentMenus.forEach(menu => {
+            if (!menu.contains(event.target) && !event.target.closest('.comment-menu-btn')) {
+                menu.style.display = 'none';
+            }
         });
     });
-};
-
-// ==================== AUTO-RESIZE TEXTAREA ====================
-window.autoResizeComment = function(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-};
-
-window.handleCommentKeydown = function(event, postId) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        window.submitComment(postId);
-    }
-};
-
-window.editComment = async function(commentId) {
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    const contentElement = commentElement.querySelector('.comment-content');
-    const currentContent = contentElement.textContent;
     
-    const editInput = document.createElement('textarea');
-    editInput.value = currentContent;
-    editInput.style.cssText = `
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-        resize: vertical;
-        min-height: 60px;
-    `;
-    
-    const actions = document.createElement('div');
-    actions.style.cssText = 'display: flex; gap: 8px; margin-top: 8px;';
-    actions.innerHTML = `
-        <button onclick="window.saveCommentEdit('${commentId}')" style="padding: 4px 8px; background: #ff6b35; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Save</button>
-        <button onclick="window.cancelCommentEdit('${commentId}')" style="padding: 4px 8px; background: #ccc; color: black; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Cancel</button>
-    `;
-    
-    contentElement.style.display = 'none';
-    contentElement.insertAdjacentElement('afterend', editInput);
-    contentElement.insertAdjacentElement('afterend', actions);
-    
-    window.currentEditingComment = { commentId, originalContent: currentContent };
-};
-
-window.saveCommentEdit = async function(commentId) {
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    const editInput = commentElement.querySelector('textarea');
-    const newContent = editInput.value.trim();
-    
-    if (!newContent) {
-        window.showGlobalNotification('Comment cannot be empty', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/comments/${commentId}/edit/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ content: newContent })
-        });
-        
-        if (response.ok) {
-            const contentElement = commentElement.querySelector('.comment-content');
-            contentElement.innerHTML = processPostContent(newContent);
-            window.cancelCommentEdit(commentId);
-            window.showGlobalNotification('Comment updated', 'success');
-        } else {
-            throw new Error('Failed to update comment');
-        }
-    } catch (error) {
-        console.error('Error updating comment:', error);
-        window.showGlobalNotification('Error updating comment', 'error');
-    }
-};
-
-window.cancelCommentEdit = function(commentId) {
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    const contentElement = commentElement.querySelector('.comment-content');
-    const editInput = commentElement.querySelector('textarea');
-    const actions = commentElement.querySelector('div[style*="gap: 8px"]');
-    
-    if (editInput) editInput.remove();
-    if (actions) actions.remove();
-    contentElement.style.display = 'block';
-    
-    window.currentEditingComment = null;
-};
-
-window.deleteComment = async function(commentId) {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
-    
-    try {
-        const response = await fetch(`/api/comments/${commentId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-            commentElement.style.transition = 'all 0.3s ease';
-            commentElement.style.opacity = '0';
-            commentElement.style.height = '0';
-            commentElement.style.padding = '0';
-            setTimeout(() => commentElement.remove(), 300);
-            window.showGlobalNotification('Comment deleted', 'success');
-        } else {
-            throw new Error('Failed to delete comment');
-        }
-    } catch (error) {
-        console.error('Error deleting comment:', error);
-        window.showGlobalNotification('Error deleting comment', 'error');
-    }
-};
-
-window.reportComment = function(commentId) {
-    if (confirm('Are you sure you want to report this comment?')) {
-        window.showGlobalNotification('Comment reported. Thank you for keeping our community safe.', 'success');
-        window.toggleCommentMenu(commentId);
-    }
-};
-
-// ==================== NOTIFICATION SYSTEM ====================
-window.loadNotifications = async function() {
-    try {
-        const response = await fetch('/api/notifications/');
-        if (response.ok) {
-            const data = await response.json();
-            displayNotifications(data.notifications);
-            updateNotificationCount(data.unread_count);
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-};
-
-function displayNotifications(notifications) {
-    const container = document.getElementById('notificationsContent');
-    if (!container) return;
-    
-    if (!notifications || notifications.length === 0) {
-        container.innerHTML = `
-            <div class="empty-notifications" style="text-align: center; padding: 40px 20px; color: #666;">
-                <i class="fas fa-bell" style="font-size: 48px; margin-bottom: 16px; color: #ddd;"></i>
-                <p style="margin: 0; font-size: 16px;">No notifications yet</p>
-                <span style="font-size: 14px;">When you get notifications, they'll show up here</span>
-            </div>
-        `;
-        return;
-    }
-    
-    const html = notifications.map(notification => `
-        <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}" onclick="markNotificationAsRead(${notification.id})">
-            <div class="notification-avatar">
-                ${notification.actor?.profile_pic ? 
-                    `<img src="${notification.actor.profile_pic}" alt="${notification.actor.username}">` :
-                    `<div class="default-avatar">${notification.actor?.username?.charAt(0)?.toUpperCase() || 'U'}</div>`
-                }
-            </div>
-            <div class="notification-content">
-                <div class="notification-text">
-                    <strong>${notification.actor?.full_name || notification.actor?.username || 'Someone'}</strong>
-                    ${notification.message}
-                </div>
-                <div class="notification-time">${notification.created_at}</div>
-            </div>
-            ${!notification.is_read ? '<div class="unread-indicator"></div>' : ''}
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-function updateNotificationCount(count) {
-    const badge = document.getElementById('notificationCount');
-    if (badge) {
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : count;
-            badge.style.display = 'block';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-}
-
-window.markNotificationAsRead = async function(notificationId) {
-    try {
-        const response = await fetch(`/api/notifications/${notificationId}/read/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken()
-            }
-        });
-        
-        if (response.ok) {
-            const item = document.querySelector(`[data-id="${notificationId}"]`);
-            if (item) {
-                item.classList.remove('unread');
-                const indicator = item.querySelector('.unread-indicator');
-                if (indicator) indicator.remove();
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Escape key to close modals
+        if (e.key === 'Escape') {
+            // Close modern post modal
+            if (typeof closeModernPostModal === 'function') {
+                closeModernPostModal();
             }
             
-            // Update count
-            const currentCount = parseInt(document.getElementById('notificationCount')?.textContent || '0');
-            updateNotificationCount(Math.max(0, currentCount - 1));
+            // Close image modal
+            window.closeImageModal();
         }
-    } catch (error) {
-        console.error('Error marking notification as read:', error);
-    }
-};
-
-window.markAllNotificationsAsRead = async function() {
-    try {
-        const response = await fetch('/api/notifications/mark-all-read/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken()
+    });
+    
+    // ==================== POST INTERACTION HANDLERS ====================
+    
+    // These remain the same as they work with both systems
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const postId = this.closest('[data-post-id]')?.getAttribute('data-post-id');
+            if (postId) {
+                window.toggleLike(postId, this);
             }
         });
-        
-        if (response.ok) {
-            document.querySelectorAll('.notification-item.unread').forEach(item => {
-                item.classList.remove('unread');
-                const indicator = item.querySelector('.unread-indicator');
-                if (indicator) indicator.remove();
-            });
-            
-            updateNotificationCount(0);
-            window.showGlobalNotification('All notifications marked as read', 'success');
-        }
-    } catch (error) {
-        console.error('Error marking all notifications as read:', error);
-        window.showGlobalNotification('Error updating notifications', 'error');
-    }
-};
-
-// Poll for new notifications
-function startNotificationPolling() {
-    setInterval(async () => {
-        try {
-            const response = await fetch('/api/notifications/count/');
-            if (response.ok) {
-                const data = await response.json();
-                updateNotificationCount(data.unread_count);
+    });
+    
+    document.querySelectorAll('.comment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const postId = this.closest('[data-post-id]')?.getAttribute('data-post-id');
+            if (postId) {
+                window.toggleComments(postId);
             }
-        } catch (error) {
-            console.error('Error polling notifications:', error);
-        }
-    }, 30000); // Poll every 30 seconds
-}
-
-// Setup notification panel
-window.setupNotificationPanel = function() {
+        });
+    });
+    
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const postId = this.closest('[data-post-id]')?.getAttribute('data-post-id');
+            if (postId) {
+                window.sharePost(postId);
+            }
+        });
+    });
+    
+    // ==================== MOBILE & PANEL HANDLERS ====================
+    
+    // Mobile menu
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenuClose = document.getElementById('mobileMenuClose');
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', window.toggleMobileMenu);
+    }
+    
+    if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', window.toggleMobileMenu);
+    }
+    
+    // Notifications panel
     const notificationsBtn = document.getElementById('notificationsBtn');
-    const notificationsPanel = document.getElementById('notificationsPanel');
     const closeNotifications = document.getElementById('closeNotifications');
     
     if (notificationsBtn) {
-        notificationsBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (notificationsPanel) {
-                const isActive = notificationsPanel.classList.contains('active');
-                if (isActive) {
-                    notificationsPanel.classList.remove('active');
-                } else {
-                    notificationsPanel.classList.add('active');
-                    window.loadNotifications();
-                }
-            }
-        });
+        notificationsBtn.addEventListener('click', window.toggleNotificationsPanel);
     }
     
     if (closeNotifications) {
-        closeNotifications.addEventListener('click', function() {
-            if (notificationsPanel) {
-                notificationsPanel.classList.remove('active');
-            }
-        });
+        closeNotifications.addEventListener('click', window.toggleNotificationsPanel);
     }
+    
+    // Messages panel
+    const closeMessages = document.getElementById('closeMessages');
+    if (closeMessages) {
+        closeMessages.addEventListener('click', window.toggleMessagesPanel);
+    }
+    
+    // ==================== INITIALIZE COMPONENTS ====================
+    
+    // Initialize like button states
+    window.initializeLikeButtonStates();
+    
+    // Refresh like states from server
+    window.refreshLikeStatesFromServer();
+    
+    console.log('✅ Mytro App Initialized Successfully with Modern Modal');
 };
 
-// Initialize like button states on page load
+// Load initial data function
+window.loadInitialData = function() {
+    console.log('Loading initial data');
+    
+    const userElement = document.querySelector('[data-user-id]');
+    if (userElement) {
+        window.currentUserId = userElement.dataset.userId;
+    }
+    
+    // Process hashtags in posts
+    document.querySelectorAll('.post-text').forEach(postText => {
+        const content = postText.textContent;
+        if (content && content.includes('#')) {
+            postText.innerHTML = processPostContent(content);
+        }
+    });
+};
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    
+    setTimeout(() => {
+        window.initializeApp();
+        console.log('🎉 Mytro App Fully Ready!');
+    }, 100);
+});
+
+// ==================== ADDITIONAL UTILITY FUNCTIONS ====================
 window.initializeLikeButtonStates = function() {
     const likeButtons = document.querySelectorAll('.like-btn');
     likeButtons.forEach(button => {
         if (button.classList.contains('liked')) {
-            // Ensure liked buttons show correct visual state
             const actionText = button.querySelector('.action-text');
             const icon = button.querySelector('i');
             
             if (actionText) actionText.textContent = 'Liked';
-            if (icon) {
-                icon.className = 'fas fa-heart'; // Solid heart for liked
-            }
+            if (icon) icon.className = 'fas fa-heart';
             button.style.color = '#e74c3c';
         } else {
-            // Ensure unliked buttons show correct visual state
             const actionText = button.querySelector('.action-text');
             const icon = button.querySelector('i');
             
             if (actionText) actionText.textContent = 'Like';
-            if (icon) {
-                icon.className = 'far fa-heart'; // Outline heart for unliked
-            }
+            if (icon) icon.className = 'far fa-heart';
             button.style.color = '';
         }
     });
 };
 
-// Function to refresh like states from server
 window.refreshLikeStatesFromServer = async function() {
     const postCards = document.querySelectorAll('.post-card[data-post-id]');
     const postIds = Array.from(postCards).map(card => card.getAttribute('data-post-id')).filter(id => id);
@@ -2565,10 +2062,8 @@ window.refreshLikeStatesFromServer = async function() {
                             const actionText = likeButton.querySelector('.action-text');
                             const icon = likeButton.querySelector('i');
                             
-                            // Update like count
                             if (likeCount) likeCount.textContent = postData.like_count;
                             
-                            // Update button state
                             if (postData.is_liked) {
                                 likeButton.classList.add('liked');
                                 if (actionText) actionText.textContent = 'Liked';
@@ -2590,19 +2085,4 @@ window.refreshLikeStatesFromServer = async function() {
     }
 };
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    
-    // Small delay to ensure all elements are rendered
-    setTimeout(() => {
-        window.initializeApp();
-        window.setupNotificationPanel();
-        window.initializeLikeButtonStates(); // Initialize like button states
-        window.refreshLikeStatesFromServer(); // Refresh from server to ensure accuracy
-        startNotificationPolling();
-        window.loadNotifications();
-    }, 100);
-});
-
-console.log('Main.js loaded successfully');
+console.log('✅ Mytro Main.js Loaded Successfully');

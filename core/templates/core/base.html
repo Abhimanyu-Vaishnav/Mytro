@@ -33,6 +33,510 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <style>
+      /* MODERN CREATE POST MODAL STYLES ONLY */
+      .modern-post-modal {
+        max-width: 700px;
+        max-height: 85vh;
+        width: 95%;
+      }
+
+      .modern-post-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Rich Editor Container */
+      .rich-editor-container {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .rich-editor-container.drag-over {
+        border-color: var(--kesari-primary);
+        background: var(--kesari-light);
+      }
+
+      /* Quill Editor Customization */
+      .post-editor {
+        min-height: 200px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .ql-editor {
+        font-size: 16px;
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 200px;
+        color: var(--text-primary);
+      }
+
+      .ql-editor.ql-blank::before {
+        font-style: normal;
+        color: var(--text-secondary);
+        font-size: 16px;
+      }
+
+      /* Character Counter */
+      .character-counter {
+        text-align: right;
+        padding: 8px 16px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        border-top: 1px solid var(--border-color);
+      }
+
+      /* Modern Media Preview */
+      .modern-media-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .modern-media-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+      }
+
+      .modern-media-preview-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .modern-media-preview-container img,
+      .modern-media-preview-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+
+      .modern-remove-media-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s ease;
+      }
+
+      .modern-remove-media-btn:hover {
+        background: rgba(255, 0, 0, 0.8);
+        transform: scale(1.1);
+      }
+
+      /* Modern Post Action Bar */
+      .modern-post-action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-top: 1px solid var(--border-color);
+        margin-top: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .modern-action-buttons-left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .modern-action-group {
+        position: relative;
+        display: flex;
+        gap: 4px;
+      }
+
+      .modern-action-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .modern-action-btn:hover {
+        background: var(--hover-bg);
+        border-color: var(--kesari-primary);
+        color: var(--kesari-primary);
+        transform: translateY(-2px);
+      }
+
+      .modern-btn-tooltip {
+        position: absolute;
+        bottom: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 1000;
+      }
+
+      .modern-action-btn:hover .modern-btn-tooltip {
+        opacity: 1;
+      }
+
+      /* Advanced Features Section */
+      .modern-advanced-features {
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+
+      .feature-section-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .feature-section-title i {
+        color: var(--kesari-primary);
+      }
+
+      .feature-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .feature-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+      }
+
+      .feature-btn:hover {
+        background: var(--hover-bg);
+        border-color: var(--kesari-primary);
+        color: var(--kesari-primary);
+      }
+
+      .feature-btn i {
+        font-size: 1.1rem;
+      }
+
+      /* Emoji Picker Styles */
+      .modern-emoji-picker {
+        max-width: 400px;
+      }
+
+      .emoji-search-container {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .emoji-search-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+
+      .emoji-search-input:focus {
+        outline: none;
+        border-color: var(--kesari-primary);
+      }
+
+      .emoji-categories-modern {
+        display: flex;
+        gap: 4px;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+      }
+
+      .emoji-category-modern {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: 20px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+      }
+
+      .emoji-category-modern.active,
+      .emoji-category-modern:hover {
+        background: var(--kesari-primary);
+        color: white;
+        border-color: var(--kesari-primary);
+      }
+
+      .emoji-grid-modern {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+        padding: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .emoji-item-modern {
+        padding: 8px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 1.4rem;
+        transition: background 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .emoji-item-modern:hover {
+        background: var(--hover-bg);
+      }
+
+      /* Poll Creator Styles */
+      .poll-creator {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+
+      .poll-question-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .poll-options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .poll-option-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .poll-option-input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+      }
+
+      .remove-poll-option {
+        width: 24px;
+        height: 24px;
+        border: none;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .add-poll-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px dashed var(--border-color);
+        background: transparent;
+        color: var(--text-secondary);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: fit-content;
+      }
+
+      .add-poll-option:hover {
+        border-color: var(--kesari-primary);
+        color: var(--kesari-primary);
+      }
+
+      .poll-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .poll-setting-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .poll-setting-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      .poll-setting-item select {
+        padding: 6px 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+      }
+
+      /* Dark theme adjustments for modern modal */
+      [data-theme="dark"] .ql-toolbar.ql-snow {
+        border-color: var(--border-color) !important;
+        background: var(--bg-secondary) !important;
+      }
+
+      [data-theme="dark"] .ql-container.ql-snow {
+        border-color: var(--border-color) !important;
+        background: var(--bg-secondary) !important;
+      }
+
+      [data-theme="dark"] .ql-editor.ql-blank::before {
+        color: var(--text-secondary) !important;
+      }
+
+      [data-theme="dark"] .ql-snow .ql-stroke {
+        stroke: var(--text-primary) !important;
+      }
+
+      [data-theme="dark"] .ql-snow .ql-fill {
+        fill: var(--text-primary) !important;
+      }
+
+      [data-theme="dark"] .ql-snow .ql-picker-label {
+        color: var(--text-primary) !important;
+      }
+
+      [data-theme="dark"] .ql-snow .ql-picker-options {
+        background: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+      }
+
+      /* Responsive design for modern modal */
+      @media (max-width: 768px) {
+        .modern-post-modal {
+          margin: 20px;
+          max-height: 80vh;
+        }
+
+        .modern-post-action-bar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .modern-action-buttons-left {
+          justify-content: center;
+        }
+
+        .feature-buttons {
+          justify-content: center;
+        }
+
+        .feature-btn {
+          min-width: 100px;
+          flex: none;
+        }
+
+        .emoji-grid-modern {
+          grid-template-columns: repeat(6, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .modern-post-modal {
+          margin: 10px;
+          max-height: 90vh;
+        }
+
+        .modern-action-buttons-left {
+          gap: 4px;
+        }
+
+        .modern-action-btn {
+          width: 40px;
+          height: 40px;
+        }
+
+        .feature-btn {
+          min-width: 80px;
+          padding: 8px 12px;
+          font-size: 0.8rem;
+        }
+
+        .emoji-grid-modern {
+          grid-template-columns: repeat(5, 1fr);
+        }
+      }
+    </style>
   </head>
   <body>
     <!-- Enhanced Navigation -->
@@ -74,69 +578,75 @@
           </div>
         </div>
 
-        <!-- Navigation Links -->
-        <div class="nav-links">
-          <a
-            href="{% url 'feed' %}"
-            class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}"
-            data-tooltip="Home"
-          >
-            <i class="fas fa-home"></i>
-          </a>
+<!-- Navigation Links -->
+<div class="nav-links">
+  <a
+    href="{% url 'feed' %}"
+    class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}"
+    data-tooltip="Home"
+  >
+    <i class="fas fa-home"></i>
+  </a>
 
-          {% if user.is_authenticated %}
-          <a
-            href="{% url 'profile' user.username %}"
-            class="nav-link"
-            data-tooltip="Profile"
-          >
-            <i class="fas fa-user"></i>
-          </a>
-          <a
-            href="#"
-            class="nav-link notifications-link"
-            id="notificationsBtn"
-            data-tooltip="Notifications"
-          >
-            <i class="fas fa-bell"></i>
-            <span
-              class="notification-badge"
-              id="notificationCount"
-              style="display: none"
-              >0</span
-            >
-          </a>
-          <a
-            href="{% url 'messages' %}"
-            class="nav-link messages-link {% if request.resolver_match.url_name == 'messages' %}active{% endif %}"
-            data-tooltip="Messages"
-          >
-            <i class="fas fa-envelope"></i>
-            <span
-              class="notification-badge"
-              id="messageCount"
-              style="display: none"
-              >0</span
-            >
-          </a>
-          <a
-            href="#"
-            class="nav-link theme-toggle-nav"
-            onclick="toggleTheme()"
-            data-tooltip="Toggle Theme"
-          >
-            <i class="fas fa-moon" id="themeIcon"></i>
-          </a>
-          {% else %} {% if request.resolver_match.url_name != 'login' %}
-          <a href="{% url 'login' %}" class="nav-link" data-tooltip="Login">
-            <i class="fas fa-sign-in-alt"></i>
-          </a>
-          {% endif %} {% if request.resolver_match.url_name != 'signup' %}
-          <a href="{% url 'signup' %}" class="nav-link" data-tooltip="Sign Up">
-            <i class="fas fa-user-plus"></i>
-          </a>
-          {% endif %} {% endif %}
-        </div>
+  {% if user.is_authenticated %}
+  <a
+    href="{% url 'profile' user.username %}"
+    class="nav-link"
+    data-tooltip="Profile"
+  >
+    <i class="fas fa-user"></i>
+  </a>
+  <a
+    href="#"
+    class="nav-link notifications-link"
+    id="notificationsBtn"
+    data-tooltip="Notifications"
+  >
+    <i class="fas fa-bell"></i>
+    <span
+      class="notification-badge"
+      id="notificationCount"
+      style="display: none"
+      >0</span
+    >
+  </a>
+  <a
+    href="{% url 'messages' %}"
+    class="nav-link messages-link {% if request.resolver_match.url_name == 'messages' %}active{% endif %}"
+    data-tooltip="Messages"
+    id="messagesNavLink"
+  >
+    <i class="fas fa-envelope"></i>
+    <!-- UNREAD PERSONS COUNT BADGE -->
+    <span
+      class="notification-badge"
+      id="unreadPersonsCount"
+      style="display: none"
+      title="People with unread messages"
+      >0</span
+    >
+  </a>
+  <a
+    href="#"
+    class="nav-link theme-toggle-nav"
+    onclick="toggleTheme()"
+    data-tooltip="Toggle Theme"
+  >
+    <i class="fas fa-moon" id="themeIcon"></i>
+  </a>
+  {% else %} 
+  {% if request.resolver_match.url_name != 'login' %}
+  <a href="{% url 'login' %}" class="nav-link" data-tooltip="Login">
+    <i class="fas fa-sign-in-alt"></i>
+  </a>
+  {% endif %} 
+  {% if request.resolver_match.url_name != 'signup' %}
+  <a href="{% url 'signup' %}" class="nav-link" data-tooltip="Sign Up">
+    <i class="fas fa-user-plus"></i>
+  </a>
+  {% endif %} 
+  {% endif %}
+</div>
 
         <!-- User Menu -->
         {% if user.is_authenticated %}
@@ -346,15 +856,14 @@
       </div>
     </div>
 
-    <!-- Create Post Modal -->
+    <!-- MODERN CREATE POST MODAL -->
     <div class="modal-overlay" id="createPostModal">
-      <div class="modal-container">
+      <div class="modal-container modern-post-modal">
         <div class="modal-header">
           <h3 class="modal-title">Create Post</h3>
           <button
             class="modal-close"
             id="closeCreatePostModal"
-            onclick="window.closeCreatePostModal()"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -374,7 +883,7 @@
             <div class="author-details">
               <span class="author-name"> {{ user.profile.full_name }} </span>
               <div class="privacy-selector">
-                <select class="privacy-select">
+                <select class="privacy-select" id="postPrivacy">
                   <option value="public">🌍 Public</option>
                   <option value="friends">👥 Friends Only</option>
                   <option value="private">🔒 Only Me</option>
@@ -383,91 +892,169 @@
             </div>
           </div>
 
-          <form id="createPostForm" class="post-form">
+          <form id="createPostForm" class="modern-post-form">
             {% csrf_token %}
-            <div class="post-content-container">
-              <textarea
-                name="content"
-                placeholder="What's on your mind, {{ user.profile.full_name }}?"
-                class="post-textarea"
-                id="postContent"
-                rows="4"
-              ></textarea>
-
-              <!-- Media Preview -->
-              <div class="media-preview-container" id="mediaPreview">
-                <!-- Media items will be added here -->
+            
+            <!-- Rich Text Editor Container -->
+            <div class="rich-editor-container">
+              <div id="postEditor" class="post-editor">
+                <!-- Quill editor will be initialized here -->
+              </div>
+              
+              <!-- Character Counter -->
+              <div class="character-counter">
+                <span id="charCount">0</span>/5000
               </div>
             </div>
 
-            <!-- Post Options -->
-            <div class="post-options-container">
-              <div class="option-buttons">
-                <button
-                  type="button"
-                  class="option-btn media-btn"
-                  onclick="document.getElementById('mediaUpload').click()"
-                >
-                  <i class="fas fa-image"></i>
-                  <span>Photo/Video</span>
+            <!-- Modern Media Preview -->
+            <div class="modern-media-preview" id="modernMediaPreview">
+              <!-- Media items will be added here -->
+            </div>
+
+            <!-- Advanced Features Section -->
+            <div class="modern-advanced-features">
+              <div class="feature-section-title">
+                <i class="fas fa-magic"></i>
+                <span>Advanced Features</span>
+              </div>
+              <div class="feature-buttons">
+                <button type="button" class="feature-btn" id="addPollBtn">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>Create Poll</span>
                 </button>
-                <button
-                  type="button"
-                  class="option-btn feeling-btn"
-                  onclick="openEmojiPicker()"
-                >
+                <button type="button" class="feature-btn" id="addGifBtn">
+                  <i class="fas fa-film"></i>
+                  <span>Add GIF</span>
+                </button>
+                <button type="button" class="feature-btn" id="addEmojiBtn">
                   <i class="fas fa-smile"></i>
-                  <span>Feeling/Activity</span>
+                  <span>Emoji Picker</span>
                 </button>
-                <button
-                  type="button"
-                  class="option-btn location-btn"
-                  onclick="window.addLocation()"
-                >
+                <button type="button" class="feature-btn" id="addLocationBtn">
                   <i class="fas fa-map-marker-alt"></i>
-                  <span>Check In</span>
-                </button>
-                <button
-                  type="button"
-                  class="option-btn audio-btn"
-                  onclick="addAudio()"
-                >
-                  <i class="fas fa-microphone"></i>
-                  <span>Audio</span>
+                  <span>Add Location</span>
                 </button>
               </div>
-
-              <input
-                type="file"
-                id="mediaUpload"
-                name="image"
-                accept="image/*,video/*"
-                multiple
-                style="display: none"
-              />
             </div>
 
-            <div class="modal-actions">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="window.closeCreatePostModal()"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="btn btn-primary"
-                id="postSubmitBtn"
-                disabled
-              >
-                <span class="btn-text">Post</span>
-                <div class="btn-loading" style="display: none">
-                  <i class="fas fa-spinner fa-spin"></i>
+            <!-- Poll Creator (Hidden by default) -->
+            <div class="poll-creator" id="pollCreator" style="display: none;">
+              <input type="text" class="poll-question-input" placeholder="Ask a question..." id="pollQuestion">
+              <div class="poll-options-container" id="pollOptionsContainer">
+                <div class="poll-option-item">
+                  <input type="text" class="poll-option-input" placeholder="Option 1">
+                  <button type="button" class="remove-poll-option">×</button>
                 </div>
+                <div class="poll-option-item">
+                  <input type="text" class="poll-option-input" placeholder="Option 2">
+                  <button type="button" class="remove-poll-option">×</button>
+                </div>
+              </div>
+              <button type="button" class="add-poll-option" id="addPollOption">
+                <i class="fas fa-plus"></i>
+                <span>Add Option</span>
               </button>
+              <div class="poll-settings">
+                <div class="poll-setting-item">
+                  <input type="checkbox" id="multipleChoice">
+                  <label for="multipleChoice">Allow multiple choices</label>
+                </div>
+                <div class="poll-setting-item">
+                  <label>Duration:</label>
+                  <select id="pollDuration">
+                    <option value="1">1 day</option>
+                    <option value="3">3 days</option>
+                    <option value="7" selected>7 days</option>
+                    <option value="30">30 days</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modern Post Action Bar -->
+            <div class="modern-post-action-bar">
+              <div class="modern-action-buttons-left">
+                <div class="modern-action-group">
+                  <input type="file" id="modernMediaUpload" name="image" accept="image/*,video/*" multiple style="display: none" />
+                  <button type="button" class="modern-action-btn" id="modernMediaBtn">
+                    <i class="fas fa-image"></i>
+                    <span class="modern-btn-tooltip">Photo/Video</span>
+                  </button>
+                </div>
+
+                <div class="modern-action-group">
+                  <button type="button" class="modern-action-btn" id="feelingBtn">
+                    <i class="fas fa-smile-beam"></i>
+                    <span class="modern-btn-tooltip">Feeling</span>
+                  </button>
+                </div>
+
+                <div class="modern-action-group">
+                  <button type="button" class="modern-action-btn" id="tagFriendsBtn">
+                    <i class="fas fa-tag"></i>
+                    <span class="modern-btn-tooltip">Tag Friends</span>
+                  </button>
+                </div>
+
+                <div class="modern-action-group">
+                  <button type="button" class="modern-action-btn" id="backgroundBtn">
+                    <i class="fas fa-palette"></i>
+                    <span class="modern-btn-tooltip">Background</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="action-buttons-right">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelModernPost"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="modernPostSubmitBtn"
+                >
+                  <span class="btn-text">Post</span>
+                  <div class="btn-loading" style="display: none">
+                    <i class="fas fa-spinner fa-spin"></i>
+                  </div>
+                </button>
+              </div>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Emoji Picker Modal -->
+    <div class="modal-overlay" id="modernEmojiPickerModal">
+      <div class="modal-container small-modal modern-emoji-picker">
+        <div class="modal-header">
+          <h3 class="modal-title">Select Emoji</h3>
+          <button class="modal-close" id="closeModernEmojiPicker">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="emoji-search-container">
+            <input type="text" placeholder="Search emojis..." id="modernEmojiSearch" class="emoji-search-input">
+          </div>
+          <div class="emoji-categories-modern">
+            <button class="emoji-category-modern active" data-category="smileys">😊</button>
+            <button class="emoji-category-modern" data-category="people">👋</button>
+            <button class="emoji-category-modern" data-category="nature">🐶</button>
+            <button class="emoji-category-modern" data-category="food">🍕</button>
+            <button class="emoji-category-modern" data-category="activities">⚽</button>
+          </div>
+
+          <div class="emoji-grid-modern" id="modernEmojiGrid">
+            <!-- Emojis will be populated by JavaScript -->
+          </div>
         </div>
       </div>
     </div>
@@ -563,36 +1150,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Emoji Picker Modal -->
-    <div class="modal-overlay" id="emojiPickerModal">
-      <div class="modal-container small-modal">
-        <div class="modal-header">
-          <h3 class="modal-title">Select Emoji</h3>
-          <button class="modal-close" onclick="closeEmojiPicker()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <div class="emoji-categories">
-            <button class="emoji-category active" data-category="smileys">
-              😊
-            </button>
-            <button class="emoji-category" data-category="people">👋</button>
-            <button class="emoji-category" data-category="nature">🐶</button>
-            <button class="emoji-category" data-category="food">🍕</button>
-            <button class="emoji-category" data-category="activities">
-              ⚽
-            </button>
-          </div>
-
-          <div class="emoji-grid" id="emojiGrid">
-            <!-- Emojis will be populated by JavaScript -->
-          </div>
-        </div>
-      </div>
-    </div>
     {% endif %}
 
     <!-- Story Creator Modal -->
@@ -613,398 +1170,1286 @@
     <script src="{% static 'js/profile.js' %}"></script>
     {% endif %} {% block scripts %} {% endblock %}
 
-    <script>
-      // Simple initialization bridge
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM loaded, main.js should handle initialization");
+<script>
+// ==================== MODERN CREATE POST SYSTEM ====================
+class ModernPostSystem {
+    constructor() {
+        this.quill = null;
+        this.uploadedMedia = [];
+        this.isInitialized = false;
+        this.currentPollOptions = 2;
+        
+        this.init();
+    }
 
-        // Initialize live search
-        initializeLiveSearch();
-      });
+    init() {
+        console.log('🚀 Initializing Modern Post System...');
+        
+        // Replace old create post functionality
+        this.replaceOldCreatePost();
+        
+        // Setup global event listeners
+        this.setupGlobalListeners();
+        
+        this.isInitialized = true;
+        console.log('✅ Modern Post System Initialized');
+    }
 
-      // Live search functionality
-      let searchTimeout = null;
+    replaceOldCreatePost() {
+        // Replace any old create post buttons
+        const oldCreatePostBtns = document.querySelectorAll('.option-btn.media-btn, .create-post-btn, [onclick*="createPost"]');
+        oldCreatePostBtns.forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                this.openModal();
+            };
+        });
 
-      function initializeLiveSearch() {
-        const searchInput = document.getElementById("searchInput");
-        if (searchInput) {
-          searchInput.addEventListener("input", function (e) {
-            performLiveSearch(e.target.value);
-          });
-
-          searchInput.addEventListener("focus", function () {
-            if (this.value.length >= 2) {
-              showSearchResults();
-            }
-          });
-
-          searchInput.addEventListener("blur", function () {
-            setTimeout(() => {
-              hideSearchResults();
-            }, 300);
-          });
-        }
-      }
-
-      function performLiveSearch(query) {
-        const searchResults = document.getElementById("searchResults");
-        const searchLoading = document.getElementById("searchLoading");
-        const searchEmpty = document.getElementById("searchEmpty");
-
-        if (!query || query.length < 2) {
-          searchResults.classList.remove("show");
-          return;
-        }
-
-        searchResults.classList.add("show");
-        if (searchLoading) searchLoading.style.display = "flex";
-        if (searchEmpty) searchEmpty.style.display = "none";
-
-        // Clear previous timeout
-        if (searchTimeout) {
-          clearTimeout(searchTimeout);
-        }
-
-        // Debounce search
-        searchTimeout = setTimeout(async () => {
-          try {
-            const response = await fetch(
-              `/api/search-users/?q=${encodeURIComponent(query)}`
-            );
-            if (response.ok) {
-              const data = await response.json();
-              displayNavSearchResults(data.users);
-            } else {
-              displayNavSearchResults([]);
-            }
-          } catch (error) {
-            console.error("Search error:", error);
-            displayNavSearchResults([]);
-          } finally {
-            if (searchLoading) searchLoading.style.display = "none";
-          }
-        }, 300);
-      }
-
-      function displayNavSearchResults(users) {
-        const searchResults = document.getElementById("searchResults");
-        const searchEmpty = document.getElementById("searchEmpty");
-
-        if (!users || users.length === 0) {
-          if (searchEmpty) searchEmpty.style.display = "flex";
-          searchResults.innerHTML = `
-                <div class="search-loading" id="searchLoading" style="display: none; padding: 20px; text-align: center; color: #65676b; gap: 8px;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Searching...</span>
-                </div>
-                <div class="search-empty" id="searchEmpty" style="display: flex; padding: 20px; text-align: center; color: #65676b; gap: 8px; align-items: center; justify-content: center;">
-                    <i class="fas fa-search"></i>
-                    <span>No results found</span>
-                </div>
-            `;
-          return;
-        }
-
-        if (searchEmpty) searchEmpty.style.display = "none";
-
-        const isDark =
-          document.documentElement.getAttribute("data-theme") === "dark";
-
-        const resultsHTML = users
-          .slice(0, 8)
-          .map(
-            (user) => `
-            <div class="search-result-item" data-username="${
-              user.username
-            }" style="padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid ${
-              isDark ? "#333" : "#f0f2f5"
-            }; background: ${
-              isDark ? "#1a1a1a" : "white"
-            };" onmouseover="this.style.background='${
-              isDark ? "#333" : "#f8f9fa"
-            }'" onmouseout="this.style.background='${
-              isDark ? "#1a1a1a" : "white"
-            }'">
-                <div class="search-result-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                    ${
-                      user.avatar
-                        ? `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">`
-                        : `<div class="default-avatar" style="width: 100%; height: 100%; background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">${user.name.charAt(
-                            0
-                          )}</div>`
-                    }
-                </div>
-                <div class="search-result-info" style="flex: 1; min-width: 0;">
-                    <h4 class="search-result-name" style="margin: 0 0 2px 0; font-size: 14px; font-weight: 600; color: ${
-                      isDark ? "white" : "#1c1e21"
-                    }; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${
-              user.name
-            }</h4>
-                    <p class="search-result-username" style="margin: 0; color: #65676b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${
-                      user.username
-                    }</p>
-                </div>
-                <div class="search-actions" style="display: flex; gap: 4px;">
-                    <button class="btn-sm message-btn" data-user-id="${
-                      user.id
-                    }" style="padding: 6px 8px; border: 1px solid ${
-              isDark ? "#333" : "#e1e5e9"
-            }; border-radius: 6px; background: ${
-              isDark ? "#333" : "white"
-            }; color: #FF9933; cursor: pointer; font-size: 12px;" title="Message">
-                        <i class="fas fa-comment"></i>
-                    </button>
-                </div>
-            </div>
-        `
-          )
-          .join("");
-
-        searchResults.innerHTML = `
-            <div class="search-loading" id="searchLoading" style="display: none;"></div>
-            <div class="search-empty" id="searchEmpty" style="display: none;"></div>
-            ${resultsHTML}
-        `;
-
-        // Apply dark theme to search results container
-        if (isDark) {
-          searchResults.style.background = "#1a1a1a";
-          searchResults.style.borderColor = "#333";
-        } else {
-          searchResults.style.background = "white";
-          searchResults.style.borderColor = "#e9ecef";
-        }
-
-        // Add click event listeners after inserting HTML
-        searchResults
-          .querySelectorAll(".search-result-item")
-          .forEach((item) => {
-            item.addEventListener("mousedown", function (e) {
-              e.preventDefault();
-              if (!e.target.closest(".message-btn")) {
-                const username = this.dataset.username;
-                goToProfile(username);
-              }
+        // Also add create post functionality to any "What's on your mind?" inputs
+        const postInputs = document.querySelectorAll('.post-input, .create-post-input');
+        postInputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                this.openModal();
             });
-          });
-
-        searchResults.querySelectorAll(".message-btn").forEach((btn) => {
-          btn.addEventListener("mousedown", function (e) {
-            e.stopPropagation();
-            const userId = this.dataset.userId;
-            hideSearchResults();
-            quickMessage(userId);
-          });
         });
-      }
+    }
 
-      function showSearchResults() {
-        const searchResults = document.getElementById("searchResults");
-        const query = document.getElementById("searchInput").value;
-        if (query && query.length >= 2) {
-          searchResults.classList.add("show");
-        }
-      }
-
-      function hideSearchResults() {
-        const searchResults = document.getElementById("searchResults");
-        searchResults.classList.remove("show");
-      }
-
-      function goToProfile(username) {
-        // Clear search input and hide results
-        const searchInput = document.getElementById("searchInput");
-        if (searchInput) {
-          searchInput.value = "";
-        }
-        hideSearchResults();
-
-        // Navigate to profile
-        window.location.href = `/profile/${username}/`;
-      }
-
-      function quickMessage(userId) {
-        // Open messages page with user
-        window.location.href = `/messages/?user=${userId}`;
-      }
-
-      // Enhanced profile image fallback
-      function ensureProfileImageFallback() {
-        document.querySelectorAll('img[src*="profile"]').forEach((img) => {
-          img.onerror = function () {
-            const username = this.alt || "U";
-            const fallback = document.createElement("div");
-            fallback.className = "default-avatar";
-            fallback.textContent = username.charAt(0).toUpperCase();
-            fallback.style.cssText = `
-                    width: ${this.offsetWidth}px;
-                    height: ${this.offsetHeight}px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #ff6b35, #f7931e);
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 700;
-                    font-size: ${Math.max(12, this.offsetWidth * 0.4)}px;
-                `;
-            this.parentNode.replaceChild(fallback, this);
-          };
-        });
-      }
-
-      // Run on page load and when new content is added
-      document.addEventListener("DOMContentLoaded", ensureProfileImageFallback);
-
-      // Placeholder functions for modal features
-      function openEmojiPicker() {
-        if (window.showGlobalNotification) {
-          window.showGlobalNotification("Emoji picker coming soon", "info");
-        }
-      }
-
-      function closeEmojiPicker() {
-        // Close emoji picker modal
-        const modal = document.getElementById("emojiPickerModal");
-        if (modal) modal.style.display = "none";
-      }
-
-      function addLocation() {
-        if (window.addLocation) {
-          window.addLocation();
-        } else if (window.showGlobalNotification) {
-          window.showGlobalNotification("Location feature coming soon", "info");
-        }
-      }
-
-      function addAudio() {
-        if (window.showGlobalNotification) {
-          window.showGlobalNotification("Audio feature coming soon", "info");
-        }
-      }
-
-      function openImageEditor() {
-        if (window.showGlobalNotification) {
-          window.showGlobalNotification("Image editor coming soon", "info");
-        }
-      }
-
-      function closeImageEditor() {
-        const modal = document.getElementById("imageEditorModal");
-        if (modal) modal.style.display = "none";
-      }
-
-      function resetImageEditor() {
-        if (window.showGlobalNotification) {
-          window.showGlobalNotification("Reset image editor", "info");
-        }
-      }
-
-      function applyImageEdit() {
-        if (window.showGlobalNotification) {
-          window.showGlobalNotification("Apply image edits", "info");
-        }
-      }
-
-      // Global Theme Management
-      function toggleTheme() {
-        const currentTheme = localStorage.getItem("theme") || "light";
-        const newTheme = currentTheme === "light" ? "dark" : "light";
-        setGlobalTheme(newTheme);
-      }
-
-      function setGlobalTheme(theme) {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("theme", theme);
-
-        const themeIcon = document.getElementById("themeIcon");
-
-        if (theme === "dark") {
-          themeIcon.className = "fas fa-sun";
-        } else {
-          themeIcon.className = "fas fa-moon";
-        }
-      }
-
-      // Load saved theme on page load
-      document.addEventListener("DOMContentLoaded", function () {
-        const savedTheme = localStorage.getItem("theme") || "light";
-        setGlobalTheme(savedTheme);
-      });
-
-      // Message count functionality
-      let unreadMessageCount = 0;
-      let uniqueSendersCount = 0;
-
-      // Function to fetch and update message counts
-      async function updateMessageCounts() {
-        try {
-          const response = await fetch("/api/messages/unread-count/");
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-              unreadMessageCount = data.total_unread || 0;
-              uniqueSendersCount = data.unique_senders || 0;
-
-              updateMessageBadges();
+    setupGlobalListeners() {
+        // Global click handler for create post triggers
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            
+            // Check if clicked element or its parent should trigger post creation
+            if (target.closest('.create-post-trigger') || 
+                target.closest('[data-action="create-post"]') ||
+                target.textContent.includes('Create Post') ||
+                target.textContent.includes("What's on your mind")) {
+                e.preventDefault();
+                this.openModal();
             }
-          }
+        });
+
+        // Escape key handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeModal();
+            }
+        });
+    }
+
+    openModal() {
+        console.log('📝 Opening Modern Post Modal...');
+        const modal = document.getElementById('createPostModal');
+        if (!modal) {
+            console.error('❌ Create post modal not found!');
+            this.showFallbackPostCreation();
+            return;
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Initialize editor when modal opens
+        this.initializeEditor();
+        
+        // Focus the editor
+        setTimeout(() => {
+            this.focusEditor();
+        }, 300);
+    }
+
+    closeModal() {
+        const modal = document.getElementById('createPostModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            this.resetForm();
+        }
+    }
+
+    initializeEditor() {
+        // Initialize Quill if not already initialized
+        if (!this.quill) {
+            this.initQuillEditor();
+        }
+        
+        // Setup modal event listeners
+        this.setupModalEvents();
+        
+        // Setup media handling
+        this.setupMediaHandling();
+        
+        // Setup advanced features
+        this.setupAdvancedFeatures();
+    }
+
+    initQuillEditor() {
+        try {
+            const editorElement = document.getElementById('postEditor');
+            if (!editorElement) {
+                console.error('❌ Post editor element not found');
+                this.createFallbackEditor();
+                return;
+            }
+
+            this.quill = new Quill('#postEditor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['clean']
+                    ]
+                },
+                placeholder: `What's on your mind, {{ user.profile.full_name|default:user.username }}?`,
+                bounds: '#postEditor'
+            });
+
+            // Character counter
+            this.quill.on('text-change', () => {
+                this.updateCharacterCounter();
+                this.updatePostButtonState();
+            });
+
+            // Customize for dark theme
+            this.customizeQuillTheme();
+            
+            console.log('✅ Quill editor initialized successfully');
+
         } catch (error) {
-          console.error("Error fetching message counts:", error);
+            console.error('❌ Error initializing Quill:', error);
+            this.createFallbackEditor();
         }
-      }
+    }
 
-      // Function to update message badges in navigation
-      function updateMessageBadges() {
-        const messageBadge = document.getElementById("messageCount");
-        const mobileMessageBadge = document.querySelector(
-          '.mobile-nav-link[href*="messages"] .mobile-notification-badge'
+    createFallbackEditor() {
+        const editorContainer = document.querySelector('.rich-editor-container');
+        if (!editorContainer) return;
+
+        editorContainer.innerHTML = `
+            <textarea 
+                id="postContent" 
+                class="post-textarea"
+                placeholder="What's on your mind, {{ user.profile.full_name|default:user.username }}?"
+                rows="6"
+                style="width: 100%; border: none; outline: none; padding: 20px; font-size: 16px; resize: vertical; min-height: 200px; background: transparent; color: inherit;"
+            ></textarea>
+        `;
+        
+        const textarea = document.getElementById('postContent');
+        textarea.addEventListener('input', () => {
+            this.updateCharacterCounter();
+            this.updatePostButtonState();
+        });
+    }
+
+    customizeQuillTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (!isDark) return;
+
+        // Remove any existing custom styles
+        const existingStyle = document.getElementById('quill-dark-theme');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'quill-dark-theme';
+        style.textContent = `
+            .ql-toolbar.ql-snow {
+                border-color: var(--border-color) !important;
+                background: var(--bg-secondary) !important;
+            }
+            .ql-container.ql-snow {
+                border-color: var(--border-color) !important;
+                background: var(--bg-secondary) !important;
+            }
+            .ql-editor.ql-blank::before {
+                color: var(--text-secondary) !important;
+                font-style: normal !important;
+            }
+            .ql-snow .ql-stroke {
+                stroke: var(--text-primary) !important;
+            }
+            .ql-snow .ql-fill {
+                fill: var(--text-primary) !important;
+            }
+            .ql-snow .ql-picker-label {
+                color: var(--text-primary) !important;
+            }
+            .ql-snow .ql-picker-options {
+                background: var(--card-bg) !important;
+                border-color: var(--border-color) !important;
+            }
+            .ql-snow .ql-picker-item {
+                color: var(--text-primary) !important;
+            }
+            .ql-editor {
+                color: var(--text-primary) !important;
+                font-size: 16px;
+                line-height: 1.6;
+            }
+            .ql-editor.ql-blank::before {
+                font-size: 16px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    setupModalEvents() {
+        const modal = document.getElementById('createPostModal');
+        const closeBtn = document.getElementById('closeCreatePostModal');
+        const cancelBtn = document.getElementById('cancelModernPost');
+        const form = document.getElementById('createPostForm');
+
+        // Remove existing event listeners to prevent duplicates
+        if (closeBtn) {
+            closeBtn.onclick = () => this.closeModal();
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.onclick = () => this.closeModal();
+        }
+
+        if (form) {
+            form.onsubmit = (e) => this.handlePostSubmit(e);
+        }
+
+        // Close on overlay click
+        if (modal) {
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    this.closeModal();
+                }
+            };
+        }
+    }
+
+    setupMediaHandling() {
+        const mediaInput = document.getElementById('modernMediaUpload');
+        const mediaBtn = document.getElementById('modernMediaBtn');
+
+        if (mediaBtn && mediaInput) {
+            mediaBtn.onclick = () => mediaInput.click();
+
+            mediaInput.onchange = (e) => {
+                this.handleMediaUpload(e.target.files);
+                mediaInput.value = ''; // Reset input
+            };
+        }
+
+        // Drag and drop support
+        const editorContainer = document.querySelector('.rich-editor-container');
+        if (editorContainer) {
+            editorContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                editorContainer.classList.add('drag-over');
+            });
+
+            editorContainer.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                editorContainer.classList.remove('drag-over');
+            });
+
+            editorContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                editorContainer.classList.remove('drag-over');
+                this.handleMediaUpload(e.dataTransfer.files);
+            });
+        }
+    }
+
+    setupAdvancedFeatures() {
+        // Poll creator
+        this.setupPollCreator();
+        
+        // Emoji picker
+        this.setupEmojiPicker();
+        
+        // Other feature buttons
+        this.setupFeatureButtons();
+    }
+
+    setupPollCreator() {
+        const addPollBtn = document.getElementById('addPollBtn');
+        const pollCreator = document.getElementById('pollCreator');
+        const addPollOptionBtn = document.getElementById('addPollOption');
+
+        if (addPollBtn && pollCreator) {
+            addPollBtn.onclick = () => {
+                const isVisible = pollCreator.style.display === 'block';
+                pollCreator.style.display = isVisible ? 'none' : 'block';
+                this.updatePostButtonState();
+            };
+        }
+
+        if (addPollOptionBtn) {
+            addPollOptionBtn.onclick = () => this.addPollOption();
+        }
+
+        // Setup remove option buttons
+        this.setupPollOptionRemovers();
+    }
+
+    setupPollOptionRemovers() {
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-poll-option')) {
+                const container = document.getElementById('pollOptionsContainer');
+                if (container && container.children.length > 2) {
+                    e.target.closest('.poll-option-item').remove();
+                    this.renumberPollOptions();
+                }
+            }
+        });
+    }
+
+    addPollOption() {
+        const container = document.getElementById('pollOptionsContainer');
+        if (!container) return;
+        
+        const optionCount = container.children.length + 1;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'poll-option-item';
+        optionDiv.innerHTML = `
+            <input type="text" class="poll-option-input" placeholder="Option ${optionCount}">
+            <button type="button" class="remove-poll-option">×</button>
+        `;
+        
+        container.appendChild(optionDiv);
+        this.currentPollOptions++;
+    }
+
+    renumberPollOptions() {
+        const options = document.querySelectorAll('.poll-option-input');
+        options.forEach((input, index) => {
+            input.placeholder = `Option ${index + 1}`;
+        });
+    }
+
+    setupEmojiPicker() {
+        const addEmojiBtn = document.getElementById('addEmojiBtn');
+        const emojiPickerModal = document.getElementById('modernEmojiPickerModal');
+        const closeEmojiPicker = document.getElementById('closeModernEmojiPicker');
+
+        if (addEmojiBtn && emojiPickerModal) {
+            addEmojiBtn.onclick = () => {
+                emojiPickerModal.style.display = 'flex';
+                this.loadEmojis('smileys');
+            };
+        }
+
+        if (closeEmojiPicker) {
+            closeEmojiPicker.onclick = () => {
+                emojiPickerModal.style.display = 'none';
+            };
+        }
+
+        // Emoji category switching
+        this.setupEmojiCategories();
+        
+        // Emoji search
+        this.setupEmojiSearch();
+    }
+
+    setupEmojiCategories() {
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('emoji-category-modern')) {
+                // Update active category
+                document.querySelectorAll('.emoji-category-modern').forEach(cat => {
+                    cat.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                // Load emojis for selected category
+                const category = e.target.dataset.category;
+                this.loadEmojis(category);
+            }
+        });
+    }
+
+    setupEmojiSearch() {
+        const searchInput = document.getElementById('modernEmojiSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filterEmojis(e.target.value);
+            });
+        }
+    }
+
+    loadEmojis(category) {
+        const emojiGrid = document.getElementById('modernEmojiGrid');
+        if (!emojiGrid) return;
+        
+        const emojis = this.getEmojisByCategory(category);
+        
+        emojiGrid.innerHTML = emojis.map(emoji => `
+            <button class="emoji-item-modern" data-emoji="${emoji}">${emoji}</button>
+        `).join('');
+        
+        // Add click events
+        emojiGrid.querySelectorAll('.emoji-item-modern').forEach(item => {
+            item.onclick = () => {
+                this.insertEmoji(item.dataset.emoji);
+            };
+        });
+    }
+
+    filterEmojis(searchTerm) {
+        const allEmojis = this.getAllEmojis();
+        const filteredEmojis = allEmojis.filter(emoji => 
+            emoji.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
+        
+        const emojiGrid = document.getElementById('modernEmojiGrid');
+        if (!emojiGrid) return;
+        
+        emojiGrid.innerHTML = filteredEmojis.slice(0, 48).map(emoji => `
+            <button class="emoji-item-modern" data-emoji="${emoji.char}">${emoji.char}</button>
+        `).join('');
+        
+        // Re-add click events
+        emojiGrid.querySelectorAll('.emoji-item-modern').forEach(item => {
+            item.onclick = () => {
+                this.insertEmoji(item.dataset.emoji);
+            };
+        });
+    }
 
-        // Update total unread count badge
-        if (messageBadge) {
-          if (unreadMessageCount > 0) {
-            messageBadge.textContent =
-              unreadMessageCount > 99 ? "99+" : unreadMessageCount;
-            messageBadge.style.display = "flex";
-          } else {
-            messageBadge.style.display = "none";
-          }
+    getEmojisByCategory(category) {
+        const emojiCategories = {
+            smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚'],
+            people: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉'],
+            nature: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷'],
+            food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🥓', '🥚', '🍳', '🥞', '🍞', '🥐', '🥨'],
+            activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱']
+        };
+        
+        return emojiCategories[category] || emojiCategories.smileys;
+    }
+
+    getAllEmojis() {
+        // This is a simplified version - in production you might want a more comprehensive emoji list
+        return [
+            { char: '😀', name: 'grinning face' },
+            { char: '😃', name: 'grinning face with big eyes' },
+            { char: '😄', name: 'grinning face with smiling eyes' },
+            // Add more emojis as needed
+        ];
+    }
+
+    setupFeatureButtons() {
+        const feelingBtn = document.getElementById('feelingBtn');
+        const tagFriendsBtn = document.getElementById('tagFriendsBtn');
+        const backgroundBtn = document.getElementById('backgroundBtn');
+        const addGifBtn = document.getElementById('addGifBtn');
+        const addLocationBtn = document.getElementById('addLocationBtn');
+
+        if (feelingBtn) {
+            feelingBtn.onclick = () => this.showFeatureComingSoon('Feeling/Activity');
         }
 
-        // Update mobile badge with unique senders count
-        if (mobileMessageBadge) {
-          if (uniqueSendersCount > 0) {
-            mobileMessageBadge.textContent =
-              uniqueSendersCount > 99 ? "99+" : uniqueSendersCount;
-            mobileMessageBadge.style.display = "flex";
-          } else {
-            mobileMessageBadge.style.display = "none";
-          }
+        if (tagFriendsBtn) {
+            tagFriendsBtn.onclick = () => this.showFeatureComingSoon('Tag Friends');
         }
-      }
 
-      // Poll for new messages every 30 seconds
-      function startMessagePolling() {
-        updateMessageCounts(); // Initial load
-        setInterval(updateMessageCounts, 30000); // Update every 30 seconds
-      }
-
-      // Initialize when DOM is loaded
-      document.addEventListener("DOMContentLoaded", function () {
-        if ("{{ user.is_authenticated }}" === "True") {
-          startMessagePolling();
+        if (backgroundBtn) {
+            backgroundBtn.onclick = () => this.showFeatureComingSoon('Background');
         }
-      });
 
-      // Also update counts when coming back to the page
-      document.addEventListener("visibilitychange", function () {
-        if (!document.hidden && "{{ user.is_authenticated }}" === "True") {
-          updateMessageCounts();
+        if (addGifBtn) {
+            addGifBtn.onclick = () => this.showFeatureComingSoon('GIF Search');
         }
-      });
-    </script>
 
+        if (addLocationBtn) {
+            addLocationBtn.onclick = () => this.showFeatureComingSoon('Location');
+        }
+    }
+
+    showFeatureComingSoon(featureName) {
+        this.showNotification(`${featureName} feature coming soon!`, 'info');
+    }
+
+    handleMediaUpload(files) {
+        const mediaPreview = document.getElementById('modernMediaPreview');
+        if (!mediaPreview) return;
+        
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+                // Check file size (max 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showNotification('File size too large. Maximum size is 10MB.', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    const mediaItem = this.createMediaPreview(file, e.target.result);
+                    mediaPreview.appendChild(mediaItem);
+                    this.uploadedMedia.push({
+                        file: file,
+                        url: e.target.result,
+                        type: file.type.startsWith('image/') ? 'image' : 'video',
+                        id: 'media-' + Date.now() + Math.random().toString(36).substr(2, 9)
+                    });
+                    
+                    this.updatePostButtonState();
+                };
+                
+                reader.onerror = () => {
+                    this.showNotification('Error reading file', 'error');
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                this.showNotification('Please select only image or video files', 'error');
+            }
+        });
+    }
+
+    createMediaPreview(file, dataUrl) {
+        const isImage = file.type.startsWith('image/');
+        const mediaId = 'modern-media-' + Date.now() + Math.random().toString(36).substr(2, 9);
+        
+        const mediaItem = document.createElement('div');
+        mediaItem.className = 'modern-media-item';
+        mediaItem.dataset.id = mediaId;
+        
+        mediaItem.innerHTML = `
+            <div class="modern-media-preview-container">
+                ${isImage ? 
+                    `<img src="${dataUrl}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">` : 
+                    `<video src="${dataUrl}" controls style="width: 100%; height: 100%; object-fit: cover;"></video>`
+                }
+                <button type="button" class="modern-remove-media-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add remove event listener
+        const removeBtn = mediaItem.querySelector('.modern-remove-media-btn');
+        removeBtn.onclick = () => {
+            this.removeMedia(mediaId);
+        };
+        
+        return mediaItem;
+    }
+
+    removeMedia(mediaId) {
+        const mediaItem = document.querySelector(`[data-id="${mediaId}"]`);
+        if (mediaItem) {
+            mediaItem.remove();
+        }
+        
+        this.uploadedMedia = this.uploadedMedia.filter(item => {
+            const itemId = 'modern-media-' + item.id;
+            return itemId !== mediaId;
+        });
+        
+        this.updatePostButtonState();
+    }
+
+    updateCharacterCounter() {
+        const charCountElement = document.getElementById('charCount');
+        if (!charCountElement) return;
+        
+        let content = '';
+        if (this.quill) {
+            content = this.quill.getText().trim();
+        } else {
+            const postContent = document.getElementById('postContent');
+            content = postContent ? postContent.value : '';
+        }
+        
+        const charCount = content.length;
+        charCountElement.textContent = charCount;
+        
+        // Add warning for long posts
+        if (charCount > 4500) {
+            charCountElement.style.color = 'var(--kesari-primary)';
+        } else {
+            charCountElement.style.color = 'var(--text-secondary)';
+        }
+    }
+
+    updatePostButtonState() {
+        const submitBtn = document.getElementById('modernPostSubmitBtn');
+        if (!submitBtn) return;
+        
+        let hasContent = false;
+        let hasMedia = this.uploadedMedia.length > 0;
+        
+        // Check content based on editor type
+        if (this.quill) {
+            const text = this.quill.getText().trim();
+            const html = this.quill.root.innerHTML;
+            hasContent = text.length > 0 || html !== '<p><br></p>';
+        } else {
+            const postContent = document.getElementById('postContent');
+            hasContent = postContent && postContent.value.trim().length > 0;
+        }
+        
+        // Check if poll is active
+        const pollCreator = document.getElementById('pollCreator');
+        const isPollActive = pollCreator && pollCreator.style.display === 'block';
+        
+        if (isPollActive) {
+            const pollQuestion = document.getElementById('pollQuestion')?.value?.trim();
+            const pollOptions = Array.from(document.querySelectorAll('.poll-option-input'))
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            const hasValidPoll = pollQuestion && pollQuestion.length > 0 && pollOptions.length >= 2;
+            submitBtn.disabled = !(hasContent || hasMedia || hasValidPoll);
+        } else {
+            submitBtn.disabled = !(hasContent || hasMedia);
+        }
+    }
+
+    focusEditor() {
+        if (this.quill) {
+            this.quill.focus();
+        } else {
+            const postContent = document.getElementById('postContent');
+            if (postContent) {
+                postContent.focus();
+            }
+        }
+    }
+
+    insertEmoji(emoji) {
+        if (this.quill) {
+            try {
+                const range = this.quill.getSelection();
+                const position = range ? range.index : this.quill.getLength();
+                
+                this.quill.insertText(position, emoji);
+                this.quill.setSelection(position + emoji.length);
+            } catch (error) {
+                console.error('Error inserting emoji in Quill:', error);
+                this.insertEmojiFallback(emoji);
+            }
+        } else {
+            this.insertEmojiFallback(emoji);
+        }
+        
+        // Close emoji picker
+        const emojiPickerModal = document.getElementById('modernEmojiPickerModal');
+        if (emojiPickerModal) {
+            emojiPickerModal.style.display = 'none';
+        }
+    }
+
+    insertEmojiFallback(emoji) {
+        const postContent = document.getElementById('postContent');
+        if (postContent) {
+            const start = postContent.selectionStart;
+            const end = postContent.selectionEnd;
+            postContent.value = postContent.value.substring(0, start) + emoji + postContent.value.substring(end);
+            postContent.selectionStart = postContent.selectionEnd = start + emoji.length;
+            postContent.focus();
+            
+            // Trigger input event for character counter
+            postContent.dispatchEvent(new Event('input'));
+        }
+    }
+
+    async handlePostSubmit(e) {
+        e.preventDefault();
+        console.log('📤 Handling modern post submission...');
+        
+        const submitBtn = document.getElementById('modernPostSubmitBtn');
+        const loadingSpinner = submitBtn?.querySelector('.btn-loading');
+        const btnText = submitBtn?.querySelector('.btn-text');
+        
+        if (!submitBtn) {
+            console.error('❌ Modern post submit button not found');
+            return;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Posting...';
+        if (loadingSpinner) loadingSpinner.style.display = 'inline-block';
+        
+        try {
+            const formData = new FormData();
+            
+            // Get content from editor
+            let content = '';
+            if (this.quill) {
+                content = this.quill.root.innerHTML;
+            } else {
+                const postContent = document.getElementById('postContent');
+                content = postContent ? postContent.value : '';
+            }
+            
+            formData.append('content', content);
+            formData.append('post_type', 'text');
+            formData.append('privacy', document.getElementById('postPrivacy')?.value || 'public');
+            formData.append('csrfmiddlewaretoken', this.getCSRFToken());
+            
+            // Add media files
+            if (this.uploadedMedia.length > 0) {
+                this.uploadedMedia.forEach((media, index) => {
+                    formData.append('image', media.file);
+                });
+            }
+            
+            // Check if poll is created
+            const pollCreator = document.getElementById('pollCreator');
+            if (pollCreator && pollCreator.style.display !== 'none') {
+                const pollQuestion = document.getElementById('pollQuestion')?.value;
+                const pollOptions = Array.from(document.querySelectorAll('.poll-option-input'))
+                    .map(input => input.value.trim())
+                    .filter(value => value !== '');
+                
+                if (pollQuestion && pollOptions.length >= 2) {
+                    formData.append('poll_question', pollQuestion);
+                    formData.append('poll_options', JSON.stringify(pollOptions));
+                    formData.append('poll_multiple_choice', document.getElementById('multipleChoice')?.checked || false);
+                    formData.append('poll_duration', document.getElementById('pollDuration')?.value || '7');
+                }
+            }
+            
+            console.log('Submitting post data...');
+            
+            const response = await fetch('/create_post/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                let errorMessage = `Failed to create post: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    console.log('Non-JSON error response');
+                }
+                throw new Error(errorMessage);
+            }
+            
+            let data;
+            try {
+                data = await response.json();
+                console.log('✅ Post created successfully:', data);
+            } catch (e) {
+                console.log('✅ Post created successfully (non-JSON response)');
+                data = { success: true };
+            }
+            
+            this.showNotification('Post created successfully!', 'success');
+            this.closeModal();
+            
+            // Reload page after short delay to show new post
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+            
+        } catch (error) {
+            console.error('❌ Create post error:', error);
+            this.showNotification(error.message || 'Something went wrong while creating post', 'error');
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            if (btnText) btnText.textContent = 'Post';
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+        }
+    }
+
+    resetForm() {
+        // Reset editor
+        if (this.quill) {
+            this.quill.setText('');
+        } else {
+            const postContent = document.getElementById('postContent');
+            if (postContent) {
+                postContent.value = '';
+            }
+        }
+        
+        // Reset uploaded media
+        this.uploadedMedia = [];
+        const mediaPreview = document.getElementById('modernMediaPreview');
+        if (mediaPreview) {
+            mediaPreview.innerHTML = '';
+        }
+        
+        // Reset poll
+        const pollCreator = document.getElementById('pollCreator');
+        if (pollCreator) {
+            pollCreator.style.display = 'none';
+            const pollQuestion = document.getElementById('pollQuestion');
+            if (pollQuestion) pollQuestion.value = '';
+            
+            // Reset poll options to initial state
+            const pollOptionsContainer = document.getElementById('pollOptionsContainer');
+            if (pollOptionsContainer) {
+                pollOptionsContainer.innerHTML = `
+                    <div class="poll-option-item">
+                        <input type="text" class="poll-option-input" placeholder="Option 1">
+                        <button type="button" class="remove-poll-option">×</button>
+                    </div>
+                    <div class="poll-option-item">
+                        <input type="text" class="poll-option-input" placeholder="Option 2">
+                        <button type="button" class="remove-poll-option">×</button>
+                    </div>
+                `;
+                this.setupPollOptionRemovers();
+            }
+        }
+        
+        // Reset character counter
+        const charCount = document.getElementById('charCount');
+        if (charCount) {
+            charCount.textContent = '0';
+            charCount.style.color = 'var(--text-secondary)';
+        }
+        
+        // Reset privacy to default
+        const postPrivacy = document.getElementById('postPrivacy');
+        if (postPrivacy) {
+            postPrivacy.value = 'public';
+        }
+        
+        this.updatePostButtonState();
+    }
+
+    showFallbackPostCreation() {
+        // Fallback to simple prompt if modal doesn't exist
+        const content = prompt("What's on your mind?");
+        if (content) {
+            this.showNotification('Fallback: Post creation would happen here', 'info');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        // Use existing notification system or fallback
+        if (window.showGlobalNotification) {
+            window.showGlobalNotification(message, type);
+        } else {
+            // Simple fallback notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                z-index: 10000;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transition: all 0.3s ease;
+            `;
+            
+            if (type === 'success') {
+                notification.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+            } else if (type === 'error') {
+                notification.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+            } else {
+                notification.style.background = 'linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary))';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+    }
+
+    getCSRFToken() {
+        let token = '';
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        
+        if (cookieValue) {
+            token = cookieValue;
+        }
+        
+        if (!token) {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                token = metaTag.getAttribute('content');
+            }
+        }
+        
+        return token;
+    }
+}
+
+// Initialize the modern post system when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM loaded, setting up modern post system...');
+    
+    // Create global instance
+    window.modernPostSystem = new ModernPostSystem();
+    
+    // Make functions globally available for backward compatibility
+    window.openModernPostModal = () => window.modernPostSystem.openModal();
+    window.closeModernPostModal = () => window.modernPostSystem.closeModal();
+    window.insertModernEmoji = (emoji) => window.modernPostSystem.insertEmoji(emoji);
+    
+    console.log('🎉 Modern Post System ready!');
+});
+
+// Handle page transitions (for Turbolinks or similar)
+document.addEventListener('turbolinks:load', function() {
+    if (window.modernPostSystem) {
+        window.modernPostSystem.setupGlobalListeners();
+    }
+});
+
+</script>
+
+<script>
+// SIMPLE THEME TOGGLE FIX
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    const themeIcon = document.getElementById('themeIcon');
+    
+    console.log('Toggling theme:', currentTheme, '→', newTheme);
+    
+    // Update HTML attribute
+    html.setAttribute('data-theme', newTheme);
+    
+    // Update icon
+    if (themeIcon) {
+        themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    
+    // Save preference
+    localStorage.setItem('mytro-theme', newTheme);
+}
+
+// Initialize theme on load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('mytro-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Set correct icon
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    
+    console.log('Theme initialized:', savedTheme);
+});
+</script>
+
+<script>
+// ==================== UNREAD PERSONS COUNT SYSTEM ====================
+
+class UnreadPersonsCounter {
+    constructor() {
+        this.unreadPersonsCount = 0;
+        this.pollingInterval = null;
+        this.isInitialized = false;
+        
+        this.init();
+    }
+
+    init() {
+        console.log('🔔 Initializing Unread Persons Counter...');
+        
+        if (!this.isUserAuthenticated()) {
+            console.log('👤 User not authenticated, skipping unread counter');
+            return;
+        }
+        
+        this.startPolling();
+        this.setupEventListeners();
+        this.isInitialized = true;
+        
+        console.log('✅ Unread Persons Counter Initialized');
+    }
+
+    isUserAuthenticated() {
+        try {
+            return {{ user.is_authenticated|yesno:"true,false" }};
+        } catch (e) {
+            return false;
+        }
+    }
+
+    setupEventListeners() {
+        // Listen for page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.checkUnreadCount();
+            }
+        });
+        
+        // Listen for custom events from messaging system
+        document.addEventListener('messageRead', () => {
+            setTimeout(() => this.checkUnreadCount(), 1000);
+        });
+        
+        document.addEventListener('newMessage', () => {
+            setTimeout(() => this.checkUnreadCount(), 500);
+        });
+    }
+
+    startPolling() {
+        // Initial check
+        this.checkUnreadCount();
+        
+        // Poll every 30 seconds
+        this.pollingInterval = setInterval(() => {
+            if (!document.hidden) {
+                this.checkUnreadCount();
+            }
+        }, 30000);
+    }
+
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
+    }
+
+    async checkUnreadCount() {
+        try {
+            const response = await fetch('/api/messages/unread-persons-count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': this.getCSRFToken()
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.updateUnreadCountUI(data.unread_persons_count || 0);
+                } else {
+                    console.log('Unread count API returned error:', data.error);
+                    this.fallbackUnreadCountCheck();
+                }
+            } else {
+                console.log('Unread count API failed:', response.status);
+                this.fallbackUnreadCountCheck();
+            }
+        } catch (error) {
+            console.log('Unread count API not available, using fallback');
+            this.fallbackUnreadCountCheck();
+        }
+    }
+
+    async fallbackUnreadCountCheck() {
+        try {
+            // Try to get count from conversations API
+            const response = await fetch('/api/conversations/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.conversations) {
+                    const unreadPersons = data.conversations.filter(chat => 
+                        (chat.last_message?.unread || 0) > 0
+                    ).length;
+                    
+                    this.updateUnreadCountUI(unreadPersons);
+                }
+            }
+        } catch (error) {
+            console.log('Fallback unread count also failed');
+        }
+    }
+
+    updateUnreadCountUI(count) {
+        const unreadBadge = document.getElementById('unreadPersonsCount');
+        const messagesNavLink = document.getElementById('messagesNavLink');
+        
+        this.unreadPersonsCount = count;
+        
+        if (unreadBadge) {
+            if (count > 0) {
+                unreadBadge.textContent = count > 99 ? '99+' : count;
+                unreadBadge.style.display = 'flex';
+                
+                // Add pulse animation for new messages
+                if (count > this.unreadPersonsCount) {
+                    this.animateBadge(unreadBadge);
+                }
+            } else {
+                unreadBadge.style.display = 'none';
+            }
+        }
+        
+        // Update page title
+        this.updatePageTitle(count);
+        
+        // Update tooltip
+        if (messagesNavLink) {
+            messagesNavLink.setAttribute('data-tooltip', 
+                count > 0 ? 
+                `Messages (${count} person${count > 1 ? 's' : ''} with unread messages)` : 
+                'Messages'
+            );
+        }
+        
+        console.log(`👥 Unread persons count updated: ${count}`);
+    }
+
+    animateBadge(badge) {
+        badge.style.animation = 'pulse 1s ease-in-out';
+        setTimeout(() => {
+            badge.style.animation = '';
+        }, 1000);
+    }
+
+    updatePageTitle(unreadCount) {
+        const baseTitle = 'Mytro - Modern Social Network';
+        
+        if (unreadCount > 0) {
+            document.title = `(${unreadCount}) ${baseTitle}`;
+        } else {
+            document.title = baseTitle;
+        }
+    }
+
+    getCSRFToken() {
+        let token = '';
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        
+        if (cookieValue) {
+            token = cookieValue;
+        }
+        
+        if (!token) {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                token = metaTag.getAttribute('content');
+            }
+        }
+        
+        return token;
+    }
+
+    // Public method to manually refresh count
+    refresh() {
+        this.checkUnreadCount();
+    }
+
+    // Public method to get current count
+    getCount() {
+        return this.unreadPersonsCount;
+    }
+
+    // Cleanup method
+    destroy() {
+        this.stopPolling();
+        this.isInitialized = false;
+    }
+}
+
+// Initialize unread counter when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM loaded, setting up unread persons counter...');
+    window.unreadPersonsCounter = new UnreadPersonsCounter();
+});
+
+// Handle page visibility
+document.addEventListener('visibilitychange', function() {
+    if (window.unreadPersonsCounter && !document.hidden) {
+        window.unreadPersonsCounter.refresh();
+    }
+});
+
+// Make refresh function globally available
+function refreshUnreadCount() {
+    if (window.unreadPersonsCounter) {
+        window.unreadPersonsCounter.refresh();
+    }
+}
+
+// CSS for pulse animation
+const pulseStyles = `
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary));
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+    border: 2px solid var(--card-bg);
+    z-index: 10;
+}
+
+.nav-link {
+    position: relative;
+}
+
+.messages-link .notification-badge {
+    background: linear-gradient(135deg, var(--kesari-primary), var(--kesari-secondary)) !important;
+    box-shadow: 0 2px 8px rgba(255, 153, 51, 0.4) !important;
+}
+
+/* Enhanced badge styles for better visibility */
+.notification-badge:not(:empty) {
+    animation: pulse 2s infinite;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .notification-badge {
+        font-size: 9px;
+        min-width: 16px;
+        height: 16px;
+        padding: 1px 4px;
+    }
+}
+`;
+
+// Add styles to document
+const styleSheet = document.createElement('style');
+styleSheet.textContent = pulseStyles;
+document.head.appendChild(styleSheet);
+</script>
+
+    <!-- KEEP ALL YOUR EXISTING CSS BELOW - NO CHANGES -->
     <style>
       /* Global Theme Variables */
       :root {
