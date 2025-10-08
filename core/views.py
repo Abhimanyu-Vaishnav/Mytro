@@ -1311,6 +1311,7 @@ def repost_post(request, post_id):
             # Undo repost
             existing_repost.delete()
             reposted = False
+            message = "Removed repost"
         else:
             # Create repost
             repost = Post.objects.create(
@@ -1318,16 +1319,18 @@ def repost_post(request, post_id):
                 repost_parent=original_post,
                 content=original_post.content,
                 image=original_post.image,
-                is_public=True
+                post_type='repost'
             )
             reposted = True
+            message = "Reposted successfully"
         
         repost_count = Post.objects.filter(repost_parent=original_post).count()
         
         return JsonResponse({
             'success': True,
             'reposted': reposted,
-            'repost_count': repost_count
+            'repost_count': repost_count,
+            'message': message
         })
     except Exception as e:
         return JsonResponse({
@@ -2646,9 +2649,11 @@ def admin_debug_urls(request):
 @login_required
 @require_GET
 def search_users_for_chat(request):
-    """Search users for new chat - ENHANCED"""
+    """Search users for new chat - FIXED VERSION"""
     try:
         query = request.GET.get('q', '').strip()
+        
+        print(f"🔍 [SERVER] Search query received: '{query}'")
         
         if not query or len(query) < 2:
             return JsonResponse({
@@ -2663,34 +2668,62 @@ def search_users_for_chat(request):
         # Combine both lists for search
         connected_users = set(following_users) | set(followers)
         
+        print(f"👥 [SERVER] Connected users count: {len(connected_users)}")
+        
         # Search in connected users first
         users = User.objects.filter(
             Q(id__in=connected_users) &
             (Q(username__icontains=query) |
              Q(first_name__icontains=query) |
-             Q(last_name__icontains=query) |
-             Q(profile__full_name__icontains=query))
+             Q(last_name__icontains=query))
         ).exclude(id=request.user.id).select_related('profile')[:20]
+        
+        print(f"✅ [SERVER] Found {users.count()} users")
         
         users_data = []
         for user in users:
-            # Check if conversation already exists
-            existing_conversation = Conversation.objects.filter(
-                participants=request.user
-            ).filter(
-                participants=user
-            ).filter(is_group=False).first()
-            
-            users_data.append({
-                'id': user.id,
-                'username': user.username,
-                'name': user.profile.full_name or user.username,
-                'avatar': user.profile.profile_pic.url if user.profile.profile_pic else None,
-                'is_online': user.last_login and (timezone.now() - user.last_login) < timedelta(minutes=5),
-                'conversation_id': existing_conversation.id if existing_conversation else None,
-                'is_following': Follow.objects.filter(follower=request.user, following=user).exists(),
-                'is_follower': Follow.objects.filter(follower=user, following=request.user).exists()
-            })
+            try:
+                # Check if conversation already exists
+                existing_conversation = Conversation.objects.filter(
+                    participants=request.user
+                ).filter(
+                    participants=user
+                ).filter(is_group=False).first()
+                
+                # Safely get profile data
+                full_name = user.username
+                avatar_url = None
+                is_online = False
+                
+                if hasattr(user, 'profile'):
+                    if user.profile.full_name:
+                        full_name = user.profile.full_name
+                    if user.profile.profile_pic:
+                        avatar_url = user.profile.profile_pic.url
+                
+                # Check online status (last 5 minutes)
+                if user.last_login:
+                    is_online = (timezone.now() - user.last_login) < timedelta(minutes=5)
+                
+                user_data = {
+                    'id': user.id,
+                    'username': user.username,
+                    'name': full_name,
+                    'avatar': avatar_url,
+                    'is_online': is_online,
+                    'conversation_id': existing_conversation.id if existing_conversation else None,
+                    'is_following': user.id in following_users,
+                    'is_follower': user.id in followers
+                }
+                
+                users_data.append(user_data)
+                print(f"👤 [SERVER] Added user: {user.username}")
+                
+            except Exception as user_error:
+                print(f"❌ [SERVER] Error processing user {user.username}: {user_error}")
+                continue
+        
+        print(f"🎯 [SERVER] Returning {len(users_data)} users")
         
         return JsonResponse({
             'success': True,
@@ -2698,10 +2731,14 @@ def search_users_for_chat(request):
         })
         
     except Exception as e:
-        print(f"Error searching users: {e}")
+        print(f"💥 [SERVER] Critical error in search_users_for_chat: {e}")
+        import traceback
+        traceback.print_exc()
+        
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': 'Search failed',
+            'users': []
         }, status=500)
 
 @login_required
@@ -2890,6 +2927,89 @@ def stop_typing(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+def search_api(request):
+    query = request.GET.get('q', '').strip()
+    
+    if not query or len(query) < 2:
+        return JsonResponse({'users': [], 'posts': [], 'success': True})
+    
+    results = {
+        'users': [],
+        'posts': [],
+        'success': True
+    }
+    
+    try:
+        # Search users - basic search
+        users = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )[:10]
+        
+        for user in users:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'full_name': user.get_full_name() or user.username,
+                'profile_pic': None
+            }
+            
+            # Safely get profile data
+            try:
+                if hasattr(user, 'profile'):
+                    user_data['full_name'] = user.profile.full_name or user.get_full_name() or user.username
+                    if user.profile.profile_pic:
+                        user_data['profile_pic'] = user.profile.profile_pic.url
+            except ObjectDoesNotExist:
+                pass
+                
+            results['users'].append(user_data)
+        
+        # Search posts - only if user authenticated
+        if request.user.is_authenticated:
+            try:
+                from .models import Post  # Import your Post model
+                
+                posts = Post.objects.filter(
+                    Q(content__icontains=query)
+                ).select_related('user')[:10]
+                
+                for post in posts:
+                    post_data = {
+                        'id': post.id,
+                        'content': post.content[:200],  # Limit content length
+                        'author_name': post.user.username,
+                        'author_profile_pic': None
+                    }
+                    
+                    # Safely get author profile
+                    try:
+                        if hasattr(post.user, 'profile'):
+                            post_data['author_name'] = post.user.profile.full_name or post.user.username
+                            if post.user.profile.profile_pic:
+                                post_data['author_profile_pic'] = post.user.profile.profile_pic.url
+                    except ObjectDoesNotExist:
+                        pass
+                        
+                    results['posts'].append(post_data)
+                    
+            except Exception as post_error:
+                print(f"Post search error: {post_error}")
+                # Continue without posts if there's an error
+        
+    except Exception as e:
+        print(f"Search API error: {e}")
+        return JsonResponse({
+            'success': False, 
+            'error': 'Search failed',
+            'users': [],
+            'posts': []
+        }, status=500)
+    
+    return JsonResponse(results)
+
 
 @login_required
 @require_GET

@@ -963,81 +963,192 @@ function insertModernEmoji(emoji) {
 
 
 // ==================== POST INTERACTIONS ====================
-window.toggleLike = async function(postId, button) {
+// window.toggleLike = async function(postId, button) {
+//     try {
+//         console.log('Toggling like for post:', postId);
+        
+//         const csrfToken = getCSRFToken();
+//         if (!csrfToken) return;
+
+//         const response = await fetch(`/api/like_post/${postId}/`, {
+//             method: 'POST',
+//             headers: {
+//                 'X-CSRFToken': csrfToken,  // ADD THIS LINE
+//                 'Content-Type': 'application/json'
+//             }
+//         });
+
+
+//         // const response = await fetch(`/api/like_post/${postId}/`, {
+//         //     method: 'POST',
+//         //     headers: {
+//         //         'X-CSRFToken': getCSRFToken(),
+//         //         'Content-Type': 'application/json'
+//         //     }
+//         // });
+
+//         if (!response.ok) {
+//             throw new Error(`Like failed: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         console.log('Like response:', data);
+        
+//         const likeCountElements = document.querySelectorAll(`[data-post-id="${postId}"] .like-count`);
+//         likeCountElements.forEach(el => {
+//             el.textContent = data.like_count || 0;
+//         });
+
+//         if (data.liked) {
+//             button.classList.add('liked');
+//             const actionText = button.querySelector('.action-text');
+//             const icon = button.querySelector('i');
+            
+//             if (actionText) actionText.textContent = 'Liked';
+//             if (icon) icon.className = 'fas fa-heart';
+//             button.style.color = '#e74c3c';
+//         } else {
+//             button.classList.remove('liked');
+//             const actionText = button.querySelector('.action-text');
+//             const icon = button.querySelector('i');
+            
+//             if (actionText) actionText.textContent = 'Like';
+//             if (icon) icon.className = 'far fa-heart';
+//             button.style.color = '';
+//         }
+
+//         window.showGlobalNotification(data.liked ? 'Post liked!' : 'Like removed', 'success');
+
+//     } catch (error) {
+//         console.error('Like error:', error);
+//         window.showGlobalNotification('Something went wrong while liking the post', 'error');
+//     }
+// };
+
+
+window.toggleLike = async function(postId, button, event) {
+    // ADD DOUBLE CLICK PROTECTION
+     if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    if (button.disabled) return;
+    button.disabled = true;
+    
     try {
         console.log('Toggling like for post:', postId);
         
+        const csrfToken = getCSRFToken();
+        if (!csrfToken) {
+            window.showGlobalNotification('Security token missing', 'error');
+            return;
+        }
+
         const response = await fetch(`/api/like_post/${postId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCSRFToken(),
+                'X-CSRFToken': csrfToken,
                 'Content-Type': 'application/json'
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Like failed: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Like failed');
 
         const data = await response.json();
         console.log('Like response:', data);
         
+        // Update like count
         const likeCountElements = document.querySelectorAll(`[data-post-id="${postId}"] .like-count`);
         likeCountElements.forEach(el => {
             el.textContent = data.like_count || 0;
         });
 
+        // Update button state
         if (data.liked) {
             button.classList.add('liked');
             const actionText = button.querySelector('.action-text');
             const icon = button.querySelector('i');
-            
             if (actionText) actionText.textContent = 'Liked';
             if (icon) icon.className = 'fas fa-heart';
-            button.style.color = '#e74c3c';
         } else {
             button.classList.remove('liked');
             const actionText = button.querySelector('.action-text');
             const icon = button.querySelector('i');
-            
             if (actionText) actionText.textContent = 'Like';
             if (icon) icon.className = 'far fa-heart';
-            button.style.color = '';
         }
 
         window.showGlobalNotification(data.liked ? 'Post liked!' : 'Like removed', 'success');
 
     } catch (error) {
         console.error('Like error:', error);
-        window.showGlobalNotification('Something went wrong while liking the post', 'error');
+        window.showGlobalNotification('Something went wrong', 'error');
+    } finally {
+        // RE-ENABLE BUTTON AFTER 500ms
+        setTimeout(() => {
+            button.disabled = false;
+        }, 500);
     }
 };
 
-window.toggleComments = function(postId) {
-    console.log('Toggling comments for post:', postId);
+// window.toggleComments = function(postId) {
+//     console.log('Toggling comments for post:', postId);
     
-    const commentSection = document.getElementById(`commentsSection-${postId}`) ||
-                          document.getElementById(`comments-${postId}`) ||
-                          document.querySelector(`[data-post-id="${postId}"] .comments-section`);
+//     const commentSection = document.getElementById(`commentsSection-${postId}`) ||
+//                           document.getElementById(`comments-${postId}`) ||
+//                           document.querySelector(`[data-post-id="${postId}"] .comments-section`);
     
-    if (commentSection) {
-        const isVisible = commentSection.style.display === 'block';
-        commentSection.style.display = isVisible ? 'none' : 'block';
+//     if (commentSection) {
+//         const isVisible = commentSection.style.display === 'block';
+//         commentSection.style.display = isVisible ? 'none' : 'block';
         
-        if (!isVisible) {
+//         if (!isVisible) {
+//             loadComments(postId);
+//         }
+//     } else {
+//         console.error('Comment section not found for post:', postId);
+//     }
+// };
+window.toggleComments = function(postId, event) {
+
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    console.log('🔄 Toggling comments for post:', postId);
+    
+    const commentSection = document.getElementById(`commentsSection-${postId}`);
+    if (!commentSection) {
+        console.error('❌ Comment section not found for post:', postId);
+        return;
+    }
+    
+    // Toggle display
+    const isVisible = commentSection.style.display === 'block';
+    commentSection.style.display = isVisible ? 'none' : 'block';
+    
+    console.log('✅ Comment section visibility:', commentSection.style.display);
+    
+    // Load comments if opening
+    if (!isVisible) {
+        setTimeout(() => {
             loadComments(postId);
-        }
-    } else {
-        console.error('Comment section not found for post:', postId);
+        }, 100);
     }
 };
+
+
 
 async function loadComments(postId) {
     try {
+        console.log('📥 Loading comments for post:', postId);
         const response = await fetch(`/api/comments/${postId}/`);
         if (!response.ok) throw new Error('Failed to load comments');
         
         const data = await response.json();
+        console.log('Comments loaded:', data);
         displayComments(postId, data.comments);
     } catch (error) {
         console.error('Error loading comments:', error);
@@ -1927,14 +2038,14 @@ window.initializeApp = function() {
         });
     });
     
-    document.querySelectorAll('.comment-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const postId = this.closest('[data-post-id]')?.getAttribute('data-post-id');
-            if (postId) {
-                window.toggleComments(postId);
-            }
-        });
-    });
+    // document.querySelectorAll('.comment-btn').forEach(btn => {
+    //     btn.addEventListener('click', function() {
+    //         const postId = this.closest('[data-post-id]')?.getAttribute('data-post-id');
+    //         if (postId) {
+    //             window.toggleComments(postId);
+    //         }
+    //     });
+    // });
     
     document.querySelectorAll('.share-btn').forEach(btn => {
         btn.addEventListener('click', function() {

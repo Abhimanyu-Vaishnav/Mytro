@@ -2782,54 +2782,69 @@ body:not([data-theme="dark"]) .suggestion-item .follow-btn.following:hover,
     }
 }
 
-<script>
-// Text formatting utilities
-function formatPostText(text) {
-    if (!text) return '';
-    
-    // Trim leading and trailing whitespace but preserve internal line breaks
-    return text.trim();
+/* Post Card Specific Styles */
+.post-card {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-function normalizeWhitespace(text) {
-    if (!text) return '';
-    
-    // Remove excessive leading spaces but keep line breaks
-    return text.replace(/^\s+/gm, '').trim();
+/* Like Animation */
+.like-btn.liked {
+    animation: likeAnimation 0.6s ease;
 }
 
-// Apply text formatting on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Format all existing post text
-    document.querySelectorAll('.post-text').forEach(element => {
-        if (element.textContent) {
-            element.textContent = formatPostText(element.textContent);
-        }
-    });
-    
-    // Format textareas on input
-    document.querySelectorAll('.post-textarea, .edit-post-textarea').forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            // Preserve cursor position while formatting
-            const cursorPos = this.selectionStart;
-            const formatted = normalizeWhitespace(this.value);
-            if (formatted !== this.value) {
-                this.value = formatted;
-                this.setSelectionRange(cursorPos, cursorPos);
-            }
-        });
-    });
-});
-
-// Override existing form submission to format text
-if (typeof submitPost === 'function') {
-    const originalSubmitPost = submitPost;
-    submitPost = function() {
-        const textarea = document.querySelector('.post-textarea');
-        if (textarea) {
-            textarea.value = formatPostText(textarea.value);
-        }
-        return originalSubmitPost.apply(this, arguments);
-    };
+@keyframes likeAnimation {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
 }
-</script>
+
+/* Comment Slide Animation */
+.comments-section {
+    transition: all 0.3s ease;
+}
+
+/* Image Modal */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.image-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Loading States */
+.post-action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.post-action-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

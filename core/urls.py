@@ -127,6 +127,8 @@ urlpatterns = [
     # Online Users
     path("api/online-users/", views.get_online_users, name="get_online_users"),
     path("api/trending-hashtags/", views.get_trending_hashtags, name="get_trending_hashtags"),
+    path('api/search/', views.search_api, name='search_api'),
+
 
     # ==================== MEDIA & UPLOADS ====================
     path("api/upload-post-photo/", views.upload_post_photo, name="upload_post_photo"),
