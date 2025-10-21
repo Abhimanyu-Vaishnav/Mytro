@@ -100,3 +100,5 @@ Admin panel available at /admin (requires superuser)
 For questions, suggestions, or collaboration: 
 Abhimanyu Vaishnav 
 📧 abhimanyuvaishnav2017@gmail.com
+# Mytro
+Welcome to **Mytro**, a modern social media platform built with Django. Mytro enables users to connect, share, and interact through posts, stories, comments, and profiles — all wrapped in a sleek, responsive interface.
