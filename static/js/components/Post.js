@@ -631,7 +631,7 @@ async function saveCommentEdit(commentId) {
     const newContent = textarea.value.trim();
     
     if (!newContent) {
-        alert('Comment content cannot be empty');
+        if(window.showToast) showToast('Comment content cannot be empty','error'); else console.log('Comment content cannot be empty');
         return;
     }
     
@@ -668,7 +668,7 @@ async function saveCommentEdit(commentId) {
         }
     } catch (error) {
         console.error('Error editing comment:', error);
-        alert('Error editing comment');
+        if(window.showToast) showToast('Error editing comment','error'); else console.log('Error editing comment');
     }
 }
 

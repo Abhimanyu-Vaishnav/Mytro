@@ -1,24 +1,15 @@
 <!-- core/templates/core/components/post_card.html -->
 {% load static %}
+{% load post_extras %}
+<link rel="stylesheet" href="{% static 'css/post_card.css' %}">
 <div class="post-card" data-post-id="{{ post.id }}">
-    
-    <!-- Repost Header -->
+    <!-- Repost / Quote header -->
     {% if post.repost_parent %}
-    <div class="repost-header">
-        <i class="fas fa-retweet"></i>
-        <span>
-            <a href="{% url 'profile' post.author.username %}">
-                {{ post.author.profile.full_name|default:post.author.username }}
-            </a>
-            reposted
-            {% if post.repost_parent.author %}
-            from 
-            <a href="{% url 'profile' post.repost_parent.author.username %}">
-                {{ post.repost_parent.author.profile.full_name|default:post.repost_parent.author.username }}
-            </a>
-            {% endif %}
-        </span>
-    </div>
+        <div class="repost-header">
+            <i class="fas fa-retweet" aria-hidden="true"></i>
+            <span class="repost-text">{{ post.author.username }} reposted</span>
+            <small class="repost-time">&middot; {{ post.created_at|timesince }} ago</small>
+        </div>
     {% endif %}
 
     <!-- Post Header -->
@@ -35,241 +26,239 @@
             </a>
             <div class="user-details">
                 <a href="{% url 'profile' post.author.username %}" class="user-name">
-                    {{ post.author.profile.full_name }}
+                    {{ post.author.profile.full_name|default:post.author.username }}
                 </a>
                 <div class="post-meta">
                     <span class="post-time">{{ post.created_at|timesince }} ago</span>
-                    <span class="post-privacy">
-                        <i class="fas fa-globe-americas"></i>
-                        Public
-                    </span>
                 </div>
             </div>
         </div>
-        
-        <!-- Post Options Menu -->
         <div class="post-options">
-            <button class="post-menu-btn" onclick="window.togglePostMenu('{{ post.id }}')">
-                <i class="fas fa-ellipsis-h"></i>
+            <button class="post-menu-btn" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu('{{ post.id }}')">
+                <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
+                <span class="sr-only">Open post menu</span>
             </button>
-            <div class="post-menu-dropdown" id="postMenu-{{ post.id }}">
+            <div class="post-menu-dropdown" id="postMenu-{{ post.id }}" role="menu">
                 {% if post.author == request.user %}
-                    <button class="menu-item" onclick="window.editPost('{{ post.id }}')">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit Post</span>
+                    <button class="menu-item" onclick="editPost('{{ post.id }}')">
+                        <i class="fas fa-edit"></i> Edit Post
                     </button>
-                    <button class="menu-item" onclick="window.deletePost('{{ post.id }}')">
-                        <i class="fas fa-trash"></i>
-                        <span>Delete Post</span>
-                    </button>
-                    <div class="menu-divider"></div>
-                {% endif %}
-                <button class="menu-item" onclick="window.repost('{{ post.id }}')">
-                    <i class="fas fa-retweet"></i>
-                    <span>Repost</span>
-                </button>
-                <button class="menu-item" onclick="window.quotePost('{{ post.id }}')">
-                    <i class="fas fa-quote-left"></i>
-                    <span>Quote Post</span>
-                </button>
-                <button class="menu-item" onclick="window.savePost('{{ post.id }}')">
-                    <i class="fas fa-bookmark"></i>
-                    <span>Save Post</span>
-                </button>
-                <button class="menu-item" onclick="window.copyPostLink('{{ post.id }}')">
-                    <i class="fas fa-link"></i>
-                    <span>Copy Link</span>
-                </button>
-                <button class="menu-item" onclick="window.reportPost('{{ post.id }}')">
-                    <i class="fas fa-flag"></i>
-                    <span>Report Post</span>
-                </button>
-                {% if post.author != request.user %}
-                    <div class="menu-divider"></div>
-                    <button class="menu-item" onclick="toggleFollow('{{ post.author.id }}', this)">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Follow {{ post.author.username }}</span>
+                    <button class="menu-item" onclick="deletePost('{{ post.id }}')">
+                        <i class="fas fa-trash"></i> Delete Post
                     </button>
                 {% endif %}
+                <button class="menu-item" onclick="repost('{{ post.id }}')" role="menuitem">
+                    <i class="fas fa-retweet"></i> Repost
+                </button>
+                <button class="menu-item" onclick="openQuoteModal('{{ post.id }}')" role="menuitem">
+                    <i class="fas fa-quote-left"></i> Quote Post
+                </button>
+                <button class="menu-item" onclick="savePost('{{ post.id }}')" role="menuitem">
+                    <i class="fas fa-bookmark"></i> Save Post
+                </button>
+                <button class="menu-item" onclick="copyPostLink('{{ post.id }}')" role="menuitem">
+                    <i class="fas fa-link"></i> Copy Link
+                </button>
+                <button class="menu-item" onclick="openReportModal('{{ post.id }}')" role="menuitem">
+                    <i class="fas fa-flag"></i> Report Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quote Modal -->
+    <div class="quote-modal" id="quoteModal-{{ post.id }}" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="quoteModalLabel-{{ post.id }}">
+        <div class="quote-modal-overlay" onclick="closeQuoteModal('{{ post.id }}')"></div>
+        <div class="quote-modal-panel">
+            <h3 id="quoteModalLabel-{{ post.id }}">Quote Post</h3>
+            <div class="quote-original">
+                <strong>{{ post.author.username }}</strong>
+                <p class="quote-original-text">{{ post.content|truncatechars:200 }}</p>
+            </div>
+            <textarea id="quoteText-{{ post.id }}" placeholder="Add your thoughts..." rows="4" aria-label="Quote text" maxlength="1000"></textarea>
+            <div class="quote-counter"><span id="quoteCount-{{ post.id }}">0</span>/1000</div>
+            <div class="quote-actions">
+                <button class="btn btn-secondary" onclick="closeQuoteModal('{{ post.id }}')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitQuote('{{ post.id }}')">Quote</button>
             </div>
         </div>
     </div>
 
     <!-- Post Content -->
     <div class="post-content">
+        {% if post.is_quote and post.quote_text %}
+            <div class="quote-text">{{ post.quote_text|linebreaksbr }}</div>
+        {% endif %}
         {% if post.content %}
-            <div class="post-text">
-                {{ post.content|safe|linebreaksbr }}
-            </div>
+            <p>{{ post.content|safe }}</p>
         {% endif %}
-        
         {% if post.image %}
-            <div class="post-media">
-                <div class="media-container">
-                    <img src="{{ post.image.url }}" 
-                         alt="Post image" 
-                         class="post-image"
-                         onclick="window.openImageModal('{{ post.image.url }}')"
-                         loading="lazy">
-                </div>
-            </div>
+            <img src="{{ post.image.url }}" alt="Post Image" class="post-image" loading="lazy" onclick="openLightbox(this, '{{ post.image.url }}')">
         {% endif %}
-    </div>
 
-    <!-- Post Stats -->
-    <div class="post-stats">
-        <div class="stats-left">
-            <div class="likes-stat" onclick="showLikesModal('{{ post.id }}')">
-                <div class="likes-preview">
-                    <i class="fas fa-heart"></i>
-                    <span class="like-count">{{ post.likes.count }}</span>
+        {% if post.repost_parent %}
+            <div class="repost-preview">
+                <div class="repost-preview-header">
+                    <a href="{% url 'profile' post.repost_parent.author.username %}">{{ post.repost_parent.author.username }}</a>
+                    <span class="small-time">&middot; {{ post.repost_parent.created_at|timesince }} ago</span>
                 </div>
-            </div>
-            <div class="reposts-stat" onclick="showRepostsModal('{{ post.id }}')">
-                <div class="reposts-preview">
-                    <i class="fas fa-retweet"></i>
-                    <span class="repost-count">{{ post.reposts.count }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="stats-right">
-            <span class="comment-count">{{ post.comments.count }} comments</span>
-            <span class="share-count">{{ post.shares.count }} shares</span>
-        </div>
-    </div>
-
-    <!-- Post Actions - FIXED -->
-<div class="post-actions">
-    <!-- Like Button -->
-    <button class="post-action-btn like-btn {% if request.user in post.likes.all %}liked{% endif %}" 
-            data-post-id="{{ post.id }}"
-            onclick="window.toggleLike('{{ post.id }}', this, event)">
-        <i class="fas fa-heart"></i>
-        <span class="action-text">
-            {% if request.user in post.likes.all %}Liked{% else %}Like{% endif %}
-        </span>
-    </button>
-    
-    <!-- Comment Button -->
-    <button class="post-action-btn comment-btn" 
-            onclick="window.toggleComments('{{ post.id }}', event)">
-        <i class="fas fa-comment"></i>
-        <span>Comment</span>
-    </button>
-    
-    <!-- Repost Button with Dropdown - FIXED -->
-    <div class="repost-container">
-        <button class="post-action-btn repost-btn" 
-                onclick="window.handleRepost('{{ post.id }}', event)">
-            <i class="fas fa-retweet"></i>
-            <span>Repost</span>
-        </button>
-        <div class="repost-dropdown" id="repostMenu-{{ post.id }}">
-            <button class="repost-option" onclick="window.repost('{{ post.id }}', event)">
-                <i class="fas fa-retweet"></i>
-                <span>Repost</span>
-            </button>
-            <button class="repost-option" onclick="window.quotePost('{{ post.id }}', event)">
-                <i class="fas fa-quote-left"></i>
-                <span>Quote Post</span>
-            </button>
-        </div>
-    </div>
-    
-    <!-- Share Button with Dropdown - FIXED -->
-    <div class="share-container">
-        <button class="post-action-btn share-btn" 
-                onclick="window.toggleShareMenu('{{ post.id }}', event)">
-            <i class="fas fa-share"></i>
-            <span>Share</span>
-        </button>
-        <div class="share-dropdown" id="shareMenu-{{ post.id }}">
-            <button class="share-option" onclick="window.shareToFeed('{{ post.id }}', event)">
-                <i class="fas fa-newspaper"></i>
-                <span>Share to Feed</span>
-            </button>
-            <button class="share-option" onclick="window.shareToMessage('{{ post.id }}', event)">
-                <i class="fas fa-envelope"></i>
-                <span>Send in Message</span>
-            </button>
-            <button class="share-option" onclick="window.shareToStory('{{ post.id }}', event)">
-                <i class="fas fa-camera"></i>
-                <span>Share to Story</span>
-            </button>
-            <div class="share-divider"></div>
-            <button class="share-option" onclick="window.copyPostLink('{{ post.id }}', event)">
-                <i class="fas fa-link"></i>
-                <span>Copy Link</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-
-    <!-- Comments Section -->
-    <div class="comments-section" id="commentsSection-{{ post.id }}" style="display: none;">
-        <!-- Add Comment Form -->
-        <div class="add-comment-form">
-            <div class="comment-avatar">
-                {% if user.profile.profile_pic %}
-                    <img src="{{ user.profile.profile_pic.url }}" alt="Profile" class="user-avatar small">
-                {% else %}
-                    <div class="default-avatar small">
-                        {{ user.username|first|upper }}
-                    </div>
+                <div class="repost-preview-content">{{ post.repost_parent.content|truncatechars:200 }}</div>
+                {% if post.repost_parent.image %}
+                    <img src="{{ post.repost_parent.image.url }}" alt="Reposted image" class="repost-preview-image" loading="lazy">
                 {% endif %}
             </div>
-            <div class="comment-input-container">
-                <div class="comment-input-wrapper">
-                    <textarea class="comment-input" 
-                              placeholder="Write a comment..." 
-                              id="commentInput-{{ post.id }}"
-                              onkeydown="handleCommentKeydown(event, '{{ post.id }}')"></textarea>
-                </div>
-                <button class="comment-submit-btn" onclick="window.submitComment('{{ post.id }}')" type="button">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
+        {% endif %}
+    </div>
 
-        <!-- Comments List -->
-        <div class="comments-list" id="commentsList-{{ post.id }}">
-            {% for comment in post.comments.all|slice:":3"|dictsortreversed:"created_at" %}
-            <div class="comment" data-comment-id="{{ comment.id }}">
-                <div class="comment-avatar">
-                    {% if comment.user.profile.profile_pic %}
-                        <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}">
-                    {% else %}
-                        <div class="comment-avatar-default">
-                            {{ comment.user.username|first|upper }}
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <strong>{{ comment.user.profile.full_name|default:comment.user.username }}</strong>
-                        <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+    <!-- Post Actions -->
+    <div class="post-actions" aria-label="Post actions">
+        {% comment %} Determine if current user liked this post {% endcomment %}
+    {% is_liked post request.user as liked %}
+    <button class="action-btn like-btn {% if liked %}liked{% endif %}" data-liked="{% if liked %}true{% else %}false{% endif %}" onclick="likePost('{{ post.id }}')" aria-pressed="{% if liked %}true{% else %}false{% endif %}">
+            <i class="fas fa-heart" aria-hidden="true"></i>
+            <span class="action-label">Like</span>
+            <span class="count like-count" id="likeCount-{{ post.id }}" onclick="openLikedUsers('{{ post.id }}')" role="button" tabindex="0">{{ post.likes.count }}</span>
+        </button>
+
+        <button class="action-btn comment-btn" onclick="focusCommentInput('{{ post.id }}')">
+            <i class="fas fa-comment" aria-hidden="true"></i>
+            <span class="action-label">Comment</span>
+            <span class="count" id="commentCount-{{ post.id }}">{{ post.comments.count }}</span>
+        </button>
+
+        <!-- Placeholder for share/repost menus already present elsewhere -->
+
+        <button class="action-btn share-btn" onclick="sharePost('{{ post.id }}')">
+            <i class="fas fa-share" aria-hidden="true"></i>
+            <span class="action-label">Share</span>
+        </button>
+        
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" id="comments-{{ post.id }}">
+        <form class="comment-form" onsubmit="submitComment(event, '{{ post.id }}')">
+            <input type="text" placeholder="Write a comment..." id="commentInput-{{ post.id }}" aria-label="Write a comment" required>
+            <button type="submit" aria-label="Post comment">Post</button>
+        </form>
+        <div class="comment-list" id="commentList-{{ post.id }}">
+            {% for comment in post.comments.all %}
+                <div class="comment-item" data-comment-id="{{ comment.id }}">
+                    <div class="comment-avatar">
+                        {% if comment.user.profile.profile_pic %}
+                            <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}">
+                        {% else %}
+                            <div class="default-avatar">{{ comment.user.username|first|upper }}</div>
+                        {% endif %}
                     </div>
-                    <div class="comment-text">{{ comment.content }}</div>
+                    <div class="comment-content">
+                        <div class="comment-bubble">
+                            <div class="comment-header">
+                                <div class="comment-user-details">
+                                    <a href="{% url 'profile' comment.user.username %}" class="comment-author">
+                                        {{ comment.user.profile.full_name|default:comment.user.username }}
+                                    </a>
+                                    <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                                </div>
+                                <div class="comment-menu">
+                                    <button class="comment-menu-btn" onclick="toggleCommentMenu({{ comment.id }})">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <div class="comment-menu-dropdown" id="comment-menu-{{ comment.id }}">
+                                        {% if comment.user == request.user %}
+                                            <button onclick="editComment({{ comment.id }})">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button onclick="deleteComment({{ comment.id }})">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        {% else %}
+                                            <button onclick="reportComment({{ comment.id }})">
+                                                <i class="fas fa-flag"></i> Report
+                                            </button>
+                                        {% endif %}
+                                        <button onclick="copyCommentLink({{ comment.id }})">
+                                            <i class="fas fa-link"></i> Copy link
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-text">{{ comment.content|safe }}
+                                {% if comment.edited %}
+                                    <span class="edited-indicator">(edited)</span>
+                                {% endif %}
+                            </div>
+                            <div class="comment-actions">
+                                <button class="comment-action-btn like-btn {% if comment|is_liked_by:request.user %}liked{% endif %}" 
+                                        onclick="likeComment({{ comment.id }}, this)">
+                                    <i class="fas fa-heart"></i>
+                                    <span>{{ comment.likes.count|default:0 }}</span>
+                                </button>
+                                <button class="comment-action-btn reply-btn" 
+                                        onclick="replyToComment({{ comment.id }}, '{{ comment.user.username }}')">
+                                    <i class="fas fa-reply"></i>
+                                    <span>Reply</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
             {% empty %}
-            <div class="no-comments">No comments yet</div>
+                <div class="no-comments">No comments yet — be the first!</div>
             {% endfor %}
-            
-            {% if post.comments.count > 3 %}
-                <button class="load-more-comments" onclick="loadMoreComments('{{ post.id }}')">
-                    Load {{ post.comments.count|add:"-3" }} more comments
-                </button>
-            {% endif %}
         </div>
     </div>
 </div>
 
+<!-- Liked Users Modal -->
+<div class="modal" id="likedUsersModal-{{ post.id }}" role="dialog" aria-hidden="true">
+    <div class="modal-overlay" onclick="closeLikedUsers('{{ post.id }}')"></div>
+    <div class="modal-panel">
+        <h3>Liked by</h3>
+        <div class="liked-users-list" id="likedUsersList-{{ post.id }}">Loading...</div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeLikedUsers('{{ post.id }}')">Close</button></div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal" id="deleteConfirmModal-{{ post.id }}" role="dialog" aria-hidden="true">
+    <div class="modal-overlay" onclick="closeDeleteConfirm('{{ post.id }}')"></div>
+    <div class="modal-panel">
+        <h3>Delete Post?</h3>
+        <p>Are you sure you want to delete this post? This cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeDeleteConfirm('{{ post.id }}')">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmDeletePost('{{ post.id }}')">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="imageLightbox" aria-hidden="true">
+    <div class="lightbox-overlay" onclick="closeLightbox()"></div>
+    <div class="lightbox-panel">
+        <img src="" alt="" id="lightboxImage">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+    </div>
+</div>
+
+
+<script src="{% static 'js/post_card.js' %}"></script>
+<script src="{% static 'js/toasts.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/toasts.css' %}">
+
+<script>
+// Attach counter handlers for quote modals
+document.addEventListener('input', function(e){
+    if(e.target && e.target.id && e.target.id.startsWith('quoteText-')){
+        const id = e.target.id.split('-')[1];
+        const cnt = document.getElementById(`quoteCount-${id}`);
+        if(cnt) cnt.textContent = e.target.value.length;
+    }
+});
+</script>
 <style>
-/* Post Card Styles */
 .post-card {
-    background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 16px;
@@ -277,41 +266,18 @@
     border: 1px solid #e1e5e9;
 }
 
-/* Repost Header */
-.repost-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #65676b;
-    font-size: 13px;
-    margin-bottom: 12px;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.repost-header a {
-    color: #FF9933;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.repost-header a:hover {
-    text-decoration: underline;
-}
-
 /* Post Header */
 .post-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 12px;
 }
 
 .post-user-info {
     display: flex;
     gap: 12px;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .user-avatar, .default-avatar {
@@ -353,7 +319,7 @@
     margin-top: 2px;
 }
 
-.post-time, .post-privacy {
+.post-time {
     color: #65676b;
     font-size: 13px;
 }
@@ -416,32 +382,16 @@
     color: #FF9933;
 }
 
-.menu-divider {
-    height: 1px;
-    background: #e1e5e9;
-    margin: 4px 0;
-}
-
 /* Post Content */
 .post-content {
     margin-bottom: 12px;
 }
 
-.post-text {
+.post-content p {
     font-size: 15px;
     line-height: 1.4;
     color: #1c1e21;
     margin-bottom: 12px;
-    white-space: pre-line;
-}
-
-.post-media {
-    margin-top: 12px;
-}
-
-.media-container {
-    border-radius: 8px;
-    overflow: hidden;
 }
 
 .post-image {
@@ -457,42 +407,6 @@
     transform: scale(1.02);
 }
 
-/* Post Stats */
-.post-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #e1e5e9;
-    margin-bottom: 8px;
-    color: #65676b;
-    font-size: 14px;
-}
-
-.stats-left {
-    display: flex;
-    gap: 16px;
-}
-
-.likes-stat, .reposts-stat {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.likes-stat:hover, .reposts-stat:hover {
-    background: #f0f2f5;
-}
-
-.stats-right {
-    display: flex;
-    gap: 16px;
-}
-
 /* Post Actions */
 .post-actions {
     display: flex;
@@ -501,7 +415,7 @@
     border-top: 1px solid #e1e5e9;
 }
 
-.post-action-btn {
+.action-btn {
     background: none;
     border: none;
     padding: 8px 16px;
@@ -516,99 +430,10 @@
     font-weight: 500;
 }
 
-.post-action-btn:hover {
+.action-btn:hover {
     background: #f0f2f5;
     color: #FF9933;
 }
-
-.like-btn.liked {
-    color: #e74c3c;
-}
-
-.like-btn.liked .action-text {
-    color: #e74c3c;
-}
-
-
-/* Repost & Share Dropdown Styles - FIXED */
-.repost-container, .share-container {
-    position: relative;
-    display: inline-block;
-}
-
-.repost-dropdown, .share-dropdown {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    min-width: 180px;
-    z-index: 9999;
-    padding: 8px 0;
-    margin-bottom: 8px;
-    display: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.repost-dropdown.show, .share-dropdown.show {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(-5px);
-}
-
-.repost-option, .share-option {
-    width: 100%;
-    padding: 12px 16px;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: #1c1e21;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.repost-option:hover, .share-option:hover {
-    background: #f0f2f5;
-    color: #FF9933;
-}
-
-.repost-option i, .share-option i {
-    width: 16px;
-    text-align: center;
-    color: #65676b;
-}
-
-.repost-option:hover i, .share-option:hover i {
-    color: #FF9933;
-}
-
-.share-divider {
-    height: 1px;
-    background: #e1e5e9;
-    margin: 6px 0;
-}
-
-/* Ensure dropdowns are above everything */
-.post-actions {
-    position: relative;
-    z-index: 1;
-}
-
-.repost-container, .share-container {
-    z-index: 9998;
-}
-
 
 /* Comments Section */
 .comments-section {
@@ -617,75 +442,53 @@
     padding-top: 16px;
 }
 
-.add-comment-form {
+.comment-form {
     display: flex;
-    gap: 12px;
-    align-items: flex-start;
+    gap: 8px;
     margin-bottom: 16px;
 }
 
-.comment-input-container {
+.comment-form input {
     flex: 1;
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-}
-
-.comment-input-wrapper {
-    flex: 1;
-}
-
-.comment-input {
-    width: 100%;
     padding: 12px 16px;
     border: 1px solid #e1e5e9;
     border-radius: 20px;
-    resize: none;
     font-size: 14px;
     font-family: inherit;
-    min-height: 40px;
-    max-height: 120px;
 }
 
-.comment-input:focus {
-    outline: none;
-    border-color: #FF9933;
-}
-
-.comment-submit-btn {
+.comment-form button {
     background: #FF9933;
     border: none;
     border-radius: 50%;
     width: 40px;
     height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: white;
     cursor: pointer;
     transition: background 0.3s ease;
 }
 
-.comment-submit-btn:hover {
+.comment-form button:hover {
     background: #e6851a;
 }
 
 /* Comments List */
-.comments-list {
+.comment-list {
     max-height: 400px;
     overflow-y: auto;
 }
 
-.comment {
+.comment-item {
     display: flex;
     gap: 12px;
     padding: 12px;
     border-radius: 8px;
     transition: background 0.3s ease;
     margin-bottom: 8px;
+    position: relative;
 }
 
-.comment:hover {
+.comment-item:hover {
     background: #f8f9fa;
 }
 
@@ -718,7 +521,13 @@
     margin-bottom: 4px;
 }
 
-.comment-header strong {
+.comment-user-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-user-details strong {
     font-size: 14px;
     color: #1c1e21;
 }
@@ -732,6 +541,90 @@
     font-size: 14px;
     color: #1c1e21;
     line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.comment-text .edited-indicator {
+    font-size: 12px;
+    color: #65676b;
+    margin-left: 8px;
+}
+
+/* Comment Actions (Like, Reply) */
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.comment-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #65676b;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0;
+}
+
+.comment-action-btn.liked {
+    color: #FF9933;
+}
+
+/* Comment Menu (Edit, Delete) */
+.comment-menu {
+    position: relative;
+}
+
+.comment-menu-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #65676b;
+}
+
+.comment-menu-btn:hover {
+    background: #f0f2f5;
+}
+
+.comment-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    min-width: 150px;
+    z-index: 1000;
+    display: none;
+    padding: 8px 0;
+}
+
+.comment-menu-dropdown.active {
+    display: block;
+}
+
+.comment-menu-dropdown button {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #1c1e21;
+    transition: background 0.3s ease;
+}
+
+.comment-menu-dropdown button:hover {
+    background: #f0f2f5;
 }
 
 .no-comments {
@@ -852,21 +745,51 @@ function addNewCommentToDOM(postId, comment) {
     
     // Create new comment element
     const commentElement = document.createElement('div');
-    commentElement.className = 'comment';
+    commentElement.className = 'comment-item';
     commentElement.dataset.commentId = comment.id;
     commentElement.innerHTML = `
         <div class="comment-avatar">
             ${comment.user.avatar ? 
                 `<img src="${comment.user.avatar}" alt="${comment.user.name}">` :
-                `<div class="comment-avatar-default">${comment.user.name.charAt(0).toUpperCase()}</div>`
+                `<div class="default-avatar">${comment.user.name.charAt(0).toUpperCase()}</div>`
             }
         </div>
         <div class="comment-content">
-            <div class="comment-header">
-                <strong>${comment.user.name}</strong>
-                <span class="comment-time">Just now</span>
+            <div class="comment-bubble">
+                <div class="comment-header">
+                    <div class="comment-user-details">
+                        <a href="/profile/${comment.user.name}/" class="comment-author">${comment.user.name}</a>
+                        <span class="comment-time">Just now</span>
+                    </div>
+                    <div class="comment-menu">
+                        <button class="comment-menu-btn" onclick="toggleCommentMenu(${comment.id})">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="comment-menu-dropdown" id="comment-menu-${comment.id}">
+                            <button onclick="editComment(${comment.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="deleteComment(${comment.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <button onclick="copyCommentLink(${comment.id})">
+                                <i class="fas fa-link"></i> Copy link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="comment-text">${comment.content}</div>
+                <div class="comment-actions">
+                    <button class="comment-action-btn like-btn" onclick="likeComment(${comment.id}, this)">
+                        <i class="fas fa-heart"></i>
+                        <span>0</span>
+                    </button>
+                    <button class="comment-action-btn reply-btn" onclick="replyToComment(${comment.id}, '${comment.user.name}')">
+                        <i class="fas fa-reply"></i>
+                        <span>Reply</span>
+                    </button>
+                </div>
             </div>
-            <div class="comment-text">${comment.content}</div>
         </div>
     `;
     
@@ -901,21 +824,51 @@ window.loadMoreComments = async function(postId) {
             // Add new comments
             data.comments.forEach(comment => {
                 const commentElement = document.createElement('div');
-                commentElement.className = 'comment';
+                commentElement.className = 'comment-item';
                 commentElement.dataset.commentId = comment.id;
                 commentElement.innerHTML = `
                     <div class="comment-avatar">
                         ${comment.user.avatar ? 
                             `<img src="${comment.user.avatar}" alt="${comment.user.name}">` :
-                            `<div class="comment-avatar-default">${comment.user.name.charAt(0).toUpperCase()}</div>`
+                            `<div class="default-avatar">${comment.user.name.charAt(0).toUpperCase()}</div>`
                         }
                     </div>
                     <div class="comment-content">
-                        <div class="comment-header">
-                            <strong>${comment.user.name}</strong>
-                            <span class="comment-time">${comment.created_at}</span>
+                        <div class="comment-bubble">
+                            <div class="comment-header">
+                                <div class="comment-user-details">
+                                    <a href="/profile/${comment.user.name}/" class="comment-author">${comment.user.name}</a>
+                                    <span class="comment-time">${comment.created_at}</span>
+                                </div>
+                                <div class="comment-menu">
+                                    <button class="comment-menu-btn" onclick="toggleCommentMenu(${comment.id})">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <div class="comment-menu-dropdown" id="comment-menu-${comment.id}">
+                                        <button onclick="editComment(${comment.id})">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button onclick="deleteComment(${comment.id})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                        <button onclick="copyCommentLink(${comment.id})">
+                                            <i class="fas fa-link"></i> Copy link
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-text">${comment.content}</div>
+                            <div class="comment-actions">
+                                <button class="comment-action-btn like-btn" onclick="likeComment(${comment.id}, this)">
+                                    <i class="fas fa-heart"></i>
+                                    <span>${comment.likes_count || 0}</span>
+                                </button>
+                                <button class="comment-action-btn reply-btn" onclick="replyToComment(${comment.id}, '${comment.user.name}')">
+                                    <i class="fas fa-reply"></i>
+                                    <span>Reply</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="comment-text">${comment.content}</div>
                     </div>
                 `;
                 
@@ -1146,6 +1099,23 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         document.querySelectorAll('.repost-dropdown.show, .share-dropdown.show').forEach(menu => {
             menu.classList.remove('show');
+        });
+    }
+});
+
+// Toggle comment menu
+function toggleCommentMenu(commentId) {
+    const menu = document.getElementById(`comment-menu-${commentId}`);
+    if (menu) {
+        menu.classList.toggle('active');
+    }
+}
+
+// Close all comment menus when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.comment-menu')) {
+        document.querySelectorAll('.comment-menu-dropdown.active').forEach(menu => {
+            menu.classList.remove('active');
         });
     }
 });

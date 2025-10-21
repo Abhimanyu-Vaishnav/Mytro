@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -1300,29 +1301,40 @@ def repost_post(request, post_id):
     """Repost a post"""
     try:
         original_post = get_object_or_404(Post, id=post_id)
-        
-        # Check if already reposted
+        data = {}
+        try:
+            data = json.loads(request.body or "{}")
+        except Exception:
+            data = {}
+
+        is_quote = data.get('is_quote') or data.get('isQuote') or False
+        quote_text = data.get('quote_text') or data.get('quoteText') or data.get('quote') or ''
+
+        # Check if already reposted (non-quote reposts)
         existing_repost = Post.objects.filter(
             author=request.user,
-            repost_parent=original_post
+            repost_parent=original_post,
+            is_quote=False
         ).first()
-        
-        if existing_repost:
+
+        if existing_repost and not is_quote:
             # Undo repost
             existing_repost.delete()
             reposted = False
             message = "Removed repost"
         else:
-            # Create repost
+            # Create repost or quote
             repost = Post.objects.create(
                 author=request.user,
                 repost_parent=original_post,
                 content=original_post.content,
                 image=original_post.image,
-                post_type='repost'
+                post_type='repost',
+                is_quote=bool(is_quote),
+                quote_text=quote_text if is_quote else ''
             )
             reposted = True
-            message = "Reposted successfully"
+            message = "Quoted post" if is_quote else "Reposted successfully"
         
         repost_count = Post.objects.filter(repost_parent=original_post).count()
         
@@ -1680,12 +1692,25 @@ def save_post(request, post_id):
     """Save/unsave post"""
     try:
         post = get_object_or_404(Post, id=post_id)
-        # Placeholder implementation - you'll need a SavedPost model
+        # Real implementation using SavedPost model
+        from .models import SavedPost
+        existing = SavedPost.objects.filter(user=request.user, post=post).first()
+        if existing:
+            existing.delete()
+            saved = False
+            action = 'unsaved'
+            message = 'Post removed from saved items'
+        else:
+            SavedPost.objects.create(user=request.user, post=post)
+            saved = True
+            action = 'saved'
+            message = 'Post saved successfully'
+
         return JsonResponse({
             'success': True,
-            'saved': True,
-            'action': 'saved',
-            'message': 'Post saved successfully'
+            'saved': saved,
+            'action': action,
+            'message': message
         })
     except Exception as e:
         return JsonResponse({

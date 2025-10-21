@@ -1,0 +1,6 @@
+/* Simple toast notifications */
+.toast-container { position: fixed; right: 16px; top: 16px; z-index: 20000; display:flex; flex-direction:column; gap:8px; }
+.toast { background: rgba(17,24,39,0.95); color: white; padding:10px 14px; border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,0.4); min-width:160px; }
+.toast.success { background: linear-gradient(90deg,#16a34a,#10b981); }
+.toast.error { background: linear-gradient(90deg,#ef4444,#f97316); }
+.toast.info { background: linear-gradient(90deg,#0ea5e9,#0369a1); }

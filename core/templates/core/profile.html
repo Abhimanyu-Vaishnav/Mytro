@@ -772,11 +772,11 @@ function closeFollowingModal() {
 }
 
 function editCoverPhoto() {
-  alert('Cover photo edit - coming soon!');
+  if(window.showToast) showToast('Cover photo edit - coming soon!','info'); else console.log('Cover photo edit - coming soon!');
 }
 
 function editProfilePhoto() {
-  alert('Profile photo edit - coming soon!');
+  if(window.showToast) showToast('Profile photo edit - coming soon!','info'); else console.log('Profile photo edit - coming soon!');
 }
 
 function openPost(postId) {
@@ -971,7 +971,7 @@ function showSection(sectionName) {
 // Test function
 function testTabClick() {
   console.log('Tab clicked - test function working!');
-  alert('Tab click working!');
+  if(window.showToast) showToast('Tab click working!','info'); else console.log('Tab click working!');
 }
 
 async function followUser(userId, button) {
@@ -1030,8 +1030,10 @@ async function followUser(userId, button) {
       button.innerHTML = originalHTML;
       if (window.showGlobalNotification) {
         window.showGlobalNotification('Failed to update follow status', 'error');
+      } else if (window.showToast) {
+        showToast('Failed to update follow status','error');
       } else {
-        alert('Failed to update follow status');
+        console.log('Failed to update follow status');
       }
     }
   } catch (error) {
@@ -1039,8 +1041,10 @@ async function followUser(userId, button) {
     button.innerHTML = originalHTML;
     if (window.showGlobalNotification) {
       window.showGlobalNotification('Network error', 'error');
+    } else if (window.showToast) {
+      showToast('Network error','error');
     } else {
-      alert('Network error');
+      console.log('Network error');
     }
   } finally {
     button.disabled = false;

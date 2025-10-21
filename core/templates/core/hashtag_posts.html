@@ -1,0 +1,181 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load mention_tags %}
+
+{% block title %}#{{ hashtag }} - Mytro{% endblock %}
+
+{% block content %}
+<div class="hashtag-page">
+    <div class="hashtag-header">
+        <div class="hashtag-info">
+            <h1 class="hashtag-title">#{{ hashtag }}</h1>
+            <p class="hashtag-count">{{ post_count }} posts</p>
+        </div>
+        <div class="hashtag-actions">
+            <button class="follow-hashtag-btn">
+                <i class="fas fa-plus"></i>
+                Follow Hashtag
+            </button>
+        </div>
+    </div>
+
+    <div class="hashtag-posts">
+        {% if posts %}
+            {% for post in posts %}
+                {% include 'core/components/post_card.html' with post=post %}
+            {% endfor %}
+        {% else %}
+            <div class="no-posts">
+                <div class="no-posts-content">
+                    <i class="fas fa-hashtag"></i>
+                    <h3>No posts yet</h3>
+                    <p>Be the first to post with #{{ hashtag }}</p>
+                    <button class="btn-primary" onclick="document.getElementById('createPostModal').style.display='flex'">
+                        Create Post
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="trending-hashtags">
+        <h3>Trending Hashtags</h3>
+        <ul>
+            {% for trending in trending_hashtags %}
+                <li><a href="{% url 'hashtag_posts' trending.name %}">#{{ trending.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<style>
+.hashtag-page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.hashtag-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 20px;
+}
+
+.hashtag-info h1 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.hashtag-count {
+    margin: 5px 0 0 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.follow-hashtag-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.follow-hashtag-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.no-posts {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.no-posts-content i {
+    font-size: 48px;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+}
+
+.no-posts-content h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 24px;
+}
+
+.no-posts-content p {
+    margin: 0 0 20px 0;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Dark theme */
+[data-theme="dark"] .hashtag-header {
+    border-color: var(--border-medium);
+}
+
+[data-theme="dark"] .hashtag-info h1 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .hashtag-count {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .follow-hashtag-btn {
+    background: #FF9933;
+}
+
+[data-theme="dark"] .follow-hashtag-btn:hover {
+    background: #e6851a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hashtag-page {
+        padding: 10px;
+    }
+    
+    .hashtag-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .hashtag-info h1 {
+        font-size: 24px;
+    }
+    
+    .follow-hashtag-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

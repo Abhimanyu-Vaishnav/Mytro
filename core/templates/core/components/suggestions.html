@@ -139,8 +139,10 @@ async function followUser(userId, button) {
             button.innerHTML = originalHTML;
             if (window.showGlobalNotification) {
                 window.showGlobalNotification('Failed to update follow status', 'error');
+            } else if (window.showToast) {
+                showToast('Failed to update follow status','error');
             } else {
-                alert('Failed to update follow status');
+                console.log('Failed to update follow status');
             }
         }
     } catch (error) {
@@ -148,8 +150,10 @@ async function followUser(userId, button) {
         button.innerHTML = originalHTML;
         if (window.showGlobalNotification) {
             window.showGlobalNotification('Network error', 'error');
+        } else if (window.showToast) {
+            showToast('Network error','error');
         } else {
-            alert('Network error');
+            console.log('Network error');
         }
     } finally {
         button.disabled = false;

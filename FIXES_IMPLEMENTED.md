@@ -151,3 +151,10 @@ POST /post/new/                    - Create new posts
 **Status**: ✅ **ALL CRITICAL ISSUES FIXED**
 
 The Mytro social media app is now fully functional with all major features working correctly. Users can create posts, interact with content, follow each other, and use all social media features as expected.
+
+## Recent: Post card redesign
+
+- Reworked `core/templates/core/components/post_card.html` with a modern, Instagram-like layout and accessibility improvements.
+- Added `static/css/post_card.css` and `static/js/post_card.js` to handle styling and interactions (likes, comments, repost, quote, save, share, report).
+- Implemented real save/unsave logic in `core/views.py::save_post` using `SavedPost` model.
+- Added unit tests `core/tests/test_post_ajax.py` covering like, comment, and save endpoints.

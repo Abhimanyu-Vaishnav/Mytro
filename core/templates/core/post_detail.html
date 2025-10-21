@@ -333,9 +333,9 @@ function sharePost(postId) {
       title: 'Check out this post on Mytro',
       url: `${window.location.origin}/post/${postId}/`
     });
-  } else {
+    } else {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}/`);
-    alert('Link copied to clipboard!');
+  if(window.showToast) showToast('Link copied to clipboard!','success'); else console.log('Link copied to clipboard!');
   }
 }
 

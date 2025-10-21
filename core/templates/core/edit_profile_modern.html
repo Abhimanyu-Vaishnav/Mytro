@@ -1491,7 +1491,7 @@ function saveAdjustedImage() {
     // Here you would typically save the transform values to the server
     // For now, just close the modal
     closeImageAdjuster();
-    alert('Image position saved!');
+    if(window.showToast) showToast('Image position saved!','success'); else console.log('Image position saved!');
 }
 
 // Form submission with loading state

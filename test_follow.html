@@ -24,17 +24,17 @@
             const data = await response.text();
             console.log('Response data:', data);
             
-            if (response.ok) {
+                if (response.ok) {
                 const jsonData = JSON.parse(data);
                 console.log('Follow successful:', jsonData);
-                alert('Follow successful: ' + JSON.stringify(jsonData));
+                if(window.showToast) showToast('Follow successful','success'); else console.log('Follow successful: ' + JSON.stringify(jsonData));
             } else {
                 console.error('Follow failed:', data);
-                alert('Follow failed: ' + data);
+                if(window.showToast) showToast('Follow failed','error'); else console.log('Follow failed: ' + data);
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error: ' + error.message);
+            if(window.showToast) showToast('Error: ' + error.message,'error'); else console.log('Error: ' + error.message);
         }
     }
     </script>
